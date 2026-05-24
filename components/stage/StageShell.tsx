@@ -1,7 +1,9 @@
 'use client';
 
+import { MotionConfig } from 'framer-motion';
 import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
+import { StageFonts, StageKeyframes, StageScaler, LoadingStage } from './atmosphere';
 import { StageIdle } from './StageIdle';
 import { StageVS } from './StageVS';
 import { StagePrompting } from './StagePrompting';
@@ -9,26 +11,31 @@ import { StageGenerating } from './StageGenerating';
 import { StageVoting } from './StageVoting';
 import { StageResult } from './StageResult';
 
+/**
+ * Stage root - broadcast/arcade dark stage scaled into any projector viewport.
+ * Loads the pixel/broadcast fonts, injects pc-* keyframes, and routes the
+ * socket phase to the matching 1920x1080 board.
+ */
 export function StageShell() {
   const { state } = useGameState();
   const { t } = useI18n();
 
-  if (!state) {
-    return (
-      <div className="min-h-screen q-stage-bg grid place-items-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-full border-[5px] border-primary-100 border-t-primary animate-spin" />
-          <p className="q-label text-lg">{t('connecting')}</p>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <MotionConfig reducedMotion="user">
+      <StageFonts />
+      <StageKeyframes />
+      <StageScaler>
+        {state ? <PhaseBoard phase={state.phase} /> : <LoadingStage label={t('connecting')} />}
+      </StageScaler>
+    </MotionConfig>
+  );
+}
 
-  switch (state.phase) {
+function PhaseBoard({ phase }: { phase: string }) {
+  switch (phase) {
     case 'IDLE':
-      return <StageIdle />;
     case 'PLAYER_1_JOINED':
-      return <StageIdle showWaiting />;
+      return <StageIdle />;
     case 'VS_INTRO':
       return <StageVS />;
     case 'PROMPTING':

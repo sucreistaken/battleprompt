@@ -2,149 +2,259 @@
 
 import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
-import { StageChrome, LiveBadge, StageMatchMeta } from '@/components/ui/StageChrome';
-import { CountdownTimer } from '@/components/ui/CountdownTimer';
-import { cn } from '@/lib/utils';
+import {
+  StageFrame,
+  TopBar,
+  Avatar,
+  Lbl,
+  ReferenceFrame,
+  CountdownRing,
+  useCountdown,
+  C,
+  FONT,
+  PROMPT_MAX,
+} from './atmosphere';
 
 /**
- * PROMPTING stage — 3-col layout:
- *   [ A live prompt panel ] [ reference image + countdown ] [ B live prompt panel ]
- * Both prompts visible to the room (live updates via socket prompt_typing).
- * Admin's showLivePrompts toggle still respected.
+ * PROMPTING - twin jersey panels (A left, B mirrored right) + center column
+ * (reference image + live countdown). Both prompts stream to the room unless
+ * the admin's showLivePrompts toggle is off.
  */
 export function StagePrompting() {
   const { state, livePrompts } = useGameState();
   const { t } = useI18n();
+  const cd = useCountdown(state?.phaseEndsAt ?? null, state?.durations.promptDurationSec ?? 30);
 
   if (!state) return null;
-  const a = state.players.A;
-  const b = state.players.B;
+  const matchId = state.matchId ? state.matchId.slice(-4).toUpperCase() : '';
 
   return (
-    <StageChrome
-      topBar={
-        <>
-          <div className="flex items-center gap-4">
-            <span className="q-display text-2xl text-primary">prompt clash</span>
-            <LiveBadge label={t('live')} />
-          </div>
-          <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
-        </>
-      }
-    >
-      <div className="w-full max-w-[1440px]">
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-8 items-stretch">
-          {/* A panel (left) */}
-          <PromptPanel
-            slot="A"
-            nickname={a?.nickname ?? '—'}
-            submitted={!!a?.submitted}
-            promptText={livePrompts.A}
-            showPrompt={state.showLivePrompts}
-            submittedLabel={t('submitted')}
-            playerLabel={t('playerLabel')}
-            typingLabel={t('typing')}
-            promptHiddenLabel={t('promptHidden')}
-          />
+    <StageFrame>
+      <TopBar liveLabel={t('live')} matchId={matchId} theme={state.theme} />
 
-          {/* Reference + countdown (center) */}
-          <div className="flex flex-col items-center gap-5 w-[440px]">
-            <span className="q-label text-base">{t('referenceImage')}</span>
-            <div className="q-card-elevated overflow-hidden w-full aspect-square bg-primary-50">
-              {state.referenceImageUrl ? (
-                <img
-                  src={state.referenceImageUrl}
-                  alt={t('referenceImage')}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full q-skeleton grid place-items-center">
-                  <span className="q-label">{t('loadingText')}</span>
-                </div>
-              )}
-            </div>
-            <CountdownTimer
-              endsAt={state.phaseEndsAt}
-              totalSeconds={state.durations.promptDurationSec}
-              variant="stage"
-              label={t('timeLeft')}
+      <div
+        style={{
+          position: 'absolute',
+          top: 140,
+          bottom: 60,
+          left: 60,
+          right: 60,
+          display: 'grid',
+          gridTemplateColumns: '1fr 480px 1fr',
+          gap: 36,
+        }}
+      >
+        <PlayerPanel
+          letter="A"
+          name={state.players.A?.nickname ?? '-'}
+          prompt={livePrompts.A}
+          submitted={!!state.players.A?.submitted}
+          showPrompt={state.showLivePrompts}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+          <div
+            style={{
+              background: C.ink2,
+              border: `1px solid ${C.line}`,
+              padding: 22,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+              alignItems: 'center',
+            }}
+          >
+            <Lbl size={11}>{t('referenceImage')}</Lbl>
+            <ReferenceFrame
+              src={state.referenceImageUrl}
+              alt={t('referenceImage')}
+              size={384}
+              loadingLabel={t('loadingText')}
             />
+            <div
+              style={{
+                alignSelf: 'stretch',
+                textAlign: 'center',
+                fontFamily: FONT.body,
+                fontSize: 16,
+                color: C.text2,
+                fontStyle: 'italic',
+                lineHeight: 1.4,
+              }}
+            >
+              &ldquo;{state.theme}&rdquo;
+            </div>
           </div>
 
-          {/* B panel (right) */}
-          <PromptPanel
-            slot="B"
-            nickname={b?.nickname ?? '—'}
-            submitted={!!b?.submitted}
-            promptText={livePrompts.B}
-            showPrompt={state.showLivePrompts}
-            submittedLabel={t('submitted')}
-            playerLabel={t('playerLabel')}
-            typingLabel={t('typing')}
-            promptHiddenLabel={t('promptHidden')}
-          />
+          <div
+            style={{
+              background: C.ink2,
+              border: `1px solid ${C.line}`,
+              padding: '28px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 18,
+            }}
+          >
+            <Lbl size={11}>{t('timeLeft')}</Lbl>
+            <CountdownRing size={180} progress={cd.progress} value={cd.value} danger={cd.danger} stroke={6} />
+          </div>
         </div>
+
+        <PlayerPanel
+          letter="B"
+          name={state.players.B?.nickname ?? '-'}
+          prompt={livePrompts.B}
+          submitted={!!state.players.B?.submitted}
+          showPrompt={state.showLivePrompts}
+          mirrored
+        />
       </div>
-    </StageChrome>
+    </StageFrame>
   );
 }
 
-function PromptPanel({
-  slot,
-  nickname,
+function PlayerPanel({
+  letter,
+  name,
+  prompt,
   submitted,
-  promptText,
   showPrompt,
-  submittedLabel,
-  playerLabel,
-  typingLabel,
-  promptHiddenLabel,
+  mirrored = false,
 }: {
-  slot: 'A' | 'B';
-  nickname: string;
+  letter: 'A' | 'B';
+  name: string;
+  prompt: string;
   submitted: boolean;
-  promptText: string;
   showPrompt: boolean;
-  submittedLabel: string;
-  playerLabel: string;
-  typingLabel: string;
-  promptHiddenLabel: string;
+  mirrored?: boolean;
 }) {
+  const { t } = useI18n();
+  const color = C.player(letter);
+  const ink = C.playerInk(letter);
+  const active = !submitted;
+  const charCount = Math.min(prompt.length, PROMPT_MAX);
+
   return (
     <div
-      className={cn(
-        'q-card-elevated overflow-hidden flex flex-col min-h-[520px] transition-all',
-        submitted && 'ring-2 ring-primary/40',
-      )}
+      style={{
+        position: 'relative',
+        background: C.ink2,
+        border: `1px solid ${active ? color : C.line}`,
+        borderLeft: mirrored ? `1px solid ${active ? color : C.line}` : `5px solid ${color}`,
+        borderRight: mirrored ? `5px solid ${color}` : `1px solid ${active ? color : C.line}`,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 720,
+      }}
     >
-      <div className="px-6 py-4 flex items-center justify-between border-b border-border bg-surface">
-        <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              'q-display w-14 h-14 rounded-full bg-primary text-white grid place-items-center text-3xl shadow-cta',
-            )}
-          >
-            {slot}
-          </span>
-          <div className="flex flex-col">
-            <span className="q-label">{playerLabel} {slot}</span>
-            <span className="text-2xl font-semibold text-ink truncate max-w-[260px]">{nickname}</span>
-          </div>
-        </div>
-        {submitted && <span className="q-pill-primary text-base">{submittedLabel}</span>}
+      {/* Top stripe */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 24px',
+          background: active ? color : C.ink3,
+          color: active ? ink : C.text2,
+          borderBottom: `1px solid ${active ? color : C.line}`,
+          flexDirection: mirrored ? 'row-reverse' : 'row',
+        }}
+      >
+        <span style={{ fontFamily: FONT.pixel, fontSize: 18, letterSpacing: '0.1em' }}>
+          {(active ? t('typingShort') : t('submittedShort')).toUpperCase()} · {t('playerLabel').toUpperCase()} {letter}
+        </span>
+        <span style={{ fontFamily: FONT.mono, fontSize: 13, letterSpacing: '0.12em' }}>
+          {charCount}/{PROMPT_MAX}
+        </span>
       </div>
-      <div className="flex-1 p-8 bg-primary-50 flex items-start">
-        {showPrompt ? (
-          <p
-            className={cn(
-              'q-mono leading-relaxed',
-              promptText ? 'text-2xl text-ink' : 'text-xl text-ink-light',
-            )}
+
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 22,
+          padding: '30px 36px 24px',
+          flexDirection: mirrored ? 'row-reverse' : 'row',
+        }}
+      >
+        <Avatar letter={letter} size={88} player={letter} />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            alignItems: mirrored ? 'flex-end' : 'flex-start',
+          }}
+        >
+          <Lbl size={12} color={color}>
+            {t('playerLabel')} {letter}
+          </Lbl>
+          <span style={{ fontFamily: FONT.body, fontSize: 38, fontWeight: 700, color: C.bone, lineHeight: 1 }}>
+            {name}
+          </span>
+        </div>
+        <div style={{ flex: 1 }} />
+        {submitted && (
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 14px',
+              background: color,
+              color: ink,
+              fontFamily: FONT.pixel,
+              fontSize: 14,
+              letterSpacing: '0.1em',
+            }}
           >
-            {promptText || typingLabel}
-          </p>
+            <svg width="12" height="12" viewBox="0 0 14 14">
+              <path d="M2 7 L6 11 L12 3" stroke={ink} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t('lockedLabel')}
+          </div>
+        )}
+      </div>
+
+      <div style={{ height: 1, background: C.line, margin: '0 36px' }} />
+
+      {/* Prompt */}
+      <div style={{ flex: 1, padding: '28px 36px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <Lbl size={11} color="text3">
+          {submitted ? t('submittedPromptLabel') : t('livePromptLabel')}
+        </Lbl>
+        {showPrompt ? (
+          <div
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 30,
+              lineHeight: 1.52,
+              color: submitted ? C.text2 : C.bone,
+              letterSpacing: '-0.005em',
+            }}
+          >
+            {prompt || (active ? '' : '-')}
+            {active && (
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 14,
+                  height: 34,
+                  background: color,
+                  verticalAlign: 'text-bottom',
+                  marginLeft: 4,
+                  animation: 'pcCaret 0.53s steps(2, end) infinite',
+                }}
+              />
+            )}
+          </div>
         ) : (
-          <p className="q-label text-ink-light">{promptHiddenLabel}</p>
+          <Lbl size={14} color="text4">
+            {t('promptHidden')}
+          </Lbl>
         )}
       </div>
     </div>
