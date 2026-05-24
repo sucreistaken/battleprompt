@@ -12,3 +12,7 @@ coverage/
 .vscode/
 .idea/
 gcs-key.json
+
+# Screenshot / tooling artifacts (keep public/ assets, ignore loose root pngs)
+/*.png
+.playwright-mcp/
