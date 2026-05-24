@@ -1,0 +1,91 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e3]
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: PROMPT CLASH
+        - navigation [ref=e8]:
+          - generic [ref=e10]: LIVE
+          - generic [ref=e12]: Episodes
+          - generic [ref=e13]: Schedule
+          - generic [ref=e14]: Players
+      - generic [ref=e15]:
+        - generic [ref=e16]: "MATCH #142"
+        - button "Watch Now" [ref=e17] [cursor=pointer]
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - generic: "01"
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - generic [ref=e24]: 01 · EPISODE 13
+              - generic [ref=e25]: ·
+              - generic [ref=e26]: LIVE BROADCAST
+            - generic [ref=e27]:
+              - heading "Who tells it better?" [level=1] [ref=e28]
+              - img [ref=e29]
+              - img [ref=e31]
+              - img [ref=e45]
+              - img [ref=e47]
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - generic [ref=e51]: Current Theme
+              - generic [ref=e52]: a single futuristic cyberpu…
+            - generic [ref=e53]:
+              - generic [ref=e54]: Active Prompt
+              - generic [ref=e55]: "\"standing by…\""
+      - complementary [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: PROMPT CLASH
+          - generic [ref=e59]: Broadcast Mode
+        - generic [ref=e60]:
+          - img [ref=e66]
+          - generic:
+            - generic:
+              - img
+              - generic: TAP!
+          - img
+          - generic [ref=e69]:
+            - generic [ref=e70]: Scan to Play
+            - generic [ref=e71]: join the arena now
+        - navigation [ref=e72]:
+          - generic [ref=e74]: Broadcast
+          - generic [ref=e77]: Stats
+          - generic [ref=e79]: Scan to Play
+          - generic [ref=e81]: Help
+        - generic [ref=e82]:
+          - link "Join the Arena" [ref=e83] [cursor=pointer]:
+            - /url: http://localhost:3100
+          - img [ref=e84]
+          - img [ref=e88]
+    - generic [ref=e93]:
+      - generic [ref=e94]:
+        - generic [ref=e95]: PROMPT CLASH LIVE
+        - generic [ref=e97]: »
+      - generic [ref=e98]:
+        - text: LIVE FROM THE ARENA · ROUND 3 COMMENCING
+        - generic [ref=e99]: »
+      - generic [ref=e100]:
+        - text: NEXT UP · PROMPT MASTERS FINALS
+        - generic [ref=e101]: »
+      - generic [ref=e102]:
+        - generic [ref=e103]: TOP CONTENDER · @VECTOR_VANGUARD (158 PTS)
+        - generic [ref=e104]: »
+      - generic [ref=e105]:
+        - text: SCAN ANY TIME TO JOIN
+        - generic [ref=e106]: »
+      - generic [ref=e107]:
+        - generic [ref=e108]: PROMPT CLASH LIVE
+        - generic [ref=e110]: »
+      - generic [ref=e111]:
+        - text: LIVE FROM THE ARENA · ROUND 3 COMMENCING
+        - generic [ref=e112]: »
+      - generic [ref=e113]:
+        - text: NEXT UP · PROMPT MASTERS FINALS
+        - generic [ref=e114]: »
+      - generic [ref=e115]:
+        - generic [ref=e116]: TOP CONTENDER · @VECTOR_VANGUARD (158 PTS)
+        - generic [ref=e117]: »
+      - generic [ref=e118]:
+        - text: SCAN ANY TIME TO JOIN
+        - generic [ref=e119]: »

@@ -1,0 +1,14 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e3]
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: CONTROL ROOM
+        - generic [ref=e9]: PROMPT CLASH
+      - generic [ref=e10]:
+        - generic [ref=e11]: Restricted Access
+        - heading "Sign in" [level=1] [ref=e12]
+        - generic [ref=e13]:
+          - text: Password
+          - textbox "Password" [ref=e14]
+        - button "Enter Control →" [ref=e15] [cursor=pointer]

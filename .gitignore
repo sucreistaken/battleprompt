@@ -1,0 +1,14 @@
+node_modules/
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env*.local
+*.log
+.DS_Store
+dist/
+coverage/
+.vscode/
+.idea/
+gcs-key.json
