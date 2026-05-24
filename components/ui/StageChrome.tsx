@@ -1,58 +1,52 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { LiveBadge } from './LiveBadge';
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface StageChromeProps {
-  matchNo?: string | number;
-  liveLabel?: string;
   children: ReactNode;
-  rightSlot?: ReactNode;
   className?: string;
+  /** Show optional top bar with live + match meta */
+  topBar?: ReactNode;
 }
 
 /**
- * Broadcast-style top nav + canvas wrapper used by every stage screen.
- * Mirrors the Stitch "Olympic Heritage" reference: cream bg, navy ink,
- * tabbed top nav with LIVE indicator, optional CTA on the right.
+ * Stage shell — full-bleed background container for TV/projector views.
+ * No broadcast clutter (waves, sun bursts, tickers); minimalist editorial
+ * surface with violet radial gradient.
  */
-export function StageChrome({
-  matchNo = '142',
-  liveLabel = 'LIVE',
-  children,
-  rightSlot,
-  className = ''
-}: StageChromeProps) {
+export function StageChrome({ children, className, topBar }: StageChromeProps) {
   return (
-    <div className={`relative min-h-screen w-full bg-cream text-navy overflow-hidden ${className}`}>
-      {/* Top nav */}
-      <header className="relative z-30 px-12 pt-6 pb-4 flex items-center justify-between border-b border-navy/10">
-        <div className="flex items-baseline gap-10">
-          <div className="font-display italic font-black text-2xl tracking-tight text-navy">
-            PROMPT CLASH
-          </div>
-          <nav className="hidden md:flex items-center gap-8 font-sans font-bold text-xs tracking-widest2 uppercase text-navy/70">
-            <span className="text-navy flex items-center gap-2">
-              <LiveBadge label={liveLabel} />
-            </span>
-            <span>Episodes</span>
-            <span>Schedule</span>
-            <span>Players</span>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden md:inline font-sans font-bold text-[11px] tracking-widest2 uppercase text-navy/40">
-            MATCH #{matchNo}
-          </span>
-          {rightSlot ?? (
-            <button className="bg-navy text-cream px-5 py-2.5 font-sans font-bold text-xs tracking-widest2 uppercase">
-              Watch Now
-            </button>
-          )}
-        </div>
-      </header>
+    <main className={cn('min-h-screen q-stage-bg flex flex-col', className)}>
+      {topBar && (
+        <header className="px-12 py-6 flex items-center justify-between">
+          {topBar}
+        </header>
+      )}
+      <div className="flex-1 flex items-center justify-center px-12 py-8">
+        {children}
+      </div>
+    </main>
+  );
+}
 
-      {children}
+/** Small live indicator pill, dot pulses */
+export function LiveBadge({ label = 'CANLI' }: { label?: string }) {
+  return (
+    <span className="q-pill-live inline-flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-white animate-livePulse" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+/** Match meta line: theme + match id, low-emphasis */
+export function StageMatchMeta({ theme, matchLabel }: { theme: string; matchLabel: string }) {
+  return (
+    <div className="flex items-center gap-4 text-ink-variant">
+      <span className="q-label">{matchLabel}</span>
+      <span className="text-ink-light">·</span>
+      <span className="text-sm font-medium">{theme}</span>
     </div>
   );
 }

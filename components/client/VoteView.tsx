@@ -2,93 +2,103 @@
 
 import { useState } from 'react';
 import { useGameState } from './useGameState';
-import { CountdownTimer } from './CountdownTimer';
+import { useI18n } from './i18nContext';
+import { CountdownTimer } from '@/components/ui/CountdownTimer';
+import { cn } from '@/lib/utils';
 import type { Slot } from '@/types/game';
 
+/**
+ * VOTING / TIEBREAK_VOTE — audience picks favorite.
+ * Two big tappable cards stacked. Tap fires vote, immediate visual confirmation.
+ */
 export function VoteView() {
   const { state, vote } = useGameState();
+  const { t } = useI18n();
   const [voted, setVoted] = useState<Slot | null>(null);
-  const [busy, setBusy] = useState(false);
-  if (!state || !state.players.A || !state.players.B) return null;
-  const matchNo = state.matchId?.slice(-3).toUpperCase() || '142';
-  const isTiebreak = state.phase === 'TIEBREAK_VOTE';
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function cast(slot: Slot) {
-    if (busy || voted) return;
-    setBusy(true);
-    const r = await vote(slot);
-    setBusy(false);
-    if (r.ok) setVoted(slot);
-  }
+  if (!state) return null;
+
+  const isTiebreak = state.phase === 'TIEBREAK_VOTE';
+  const duration = isTiebreak ? state.durations.tiebreakDurationSec : state.durations.votingDurationSec;
+
+  const handleVote = async (slot: Slot) => {
+    if (voted || working) return;
+    setWorking(true);
+    setError(null);
+    setVoted(slot);  // optimistic
+    const res = await vote(slot);
+    if (!res.ok) {
+      setVoted(null);
+      setError(t('disconnected'));
+    }
+    setWorking(false);
+  };
 
   return (
-    <main className="min-h-screen bg-cream text-navy flex flex-col">
-      <header className="bg-navy text-cream px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 font-sans font-bold text-[10px] tracking-widest2 uppercase">
-          <span className="live-dot" />
-          {isTiebreak ? 'SUDDEN DEATH' : 'AUDIENCE VOTE'}
-        </div>
-        <div className="flex items-baseline gap-2">
-          <CountdownTimer
-            endsAt={state.phaseEndsAt}
-            className="font-display italic font-black text-2xl tabular-nums text-tangerine"
-          />
-          <span className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-cream/60">
-            sec
+    <main className="min-h-screen flex flex-col bg-surface qdl-safe-top">
+      {/* Top: title + countdown */}
+      <header className="px-6 pt-4 pb-3 flex items-center justify-between">
+        <div>
+          <span className="q-label q-label-primary">
+            {isTiebreak ? t('suddenDeath') : t('voteHere')}
           </span>
+          <h1 className="mt-1 q-h1 text-2xl text-ink">{t('voteHere')}</h1>
         </div>
+        <CountdownTimer
+          endsAt={state.phaseEndsAt}
+          totalSeconds={duration}
+          showLabel={false}
+        />
       </header>
 
-      <section className="px-4 pt-5">
-        <h1 className="font-display italic font-black text-3xl text-navy leading-tight">
-          Who tells it better?
-        </h1>
-        <div className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/50 mt-1">
-          MATCH #{matchNo} · tap your favourite
-        </div>
-      </section>
-
-      <div className="px-4 mt-5 flex flex-col gap-4 pb-8">
-        {(['A', 'B'] as Slot[]).map((slot) => {
-          const p = state.players[slot]!;
-          const isMine = voted === slot;
+      {/* Two tappable cards */}
+      <section className="flex-1 px-6 py-4 flex flex-col gap-4 overflow-auto">
+        {(['A', 'B'] as const).map((slot) => {
+          const player = state.players[slot];
+          const isVoted = voted === slot;
           const isOther = voted && voted !== slot;
-          const accent = slot === 'A' ? 'tangerine' : 'navy';
-          const slotNum = slot === 'A' ? '01' : '02';
           return (
             <button
               key={slot}
-              onClick={() => cast(slot)}
-              disabled={!!voted || busy}
-              className={`relative w-full text-left transition ${
-                isOther ? 'opacity-30' : 'active:translate-x-1 active:translate-y-1'
-              }`}
+              type="button"
+              onClick={() => handleVote(slot)}
+              disabled={!!voted || working}
+              aria-pressed={isVoted}
+              className={cn(
+                'q-card-elevated overflow-hidden text-left transition-all',
+                isVoted && 'ring-4 ring-primary shadow-cardLg',
+                isOther && 'opacity-50',
+                !voted && 'active:scale-[0.98] hover:shadow-cardLg',
+              )}
             >
-              <div className={`absolute inset-0 translate-x-2 translate-y-2 ${accent === 'tangerine' ? 'bg-tangerine' : 'bg-navy'}`} />
-              <div className="relative bg-cream border-2 border-navy">
-                <div className="aspect-square w-full overflow-hidden bg-cream-deep">
-                  {p.imageUrl && (
-                    <img src={p.imageUrl} className="w-full h-full object-cover" />
-                  )}
-                </div>
-                <div className="px-4 py-3 flex items-baseline justify-between">
-                  <span className={`font-sans font-bold text-xs tracking-widest2 uppercase ${accent === 'tangerine' ? 'text-tangerine' : 'text-navy'}`}>
-                    {slotNum} · {p.nickname}
+              <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+                <div className="flex items-center gap-3">
+                  <span className="q-display w-9 h-9 rounded-full bg-primary text-white grid place-items-center text-lg">
+                    {slot}
                   </span>
-                  <span className={`font-display italic font-bold text-sm ${accent === 'tangerine' ? 'text-tangerine' : 'text-navy'}`}>
-                    {isMine ? '✓ VOTED' : 'TAP →'}
-                  </span>
+                  <span className="font-semibold">{player?.nickname ?? `Player ${slot}`}</span>
                 </div>
+                {isVoted && <span className="q-pill-primary">{t('voted')}</span>}
               </div>
-              {isMine && (
-                <div className="absolute -top-3 -right-3 bg-tangerine text-navy px-3 py-1 font-sans font-bold text-[10px] tracking-widest2 uppercase shadow-offsetNavy">
-                  Your Pick
-                </div>
+              {player?.imageUrl ? (
+                <img
+                  src={player.imageUrl}
+                  alt={`${player.nickname} prompt result`}
+                  className="w-full aspect-square object-cover"
+                />
+              ) : (
+                <div className="w-full aspect-square q-skeleton" />
               )}
             </button>
           );
         })}
-      </div>
+
+        {error && (
+          <p role="alert" className="text-sm text-danger text-center">{error}</p>
+        )}
+      </section>
     </main>
   );
 }

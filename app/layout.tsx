@@ -1,24 +1,37 @@
 import type { Metadata, Viewport } from 'next';
 import '../styles/globals.css';
-import { sourceSerif, archivo } from './fonts';
+import { poppins } from './fonts';
 
 export const metadata: Metadata = {
-  title: 'Prompt Clash — Live Broadcast',
-  description: '1v1 AI image generation duel — broadcast live'
+  title: {
+    default: 'Prompt Clash',
+    template: '%s · Prompt Clash',
+  },
+  description: 'Etkinliklerde QR ile katılımlı 1v1 AI görsel üretme yarışması.',
+  applicationName: 'Prompt Clash',
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Prompt Clash',
+    locale: 'tr_TR',
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#fdfcf0',
+  themeColor: '#541fc4',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${sourceSerif.variable} ${archivo.variable}`}>
-      <body className="font-sans bg-cream text-navy antialiased">{children}</body>
+    <html lang="tr" className={poppins.variable}>
+      <body className="font-body bg-surface text-ink antialiased">{children}</body>
     </html>
   );
 }

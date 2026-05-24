@@ -1,76 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { useI18n } from '@/components/client/i18nContext';
+import { cn } from '@/lib/utils';
 
-export function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
-  const [pw, setPw] = useState('');
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+interface Props {
+  onSuccess: () => void;
+}
 
-  async function submit(e: React.FormEvent) {
+export function AdminLogin({ onSuccess }: Props) {
+  const { t } = useI18n();
+  const [password, setPassword] = useState('');
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setErr(null);
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    });
-    setBusy(false);
-    if (res.ok) {
-      onSuccess();
-      return;
+    if (!password.trim() || working) return;
+    setWorking(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        onSuccess();
+      } else {
+        setError(data.reason === 'locked' ? t('adminLocked') : t('adminWrong'));
+      }
+    } catch {
+      setError(t('disconnected'));
+    } finally {
+      setWorking(false);
     }
-    const body = await res.json().catch(() => ({}));
-    setErr(body.reason === 'locked' ? 'Too many attempts — locked' : 'Wrong password');
-  }
+  };
 
   return (
-    <main className="min-h-screen bg-cream text-navy grid place-items-center p-6">
-      <form onSubmit={submit} className="w-full max-w-sm">
-        <div className="bg-navy text-cream px-5 py-3 flex items-center justify-between">
-          <span className="font-sans font-bold text-[10px] tracking-widest2 uppercase">
-            <span className="live-dot mr-2" />
-            CONTROL ROOM
-          </span>
-          <span className="font-display italic font-black text-base">PROMPT CLASH</span>
+    <main className="min-h-screen grid place-items-center bg-surface px-6">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col gap-3 mb-8">
+          <span className="q-label q-label-primary">prompt clash · admin</span>
+          <h1 className="q-display text-display-xl text-ink">
+            {t('adminTitle')}
+          </h1>
         </div>
 
-        <div className="border-2 border-navy border-t-0 p-6 bg-cream">
-          <div className="font-sans font-bold text-[10px] tracking-widest3 uppercase text-tangerine">
-            Restricted Access
-          </div>
-          <h1 className="mt-2 font-display italic font-black text-4xl text-navy leading-tight">
-            Sign in
-          </h1>
-
-          <label className="block mt-6">
-            <span className="font-sans font-bold text-[10px] tracking-widest3 uppercase text-navy/60">
-              Password
-            </span>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <div>
+            <label htmlFor="password" className="q-label mb-2 block">
+              {t('adminPassword')}
+            </label>
             <input
+              id="password"
               type="password"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              className="mt-2 w-full px-0 py-2 bg-transparent border-b-2 border-navy text-xl font-display italic outline-none focus:border-tangerine"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError(null);
+              }}
+              autoFocus
+              autoComplete="current-password"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'pw-error' : undefined}
+              disabled={working}
+              className="q-field text-lg"
             />
-          </label>
-
-          {err && (
-            <div className="mt-4 bg-navy text-cream px-3 py-2 font-sans text-xs tracking-wider2 uppercase">
-              <span className="text-tangerine">×</span> {err}
-            </div>
-          )}
+            {error && (
+              <p id="pw-error" role="alert" className="mt-2 text-sm text-danger">
+                {error}
+              </p>
+            )}
+          </div>
 
           <button
             type="submit"
-            disabled={busy}
-            className="mt-6 w-full py-4 bg-navy text-cream font-sans font-bold text-sm tracking-widest2 uppercase shadow-offsetTangerine active:translate-x-1 active:translate-y-1 active:shadow-none transition disabled:opacity-50 disabled:shadow-none"
+            disabled={working || !password.trim()}
+            className={cn('q-cta', working && 'opacity-70')}
           >
-            Enter Control →
+            {working ? '…' : t('adminLogin')}
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </main>
   );
 }

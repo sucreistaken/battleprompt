@@ -2,179 +2,82 @@
 
 import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
-import { StageChrome } from '@/components/ui/StageChrome';
-import { Ticker } from '@/components/ui/Ticker';
-import { InkCrown, InkWing, ActionBurst, InkStar, ScribbleUnderline } from '@/components/ui/Doodles';
+import { StageChrome, LiveBadge, StageMatchMeta } from '@/components/ui/StageChrome';
+import { PlayerCard } from '@/components/ui/PlayerCard';
+import { cn } from '@/lib/utils';
 
+/**
+ * RESULT — winner reveal. Big editorial headline, winner card glowing,
+ * loser card dimmed. AI reasoning shown when winner mode is AI_SCORE.
+ */
 export function StageResult() {
   const { state } = useGameState();
   const { t } = useI18n();
-  if (!state || !state.players.A || !state.players.B) return null;
-  const matchNo = state.matchId?.slice(-3).toUpperCase() || '142';
-  const { players, winner } = state;
 
-  const a = state.winnerMode === 'AI_SCORE' ? players.A!.aiScore ?? 0 : state.votes?.A ?? 0;
-  const b = state.winnerMode === 'AI_SCORE' ? players.B!.aiScore ?? 0 : state.votes?.B ?? 0;
-  const tot = a + b || 1;
-  const aPct = Math.round((a / tot) * 100);
-  const bPct = 100 - aPct;
-  const winnerName =
-    winner === 'TIE' ? 'DRAW' : winner === 'A' ? players.A!.nickname : players.B!.nickname;
-  const winnerColor = winner === 'A' ? 'tangerine' : winner === 'B' ? 'navy' : 'navy';
+  if (!state) return null;
+  const isTie = state.winner === 'TIE';
+  const winnerSlot = state.winner === 'A' ? 'A' : state.winner === 'B' ? 'B' : null;
+  const winner = winnerSlot ? state.players[winnerSlot] : null;
+  const aiMode = state.winnerMode === 'AI_SCORE';
 
   return (
-    <StageChrome matchNo={matchNo}>
-      <main className="relative grid grid-cols-[1fr_2fr_1fr] gap-0 min-h-[calc(100vh-180px)]">
-        {/* LEFT — Player A small card */}
-        <ResultMini
-          slot="A"
-          nickname={players.A!.nickname}
-          imageUrl={players.A!.imageUrl}
-          pct={aPct}
-          isWinner={winner === 'A'}
-          accent="tangerine"
-        />
-
-        {/* CENTER — winner spotlight */}
-        <section className="relative bg-cream-deep flex flex-col items-center justify-center px-12 py-16">
-          {/* Banner */}
-          <div className="font-sans font-bold text-xs tracking-widest3 uppercase text-tangerine">
-            ★ WINNER · MATCH #{matchNo} ★
+    <StageChrome
+      topBar={
+        <>
+          <div className="flex items-center gap-4">
+            <span className="q-display text-2xl text-primary">prompt clash</span>
+            <LiveBadge />
           </div>
-
-          {/* Hand-drawn crown above winner */}
-          {winner !== 'TIE' && (
-            <InkCrown
-              className={`w-32 h-20 ${winnerColor === 'tangerine' ? 'text-tangerine' : 'text-navy'}`}
-              style={{ transform: 'rotate(-4deg)' }}
-            />
-          )}
-
-          {/* Mega italic winner name flanked by wings */}
-          <div className="relative flex items-center justify-center gap-6 mt-2">
-            {winner !== 'TIE' && (
-              <InkWing
-                className={`hidden md:block w-32 h-20 ${winnerColor === 'tangerine' ? 'text-tangerine' : 'text-navy'} scale-x-[-1]`}
-              />
-            )}
-            <h1
-              className={`relative font-display italic font-black text-center leading-[0.85] tracking-tight ${
-                winnerColor === 'tangerine' ? 'text-tangerine' : 'text-navy'
-              }`}
-              style={{ fontSize: 'clamp(5rem, 12vw, 11rem)' }}
-            >
-              {winnerName}
-              <ScribbleUnderline
-                className={`block w-40 h-3 mx-auto mt-2 ${winnerColor === 'tangerine' ? 'text-tangerine' : 'text-navy'}`}
-              />
-            </h1>
-            {winner !== 'TIE' && (
-              <InkWing
-                className={`hidden md:block w-32 h-20 ${winnerColor === 'tangerine' ? 'text-tangerine' : 'text-navy'}`}
-              />
-            )}
-          </div>
-
-          {/* Score */}
-          <div className="mt-8 flex items-baseline gap-6 font-display italic font-black tabular-nums">
-            <span className={`text-6xl ${winner === 'A' ? 'text-tangerine' : 'text-navy/40'}`}>
-              {aPct}%
-            </span>
-            <span className="text-2xl text-navy/30">vs</span>
-            <span className={`text-6xl ${winner === 'B' ? 'text-navy' : 'text-navy/40'}`}>
-              {bPct}%
-            </span>
-          </div>
-
-          {/* AI reasoning quote */}
-          {state.aiReasoning && (
-            <blockquote className="mt-8 max-w-2xl text-center font-display italic text-lg text-navy/70 leading-snug">
-              "{state.aiReasoning}"
-              <div className="mt-3 font-sans font-bold text-[10px] tracking-widest3 uppercase text-tangerine">
-                — Gemini, judge
-              </div>
-            </blockquote>
-          )}
-
-          {/* Next match countdown */}
-          <div className="absolute bottom-8 inset-x-0 text-center font-sans font-bold text-[11px] tracking-widest2 uppercase text-navy/50">
-            New match starts when 2 players join
-          </div>
-        </section>
-
-        {/* RIGHT — Player B small card */}
-        <ResultMini
-          slot="B"
-          nickname={players.B!.nickname}
-          imageUrl={players.B!.imageUrl}
-          pct={bPct}
-          isWinner={winner === 'B'}
-          accent="navy"
-        />
-      </main>
-
-      <Ticker
-        items={[
-          <span key="1" className="flex items-center gap-2">
-            <span className="live-dot" /> LIVE
-          </span>,
-          winner === 'TIE'
-            ? 'OFFICIAL · DRAW DECLARED'
-            : `OFFICIAL · ${winnerName?.toUpperCase()} TAKES THE WIN`,
-          `MATCH #${matchNo} CONCLUDED`,
-          'NEXT MATCH STANDING BY · SCAN TO JOIN'
-        ]}
-      />
-    </StageChrome>
-  );
-}
-
-function ResultMini({
-  slot,
-  nickname,
-  imageUrl,
-  pct,
-  isWinner,
-  accent
-}: {
-  slot: 'A' | 'B';
-  nickname: string;
-  imageUrl: string | null | undefined;
-  pct: number;
-  isWinner: boolean;
-  accent: 'tangerine' | 'navy';
-}) {
-  const accentBg = accent === 'tangerine' ? 'bg-tangerine' : 'bg-navy';
-  const accentText = accent === 'tangerine' ? 'text-tangerine' : 'text-navy';
-  const slotNum = slot === 'A' ? '01' : '02';
-
-  return (
-    <section className="relative bg-cream flex flex-col items-stretch px-8 py-10">
-      <div className={`flex items-baseline justify-between mb-3 ${accentText}`}>
-        <span className="font-sans font-bold text-xs tracking-widest2 uppercase">
-          {slotNum} · {nickname}
-        </span>
-        {isWinner && (
-          <span className={`${accentBg} text-cream px-2 py-0.5 font-sans font-bold text-[10px] tracking-widest2 uppercase`}>
-            Champion
+          <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
+        </>
+      }
+    >
+      <div className="w-full max-w-7xl">
+        {/* Headline */}
+        <div className="text-center mb-10 animate-slideUp">
+          <span className="q-label q-label-primary text-base block mb-3">
+            {aiMode ? t('aiScore') : t('audienceVote')}
           </span>
-        )}
-      </div>
-      <div className="relative w-full aspect-square">
-        <div className={`absolute inset-0 ${isWinner ? 'translate-x-2 translate-y-2' : 'translate-x-1 translate-y-1'} ${accentBg}`} />
-        <div className="relative w-full h-full bg-cream-deep overflow-hidden">
-          {imageUrl ? (
-            <img src={imageUrl} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full grid place-items-center text-navy/20 font-display italic">
-              —
-            </div>
+          <h1
+            className={cn(
+              'q-display text-display-2xl',
+              isTie ? 'text-ink' : 'text-primary',
+            )}
+          >
+            {isTie ? t('tie') : t('winner')}
+          </h1>
+          {!isTie && winner && (
+            <p className="mt-3 q-h1 text-display-lg text-ink">{winner.nickname}</p>
           )}
         </div>
+
+        {/* Cards side by side */}
+        <div className="grid grid-cols-2 gap-8">
+          {(['A', 'B'] as const).map((slot) => {
+            const isW = !isTie && winnerSlot === slot;
+            const isL = !isTie && winnerSlot && winnerSlot !== slot;
+            return (
+              <PlayerCard
+                key={slot}
+                slot={slot}
+                player={state.players[slot]}
+                variant="stage"
+                state={isW ? 'winner' : isL ? 'loser' : 'revealed'}
+                aiScore={aiMode ? state.players[slot]?.aiScore ?? null : undefined}
+                voteCount={!aiMode && state.votes ? state.votes[slot] : undefined}
+              />
+            );
+          })}
+        </div>
+
+        {/* AI reasoning */}
+        {aiMode && state.aiReasoning && (
+          <div className="q-card-soft p-6 mt-10 max-w-3xl mx-auto">
+            <p className="q-label text-base mb-2">AI değerlendirmesi</p>
+            <p className="text-xl text-ink-variant leading-relaxed">{state.aiReasoning}</p>
+          </div>
+        )}
       </div>
-      <div className={`mt-4 font-display italic font-black text-5xl tabular-nums ${isWinner ? accentText : 'text-navy/40'}`}>
-        {pct}%
-      </div>
-    </section>
+    </StageChrome>
   );
 }

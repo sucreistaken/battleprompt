@@ -1,97 +1,73 @@
 'use client';
 
-import { useGameState } from '@/components/client/useGameState';
+import { useEffect, useState } from 'react';
+import { AdminLogin } from './AdminLogin';
 import { SettingsForm } from './SettingsForm';
 import { MatchHistory } from './MatchHistory';
+import { useI18n } from '@/components/client/i18nContext';
+
+type AuthState = 'checking' | 'unauth' | 'auth';
 
 export function AdminPanel() {
-  const { state, socket } = useGameState();
+  const { t } = useI18n();
+  const [auth, setAuth] = useState<AuthState>('checking');
 
-  function reset() {
-    if (!confirm('Reset current match?')) return;
-    socket?.emit('admin:reset_match');
-  }
-  function forceEnd() {
-    if (!confirm('Force-end the current match?')) return;
-    socket?.emit('admin:force_end');
-  }
-  async function logout() {
-    await fetch('/api/admin/login', { method: 'DELETE' });
-    location.reload();
+  useEffect(() => {
+    fetch('/api/admin/me', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => setAuth(d.ok ? 'auth' : 'unauth'))
+      .catch(() => setAuth('unauth'));
+  }, []);
+
+  if (auth === 'checking') {
+    return (
+      <main className="min-h-screen grid place-items-center bg-surface">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-[3px] border-primary-100 border-t-primary animate-spin" />
+          <p className="q-label">yetki kontrolü</p>
+        </div>
+      </main>
+    );
   }
 
-  const matchNo = state?.matchId?.slice(-3).toUpperCase() || '—';
+  if (auth === 'unauth') {
+    return <AdminLogin onSuccess={() => setAuth('auth')} />;
+  }
 
   return (
-    <main className="min-h-screen bg-cream text-navy">
-      {/* Header bar */}
-      <header className="bg-navy text-cream px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 font-sans font-bold text-[10px] tracking-widest2 uppercase">
-            <span className="live-dot" />
-            CONTROL ROOM
-          </span>
-          <span className="font-display italic font-black text-base">PROMPT CLASH</span>
+    <main className="min-h-screen bg-surface qdl-safe-top">
+      {/* Top bar */}
+      <header className="border-b border-border bg-surface sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="q-display text-2xl text-primary">prompt clash</span>
+            <span className="q-label">{t('adminTitle')}</span>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch('/api/admin/login', { method: 'DELETE' });
+              setAuth('unauth');
+            }}
+            className="q-link text-sm"
+          >
+            Çıkış
+          </button>
         </div>
-        <button
-          onClick={logout}
-          className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-cream/60 hover:text-cream"
-        >
-          Sign out
-        </button>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 flex flex-col gap-6">
-        {/* Status strip */}
-        <section className="border-2 border-navy bg-cream">
-          <div className="bg-navy text-cream px-4 py-2 font-sans font-bold text-[10px] tracking-widest3 uppercase">
-            Live State
-          </div>
-          <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat label="Phase" value={state?.phase || '—'} />
-            <Stat label="Match" value={`#${matchNo}`} />
-            <Stat
-              label="Player A"
-              value={state?.players.A?.nickname || '—'}
-            />
-            <Stat
-              label="Player B"
-              value={state?.players.B?.nickname || '—'}
-            />
-          </div>
-          <div className="border-t-2 border-navy p-4 flex flex-wrap gap-3">
-            <button
-              onClick={forceEnd}
-              disabled={!state || state.phase === 'IDLE'}
-              className="bg-tangerine text-navy px-4 py-2 font-sans font-bold text-xs tracking-widest2 uppercase shadow-offsetNavy active:translate-x-1 active:translate-y-1 active:shadow-none transition disabled:opacity-40 disabled:shadow-none"
-            >
-              Force End
-            </button>
-            <button
-              onClick={reset}
-              className="bg-cream-deep border-2 border-navy text-navy px-4 py-2 font-sans font-bold text-xs tracking-widest2 uppercase active:translate-x-0.5 active:translate-y-0.5 transition"
-            >
-              Reset Match
-            </button>
-          </div>
+      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8">
+        <section>
+          <h2 className="q-display text-display-lg text-ink mb-2">Ayarlar</h2>
+          <p className="text-ink-variant mb-6">Maç parametreleri ve sahne tercihleri.</p>
+          <SettingsForm />
         </section>
-
-        <SettingsForm />
-        <MatchHistory />
+        <aside>
+          <h2 className="q-display text-display-lg text-ink mb-2">{t('matchHistory')}</h2>
+          <p className="text-ink-variant mb-6">Son 20 maç.</p>
+          <MatchHistory />
+        </aside>
       </div>
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <div className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/50">
-        {label}
-      </div>
-      <div className="mt-1 font-display italic font-bold text-xl text-navy truncate">
-        {value}
-      </div>
-    </div>
   );
 }

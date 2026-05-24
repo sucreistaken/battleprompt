@@ -10,25 +10,27 @@ import { ResultView } from './ResultView';
 
 export function MobileShell() {
   const { state, mySlot } = useGameState();
-  const { t } = useI18n();
 
   if (!state) {
     return (
-      <main className="min-h-screen bg-paper grid place-items-center text-ink/30 font-display italic">
-        bağlanıyor…
+      <main className="min-h-screen grid place-items-center bg-surface px-6">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-[3px] border-primary-100 border-t-primary animate-spin" />
+          <p className="q-label">bağlanıyor</p>
+        </div>
       </main>
     );
   }
 
-  // Player flow
+  // Active player flow
   if (mySlot) {
     if (state.phase === 'PROMPTING' || state.phase === 'VS_INTRO') {
       return <PromptingView />;
     }
-    if (state.phase === 'VOTING' || state.phase === 'TIEBREAK_VOTE') {
+    if (state.phase === 'GENERATING' || state.phase === 'SCORING') {
       return <AudienceView />;
     }
-    if (state.phase === 'GENERATING' || state.phase === 'SCORING') {
+    if (state.phase === 'VOTING' || state.phase === 'TIEBREAK_VOTE') {
       return <AudienceView />;
     }
     if (state.phase === 'RESULT') {
@@ -36,15 +38,12 @@ export function MobileShell() {
     }
   }
 
+  // Audience flow
   switch (state.phase) {
     case 'IDLE':
       return <JoinForm />;
     case 'PLAYER_1_JOINED':
-      return (
-        <JoinForm
-          subtitle={`${state.players.A?.nickname} bekliyor — Player B olarak katıl`}
-        />
-      );
+      return <JoinForm waitingFor={state.players.A?.nickname ?? null} />;
     case 'VOTING':
     case 'TIEBREAK_VOTE':
       return <VoteView />;

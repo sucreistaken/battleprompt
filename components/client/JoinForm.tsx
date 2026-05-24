@@ -1,100 +1,116 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useGameState } from './useGameState';
 import { useI18n } from './i18nContext';
+import { cn } from '@/lib/utils';
 
-export function JoinForm({ subtitle }: { subtitle?: string }) {
+interface Props {
+  waitingFor?: string | null;
+}
+
+/**
+ * IDLE / PLAYER_1_JOINED entry — mobile join form.
+ * Asymmetric: big editorial display headline on top, soft input cluster below.
+ * Helper line under input. Empathetic error tone.
+ */
+export function JoinForm({ waitingFor }: Props) {
   const { joinGame } = useGameState();
   const { t } = useI18n();
-  const [nick, setNick] = useState('');
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
+  const canSubmit = nickname.trim().length >= 2 && !submitting;
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setErr(null);
-    const r = await joinGame(nick.trim());
-    setBusy(false);
-    if (!r.ok) {
-      const map: Record<string, string> = {
-        too_short: 'Nickname too short',
-        too_long: 'Nickname too long (max 20)',
-        invalid_chars: 'Invalid characters',
-        profane: 'Pick a different nickname',
-        already_player_a: 'You are already Player A',
-        match_in_progress: 'Match in progress — wait as audience'
-      };
-      setErr(map[r.reason || ''] || r.reason || 'Error');
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError(null);
+    const res = await joinGame(nickname.trim());
+    if (!res.ok) {
+      const reasonKey = ({
+        too_short: 'nicknameTooShort',
+        too_long: 'nicknameTooLong',
+        invalid: 'nicknameInvalid',
+        profane: 'nicknameProfane',
+      } as Record<string, any>)[res.reason || ''] || 'nicknameInvalid';
+      setError(t(reasonKey));
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <main className="relative min-h-screen bg-cream text-navy flex flex-col">
-      {/* Top bar */}
-      <header className="px-5 pt-6 flex items-center justify-between">
-        <div className="font-display italic font-black text-lg">PROMPT CLASH</div>
-        <div className="flex items-center gap-1.5 font-sans font-bold text-[10px] tracking-widest2 uppercase">
-          <span className="live-dot" />
-          LIVE
+    <main className="min-h-screen flex flex-col bg-surface qdl-safe-top">
+      {/* Hero block */}
+      <section className="px-6 pt-8 pb-10 flex-1 flex flex-col">
+        <div className="flex flex-col gap-3">
+          <span className="q-label q-label-primary">Prompt Clash</span>
+          <h1 className="q-display text-display-xl text-ink">
+            Sıraya gir,<br />
+            <span className="text-primary">AI yarışı</span>{' '}başlıyor.
+          </h1>
         </div>
-      </header>
 
-      {/* Tangerine diagonal banner */}
-      <div className="relative mt-6 bg-tangerine px-5 py-8 overflow-hidden">
-        <div className="font-sans font-bold text-[11px] tracking-widest3 uppercase text-navy">
-          01 · NEW PLAYER
-        </div>
-        <h1 className="mt-3 font-display italic font-black text-navy text-5xl leading-[0.9] tracking-tight">
-          Step into
-          <br />
-          the arena.
-        </h1>
-        {subtitle && (
-          <div className="mt-4 font-display italic text-xl text-navy/80">{subtitle}</div>
+        {waitingFor && (
+          <div className="mt-6 q-card-soft p-4 animate-slideUp">
+            <p className="text-sm text-ink-variant">
+              <span className="font-semibold text-primary-700">{waitingFor}</span>{' '}
+              {t('waitingPlayer2').replace('…', '')}, sen B oyuncusu olarak katıl.
+            </p>
+          </div>
         )}
-      </div>
 
-      {/* Form */}
-      <form onSubmit={submit} className="px-5 mt-8 flex flex-col gap-5 flex-1">
-        <div>
-          <label className="font-sans font-bold text-[10px] tracking-widest3 uppercase text-navy/70">
-            Nickname
-          </label>
-          <div className="relative mt-2">
+        {/* Spacer */}
+        <div className="flex-1 min-h-8" />
+
+        {/* Form cluster */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <div>
+            <label htmlFor="nickname" className="q-label mb-2 block">
+              {t('nicknamePlaceholder')}
+            </label>
             <input
-              autoFocus
-              value={nick}
-              onChange={(e) => setNick(e.target.value)}
-              placeholder="@your_handle"
+              id="nickname"
+              type="text"
+              value={nickname}
+              onChange={(e) => {
+                setNickname(e.target.value);
+                if (error) setError(null);
+              }}
+              placeholder={t('nicknamePlaceholder')}
               maxLength={20}
-              className="w-full px-0 py-3 bg-transparent border-b-2 border-navy text-2xl font-display italic text-navy outline-none focus:border-tangerine"
+              autoComplete="off"
+              autoFocus
+              aria-invalid={!!error}
+              aria-describedby={error ? 'nickname-error' : undefined}
+              disabled={submitting}
+              className="q-field text-lg"
             />
-            <span className="absolute right-0 bottom-3 font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/40">
-              {nick.length}/20
-            </span>
+            {error && (
+              <p id="nickname-error" role="alert" className="mt-2 text-sm text-danger">
+                {error}
+              </p>
+            )}
           </div>
-        </div>
 
-        {err && (
-          <div className="bg-navy text-cream px-4 py-2.5 font-sans text-xs tracking-wider2 uppercase">
-            <span className="text-tangerine">×</span> {err}
-          </div>
-        )}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className={cn('q-cta', submitting && 'opacity-70')}
+          >
+            {submitting ? '…' : t('joinGame')}
+          </button>
+        </form>
+      </section>
 
-        <button
-          type="submit"
-          disabled={busy || !nick.trim()}
-          className="relative mt-2 w-full py-5 bg-navy text-cream font-sans font-bold text-base tracking-widest2 uppercase shadow-offsetTangerine active:translate-x-1 active:translate-y-1 active:shadow-none transition disabled:opacity-40 disabled:shadow-none"
-        >
-          Enter the Arena →
-        </button>
-
-        <div className="mt-auto pt-8 pb-6 text-center font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/40">
-          QR-scanned · no signup · 60 second duel
-        </div>
-      </form>
+      {/* Footer hint */}
+      <footer className="px-6 pb-8 qdl-safe-bottom">
+        <p className="text-xs text-ink-light text-center">
+          QR ile katıldın, hadi hızlı promptlar yaz, AI senin için çizsin.
+        </p>
+      </footer>
     </main>
   );
 }

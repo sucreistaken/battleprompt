@@ -10,10 +10,14 @@ import { StageResult } from './StageResult';
 
 export function StageShell() {
   const { state } = useGameState();
+
   if (!state) {
     return (
-      <div className="min-h-screen grid place-items-center text-white/30">
-        connecting…
+      <div className="min-h-screen q-stage-bg grid place-items-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full border-[5px] border-primary-100 border-t-primary animate-spin" />
+          <p className="q-label text-lg">bağlanıyor</p>
+        </div>
       </div>
     );
   }
@@ -30,7 +34,7 @@ export function StageShell() {
     case 'GENERATING':
       return <StageGenerating />;
     case 'SCORING':
-      return <StageVoting scoringMode />;
+      return <StageGenerating scoringMode />;
     case 'VOTING':
     case 'TIEBREAK_VOTE':
       return <StageVoting />;

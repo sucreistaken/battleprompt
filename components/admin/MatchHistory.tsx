@@ -1,80 +1,131 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/components/client/i18nContext';
 
 interface MatchRow {
   _id: string;
-  startedAt: string;
+  matchId: string;
   theme: string;
+  winner: 'A' | 'B' | 'TIE' | null;
   winnerMode: 'AI_SCORE' | 'AUDIENCE_VOTE';
-  playerA?: { nickname?: string; imageUrl?: string };
-  playerB?: { nickname?: string; imageUrl?: string };
-  winner?: 'A' | 'B' | 'TIE';
+  players: {
+    A?: { nickname: string; aiScore: number | null };
+    B?: { nickname: string; aiScore: number | null };
+  };
+  votes: { A: number; B: number } | null;
+  finishedAt: string;
 }
 
 export function MatchHistory() {
-  const [rows, setRows] = useState<MatchRow[] | null>(null);
+  const { t } = useI18n();
+  const [matches, setMatches] = useState<MatchRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const r = await fetch('/api/admin/matches');
-        if (!r.ok) return;
-        const body = await r.json();
-        if (!cancelled) setRows(body.matches || []);
-      } catch {}
-    }
-    load();
-    const id = setInterval(load, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
+    fetch('/api/admin/matches', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok) setMatches(d.matches);
+        else setError('yüklenemedi');
+      })
+      .catch(() => setError('yüklenemedi'));
   }, []);
 
-  return (
-    <section className="border-2 border-navy bg-cream">
-      <div className="bg-navy text-cream px-4 py-2 font-sans font-bold text-[10px] tracking-widest3 uppercase">
-        Match History · last 20
-      </div>
-      <div className="max-h-96 overflow-auto no-scrollbar">
-        {!rows && <div className="p-4 font-display italic text-sm text-navy/40">…</div>}
-        {rows && rows.length === 0 && (
-          <div className="p-4 font-display italic text-sm text-navy/40">
-            no matches yet
-          </div>
-        )}
-        {rows?.map((m, i) => (
-          <a
-            key={m._id}
-            href={m.playerA?.imageUrl || m.playerB?.imageUrl || '#'}
-            target="_blank"
-            rel="noreferrer"
-            className={`flex items-center gap-4 px-4 py-3 ${i % 2 === 0 ? 'bg-cream' : 'bg-cream-deep'} hover:bg-cream-dim border-b border-navy/10 last:border-b-0`}
-          >
-            <span className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/40 w-20 shrink-0 tabular-nums">
-              {new Date(m.startedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <span className="truncate flex-1 font-display italic text-base">
-              <span className="text-tangerine font-bold">{m.playerA?.nickname || '?'}</span>
-              <span className="text-navy/30 mx-2 not-italic font-sans text-xs">vs</span>
-              <span className="text-navy font-bold">{m.playerB?.nickname || '?'}</span>
-            </span>
-            <span className="font-sans font-bold text-[10px] tracking-widest2 uppercase">
-              {m.winner === 'TIE' ? (
-                <span className="text-navy/50">DRAW</span>
-              ) : m.winner ? (
-                <span className="text-tangerine">
-                  ★ {m.winner === 'A' ? m.playerA?.nickname : m.playerB?.nickname}
-                </span>
-              ) : (
-                ''
-              )}
-            </span>
-          </a>
+  if (matches === null && !error) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="q-card p-4 h-24 q-skeleton" />
         ))}
       </div>
-    </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="q-card-soft p-6 text-center">
+        <p className="text-sm text-ink-variant">{error}</p>
+      </div>
+    );
+  }
+
+  if (!matches || matches.length === 0) {
+    return (
+      <div className="q-card-soft p-6 text-center">
+        <p className="q-label">Henüz maç yok</p>
+        <p className="mt-1 text-sm text-ink-variant">
+          İlk maç sonuçlandığında burada görünür.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-3">
+      {matches.map((m) => (
+        <li key={m._id} className="q-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="q-label">#{m.matchId.slice(-4)}</span>
+            <span className="text-xs text-ink-light">
+              {new Date(m.finishedAt).toLocaleString('tr-TR', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <PlayerRow
+              slot="A"
+              nickname={m.players.A?.nickname ?? '—'}
+              winner={m.winner === 'A'}
+              score={m.winnerMode === 'AI_SCORE' ? m.players.A?.aiScore : m.votes?.A}
+            />
+            <span className="q-label text-ink-light">vs</span>
+            <PlayerRow
+              slot="B"
+              nickname={m.players.B?.nickname ?? '—'}
+              winner={m.winner === 'B'}
+              score={m.winnerMode === 'AI_SCORE' ? m.players.B?.aiScore : m.votes?.B}
+              align="right"
+            />
+          </div>
+          {m.theme && (
+            <p className="mt-2 text-xs text-ink-variant truncate">{m.theme}</p>
+          )}
+          {m.winner === 'TIE' && (
+            <p className="mt-1 q-label">{t('tie')}</p>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PlayerRow({
+  slot,
+  nickname,
+  winner,
+  score,
+  align = 'left',
+}: {
+  slot: 'A' | 'B';
+  nickname: string;
+  winner: boolean;
+  score: number | null | undefined;
+  align?: 'left' | 'right';
+}) {
+  return (
+    <div className={`flex flex-col ${align === 'right' ? 'items-end text-right' : 'items-start'}`}>
+      <span className={`text-sm font-semibold truncate max-w-full ${winner ? 'text-primary' : 'text-ink'}`}>
+        {winner && '🏆 '}
+        {nickname}
+      </span>
+      {typeof score === 'number' && (
+        <span className="text-xs text-ink-variant tabular-nums">{score}</span>
+      )}
+    </div>
   );
 }

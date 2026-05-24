@@ -1,91 +1,78 @@
 'use client';
 
 import { useGameState } from './useGameState';
-import { CountdownTimer } from './CountdownTimer';
+import { useI18n } from './i18nContext';
+import { CountdownTimer } from '@/components/ui/CountdownTimer';
+import { PlayerCard } from '@/components/ui/PlayerCard';
 
+/**
+ * Catch-all audience / spectating view for non-player phases.
+ * Shows phase status, optional countdown, and 2 player cards stacked.
+ * Generating → shimmer skeletons; SCORING → "AI puanlıyor" label.
+ */
 export function AudienceView() {
-  const { state } = useGameState();
+  const { state, livePrompts } = useGameState();
+  const { t } = useI18n();
+
   if (!state) return null;
-  const matchNo = state.matchId?.slice(-3).toUpperCase() || '142';
+
+  const phase = state.phase;
+  const isGenerating = phase === 'GENERATING' || phase === 'SCORING';
+  const isPrompting = phase === 'PROMPTING' || phase === 'VS_INTRO';
+
+  const statusLabel =
+    phase === 'GENERATING' ? t('generating') :
+    phase === 'SCORING' ? 'AI puanlıyor…' :
+    phase === 'PROMPTING' ? 'Oyuncular prompt yazıyor' :
+    phase === 'VS_INTRO' ? t('vs') :
+    phase === 'IDLE' ? t('backToIdle') :
+    '';
+
+  const slotState = (slot: 'A' | 'B'): any => {
+    if (isGenerating) return 'generating';
+    if (isPrompting) {
+      return state.players[slot]?.submitted ? 'submitted' : 'typing';
+    }
+    if (state.players[slot]?.imageUrl) return 'revealed';
+    return 'idle';
+  };
 
   return (
-    <main className="min-h-screen bg-cream text-navy flex flex-col">
-      <header className="bg-navy text-cream px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 font-sans font-bold text-[10px] tracking-widest2 uppercase">
-          <span className="live-dot" />
-          LIVE · AUDIENCE
+    <main className="min-h-screen flex flex-col bg-surface qdl-safe-top">
+      {/* Top status */}
+      <header className="px-6 pt-4 pb-3 flex items-center justify-between">
+        <div>
+          <span className="q-label q-label-primary">{t('audience')}</span>
+          <p className="mt-1 text-sm font-semibold text-ink">{statusLabel}</p>
         </div>
-        <span className="font-sans font-bold text-[10px] tracking-widest2 uppercase text-cream/60">
-          MATCH #{matchNo}
-        </span>
+        {isPrompting && state.phaseEndsAt && (
+          <CountdownTimer
+            endsAt={state.phaseEndsAt}
+            totalSeconds={state.durations.promptDurationSec}
+            showLabel={false}
+          />
+        )}
       </header>
 
-      <section className="px-5 py-10 flex-1 flex flex-col items-center justify-center text-center">
-        <div className="font-sans font-bold text-xs tracking-widest3 uppercase text-tangerine">
-          NOW PLAYING
-        </div>
-        <h1 className="mt-3 font-display italic font-black text-4xl leading-[0.9] tracking-tight max-w-xs">
-          {state.players.A?.nickname || '—'}
-          <span className="block text-tangerine text-2xl my-1 not-italic font-sans tracking-widest2">
-            vs
-          </span>
-          {state.players.B?.nickname || '—'}
-        </h1>
-
-        <p className="mt-6 font-display italic text-lg text-navy/70">
-          {phaseLabel(state.phase)}
-        </p>
-
-        {state.phaseEndsAt && (
-          <div className="mt-6 flex items-baseline gap-2">
-            <CountdownTimer
-              endsAt={state.phaseEndsAt}
-              className="font-display italic font-black text-7xl text-tangerine tabular-nums"
-            />
-            <span className="font-sans font-bold text-xs tracking-widest2 uppercase text-navy/50">
-              sec
-            </span>
-          </div>
-        )}
-
-        {state.referenceImageUrl && state.phase !== 'IDLE' && (
-          <div className="mt-8 w-full max-w-xs relative">
-            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-navy" />
-            <img
-              src={state.referenceImageUrl}
-              className="relative w-full aspect-square object-cover"
-            />
-            <div className="mt-3 font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/50">
-              REFERENCE · {(state.theme || '').toUpperCase().slice(0, 24)}
-            </div>
-          </div>
-        )}
+      {/* Player cards stacked */}
+      <section className="flex-1 px-6 py-4 flex flex-col gap-4 overflow-auto">
+        <PlayerCard
+          slot="A"
+          player={state.players.A}
+          variant="mobile"
+          state={slotState('A')}
+          livePromptText={livePrompts.A}
+          showLivePrompt={state.showLivePrompts && isPrompting}
+        />
+        <PlayerCard
+          slot="B"
+          player={state.players.B}
+          variant="mobile"
+          state={slotState('B')}
+          livePromptText={livePrompts.B}
+          showLivePrompt={state.showLivePrompts && isPrompting}
+        />
       </section>
-
-      <footer className="px-5 pb-6 text-center font-sans font-bold text-[10px] tracking-widest2 uppercase text-navy/40">
-        you can join next match · stay tuned
-      </footer>
     </main>
   );
-}
-
-function phaseLabel(phase: string) {
-  switch (phase) {
-    case 'VS_INTRO':
-      return 'fight intro · 5 seconds';
-    case 'PROMPTING':
-      return 'players are typing…';
-    case 'GENERATING':
-      return 'AI is drawing both entries…';
-    case 'SCORING':
-      return 'judges deciding…';
-    case 'VOTING':
-      return 'audience vote · go!';
-    case 'TIEBREAK_VOTE':
-      return 'sudden death';
-    case 'RESULT':
-      return 'winner declared';
-    default:
-      return '';
-  }
 }

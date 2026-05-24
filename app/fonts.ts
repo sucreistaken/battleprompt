@@ -1,16 +1,13 @@
-import { Source_Serif_4, Archivo_Narrow } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 
-export const sourceSerif = Source_Serif_4({
+/**
+ * Single font family — Poppins (mirrors etkinkampus.com).
+ * Weight hierarchy creates visual contrast:
+ *   400 body, 500 mid, 600 strong, 700 h1, 800 display.
+ */
+export const poppins = Poppins({
   subsets: ['latin', 'latin-ext'],
-  weight: ['400', '600', '700', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-source-serif',
-  display: 'swap'
-});
-
-export const archivo = Archivo_Narrow({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '700'],
-  variable: '--font-archivo',
-  display: 'swap'
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
+  display: 'swap',
 });
