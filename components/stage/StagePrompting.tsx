@@ -7,8 +7,10 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer';
 import { cn } from '@/lib/utils';
 
 /**
- * PROMPTING stage — countdown center, two live-prompt panels side by side.
- * Live prompts visible only when admin enabled showLivePrompts.
+ * PROMPTING stage — 3-col layout:
+ *   [ A live prompt panel ] [ reference image + countdown ] [ B live prompt panel ]
+ * Both prompts visible to the room (live updates via socket prompt_typing).
+ * Admin's showLivePrompts toggle still respected.
  */
 export function StagePrompting() {
   const { state, livePrompts } = useGameState();
@@ -30,55 +32,109 @@ export function StagePrompting() {
         </>
       }
     >
-      <div className="w-full max-w-7xl">
-        {/* Top: countdown */}
-        <div className="flex flex-col items-center gap-3 mb-12">
-          <CountdownTimer
-            endsAt={state.phaseEndsAt}
-            totalSeconds={state.durations.promptDurationSec}
-            variant="stage"
-            label={t('timeLeft')}
+      <div className="w-full max-w-[1440px]">
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-8 items-stretch">
+          {/* A panel (left) */}
+          <PromptPanel
+            slot="A"
+            nickname={a?.nickname ?? '—'}
+            submitted={!!a?.submitted}
+            promptText={livePrompts.A}
+            showPrompt={state.showLivePrompts}
+            submittedLabel={t('submitted')}
           />
-        </div>
 
-        {/* Two live-prompt panels */}
-        <div className="grid grid-cols-2 gap-8">
-          {(['A', 'B'] as const).map((slot) => {
-            const player = state.players[slot];
-            const promptText = livePrompts[slot];
-            const submitted = !!player?.submitted;
-            return (
-              <div key={slot} className="q-card-elevated overflow-hidden flex flex-col min-h-[400px]">
-                <div className="px-6 py-4 flex items-center justify-between border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <span className="q-display w-12 h-12 rounded-full bg-primary text-white grid place-items-center text-2xl">
-                      {slot}
-                    </span>
-                    <span className="text-2xl font-semibold">{player?.nickname ?? '—'}</span>
-                  </div>
-                  {submitted && (
-                    <span className="q-pill-primary text-base">{t('submitted')}</span>
-                  )}
+          {/* Reference + countdown (center) */}
+          <div className="flex flex-col items-center gap-5 w-[440px]">
+            <span className="q-label text-base">{t('referenceImage')}</span>
+            <div className="q-card-elevated overflow-hidden w-full aspect-square bg-primary-50">
+              {state.referenceImageUrl ? (
+                <img
+                  src={state.referenceImageUrl}
+                  alt={t('referenceImage')}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full q-skeleton grid place-items-center">
+                  <span className="q-label">yükleniyor</span>
                 </div>
-                <div className="flex-1 p-8 bg-primary-50 flex items-start">
-                  {state.showLivePrompts ? (
-                    <p
-                      className={cn(
-                        'q-mono leading-relaxed text-ink',
-                        promptText ? 'text-2xl' : 'text-ink-light text-xl',
-                      )}
-                    >
-                      {promptText || 'yazıyor…'}
-                    </p>
-                  ) : (
-                    <p className="q-label text-ink-light">prompt gizli</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              )}
+            </div>
+            <CountdownTimer
+              endsAt={state.phaseEndsAt}
+              totalSeconds={state.durations.promptDurationSec}
+              variant="stage"
+              label={t('timeLeft')}
+            />
+          </div>
+
+          {/* B panel (right) */}
+          <PromptPanel
+            slot="B"
+            nickname={b?.nickname ?? '—'}
+            submitted={!!b?.submitted}
+            promptText={livePrompts.B}
+            showPrompt={state.showLivePrompts}
+            submittedLabel={t('submitted')}
+          />
         </div>
       </div>
     </StageChrome>
+  );
+}
+
+function PromptPanel({
+  slot,
+  nickname,
+  submitted,
+  promptText,
+  showPrompt,
+  submittedLabel,
+}: {
+  slot: 'A' | 'B';
+  nickname: string;
+  submitted: boolean;
+  promptText: string;
+  showPrompt: boolean;
+  submittedLabel: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'q-card-elevated overflow-hidden flex flex-col min-h-[520px] transition-all',
+        submitted && 'ring-2 ring-primary/40',
+      )}
+    >
+      <div className="px-6 py-4 flex items-center justify-between border-b border-border bg-surface">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'q-display w-14 h-14 rounded-full bg-primary text-white grid place-items-center text-3xl shadow-cta',
+            )}
+          >
+            {slot}
+          </span>
+          <div className="flex flex-col">
+            <span className="q-label">Player {slot}</span>
+            <span className="text-2xl font-semibold text-ink truncate max-w-[260px]">{nickname}</span>
+          </div>
+        </div>
+        {submitted && <span className="q-pill-primary text-base">{submittedLabel}</span>}
+      </div>
+      <div className="flex-1 p-8 bg-primary-50 flex items-start">
+        {showPrompt ? (
+          <p
+            className={cn(
+              'q-mono leading-relaxed',
+              promptText ? 'text-2xl text-ink' : 'text-xl text-ink-light',
+            )}
+          >
+            {promptText || 'yazıyor…'}
+          </p>
+        ) : (
+          <p className="q-label text-ink-light">prompt gizli</p>
+        )}
+      </div>
+    </div>
   );
 }

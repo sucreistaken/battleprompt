@@ -54,6 +54,20 @@ export function AudienceView() {
         )}
       </header>
 
+      {/* Reference image (prompting only) — premium card center */}
+      {isPrompting && state.referenceImageUrl && (
+        <section className="px-6 pt-1 pb-3">
+          <div className="q-card-elevated overflow-hidden aspect-[3/2] w-full max-w-sm mx-auto">
+            <img
+              src={state.referenceImageUrl}
+              alt={t('referenceImage')}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <p className="q-label mt-2 text-center">{t('referenceImage')}</p>
+        </section>
+      )}
+
       {/* Player cards stacked */}
       <section className="flex-1 px-6 py-4 flex flex-col gap-4 overflow-auto">
         <PlayerCard

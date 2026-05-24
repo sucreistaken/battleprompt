@@ -26,7 +26,7 @@ interface Ctx {
   forceUpdate: () => void;
 }
 
-const GameCtx = createContext<Ctx | null>(null);
+export const GameCtx = createContext<Ctx | null>(null);
 
 export function GameStateProvider({
   children,
