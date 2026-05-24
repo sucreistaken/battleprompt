@@ -44,7 +44,7 @@ export function PromptingView() {
       <header className="px-6 pt-4 pb-3 flex items-center justify-between">
         <div className="flex flex-col">
           <span className="q-label q-label-primary">
-            {mySlot === 'A' ? 'Sen · Player A' : 'Sen · Player B'}
+            {t('yourSlotPrefix')} {mySlot}
           </span>
           <span className="text-sm text-ink-variant">
             {t('opponent')}:{' '}

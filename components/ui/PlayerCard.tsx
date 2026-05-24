@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/components/client/i18nContext';
 import type { PlayerSnapshot, Slot } from '@/types/game';
 
 interface PlayerCardProps {
@@ -37,8 +38,9 @@ export function PlayerCard({
   voteCount,
   className,
 }: PlayerCardProps) {
+  const { t } = useI18n();
   const isStage = variant === 'stage';
-  const nickname = player?.nickname ?? `Player ${slot}`;
+  const nickname = player?.nickname ?? `${t('playerLabel')} ${slot}`;
   const finalImage = imageUrl ?? player?.imageUrl ?? null;
 
   return (
@@ -69,10 +71,10 @@ export function PlayerCard({
           </span>
         </div>
         {state === 'submitted' && (
-          <span className="q-pill-primary">{isStage ? 'Hazır' : '✓'}</span>
+          <span className="q-pill-primary">{isStage ? t('ready') : '✓'}</span>
         )}
         {player?.disconnected && (
-          <span className="q-pill bg-danger text-white">offline</span>
+          <span className="q-pill bg-danger text-white">{t('offline')}</span>
         )}
       </div>
 
@@ -93,7 +95,7 @@ export function PlayerCard({
           <div className="absolute inset-0 grid place-items-center">
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 rounded-full border-4 border-primary-100 border-t-primary animate-spin" />
-              <span className="q-label">AI çiziyor</span>
+              <span className="q-label">{t('aiDrawing')}</span>
             </div>
           </div>
         )}
@@ -111,14 +113,14 @@ export function PlayerCard({
         <div className="px-4 py-3 lg:px-6 lg:py-4 border-t border-border flex items-center justify-between">
           {typeof aiScore === 'number' ? (
             <>
-              <span className="q-label">AI puanı</span>
+              <span className="q-label">{t('aiPoints')}</span>
               <span className={cn('q-display tabular-nums', isStage ? 'text-3xl' : 'text-xl')}>
                 {aiScore}
               </span>
             </>
           ) : (
             <>
-              <span className="q-label">Oylar</span>
+              <span className="q-label">{t('votesLabel')}</span>
               <span className={cn('q-display tabular-nums', isStage ? 'text-3xl' : 'text-xl')}>
                 {voteCount}
               </span>

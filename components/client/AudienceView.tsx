@@ -22,8 +22,8 @@ export function AudienceView() {
 
   const statusLabel =
     phase === 'GENERATING' ? t('generating') :
-    phase === 'SCORING' ? 'AI puanlıyor…' :
-    phase === 'PROMPTING' ? 'Oyuncular prompt yazıyor' :
+    phase === 'SCORING' ? t('aiScoringDots') :
+    phase === 'PROMPTING' ? t('playersWriting') :
     phase === 'VS_INTRO' ? t('vs') :
     phase === 'IDLE' ? t('backToIdle') :
     '';

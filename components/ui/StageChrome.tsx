@@ -30,7 +30,8 @@ export function StageChrome({ children, className, topBar }: StageChromeProps) {
   );
 }
 
-/** Small live indicator pill, dot pulses */
+/** Small live indicator pill, dot pulses. Pass `label` (translated) — fallback
+ *  uses a Turkish default only for legacy callers; new callers must inject t('live'). */
 export function LiveBadge({ label = 'CANLI' }: { label?: string }) {
   return (
     <span className="q-pill-live inline-flex items-center gap-2">

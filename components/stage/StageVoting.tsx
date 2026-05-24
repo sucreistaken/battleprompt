@@ -24,7 +24,7 @@ export function StageVoting() {
         <>
           <div className="flex items-center gap-4">
             <span className="q-display text-2xl text-primary">prompt clash</span>
-            <LiveBadge />
+            <LiveBadge label={t('live')} />
           </div>
           <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
         </>
@@ -38,7 +38,7 @@ export function StageVoting() {
               {isTiebreak ? t('suddenDeath') : t('voteHere')}
             </span>
             <h1 className="mt-2 q-display text-display-xl text-ink">
-              {isTiebreak ? 'Final düellosu.' : 'Hangisi daha güzel?'}
+              {isTiebreak ? t('tiebreakHeading') : t('voteHeading')}
             </h1>
           </div>
           <CountdownTimer

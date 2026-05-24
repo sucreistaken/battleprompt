@@ -46,10 +46,10 @@ export function JoinForm({ waitingFor }: Props) {
       {/* Hero block */}
       <section className="px-6 pt-8 pb-10 flex-1 flex flex-col">
         <div className="flex flex-col gap-3">
-          <span className="q-label q-label-primary">Prompt Clash</span>
+          <span className="q-label q-label-primary">{t('brandWordmark')}</span>
           <h1 className="q-display text-display-xl text-ink">
-            Sıraya gir,<br />
-            <span className="text-primary">AI yarışı</span>{' '}başlıyor.
+            {t('heroLine1')}<br />
+            <span className="text-primary">{t('heroAccent')}</span>{' '}{t('heroLine2')}
           </h1>
         </div>
 
@@ -57,7 +57,7 @@ export function JoinForm({ waitingFor }: Props) {
           <div className="mt-6 q-card-soft p-4 animate-slideUp">
             <p className="text-sm text-ink-variant">
               <span className="font-semibold text-primary-700">{waitingFor}</span>{' '}
-              {t('waitingPlayer2').replace('…', '')}, sen B oyuncusu olarak katıl.
+              {t('waitingPlayer2').replace('…', '')}, {t('joinAsPlayerB')}.
             </p>
           </div>
         )}
@@ -108,7 +108,7 @@ export function JoinForm({ waitingFor }: Props) {
       {/* Footer hint */}
       <footer className="px-6 pb-8 qdl-safe-bottom">
         <p className="text-xs text-ink-light text-center">
-          QR ile katıldın, hadi hızlı promptlar yaz, AI senin için çizsin.
+          {t('joinFooterHint')}
         </p>
       </footer>
     </main>

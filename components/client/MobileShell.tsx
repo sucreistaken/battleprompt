@@ -10,13 +10,14 @@ import { ResultView } from './ResultView';
 
 export function MobileShell() {
   const { state, mySlot } = useGameState();
+  const { t } = useI18n();
 
   if (!state) {
     return (
       <main className="min-h-screen grid place-items-center bg-surface px-6">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full border-[3px] border-primary-100 border-t-primary animate-spin" />
-          <p className="q-label">bağlanıyor</p>
+          <p className="q-label">{t('connecting')}</p>
         </div>
       </main>
     );

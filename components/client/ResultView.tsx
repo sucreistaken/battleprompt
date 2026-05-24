@@ -61,7 +61,7 @@ export function ResultView() {
 
         {aiMode && state.aiReasoning && (
           <div className="q-card-soft p-4 mt-2">
-            <p className="q-label mb-2">AI değerlendirmesi</p>
+            <p className="q-label mb-2">{t('aiEvaluation')}</p>
             <p className="text-sm text-ink-variant leading-relaxed">{state.aiReasoning}</p>
           </div>
         )}

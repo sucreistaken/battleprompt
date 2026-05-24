@@ -80,13 +80,13 @@ export function SettingsForm() {
             checked={settings.winnerMode === 'AI_SCORE'}
             onClick={() => update('winnerMode', 'AI_SCORE')}
             label={t('aiScore')}
-            hint="Gemini görselleri puanlar"
+            hint={t('aiScoreHint')}
           />
           <RadioCard
             checked={settings.winnerMode === 'AUDIENCE_VOTE'}
             onClick={() => update('winnerMode', 'AUDIENCE_VOTE')}
             label={t('audienceVote')}
-            hint="İzleyiciler karar verir"
+            hint={t('audienceVoteHint')}
           />
         </div>
       </Section>
@@ -96,7 +96,7 @@ export function SettingsForm() {
         <Toggle
           checked={settings.showLivePrompts}
           onChange={(v) => update('showLivePrompts', v)}
-          label={settings.showLivePrompts ? 'Açık · sahnede görünür' : 'Kapalı · gizli'}
+          label={settings.showLivePrompts ? t('toggleOn') : t('toggleOff')}
         />
       </Section>
 
@@ -108,6 +108,8 @@ export function SettingsForm() {
             onChange={(v) => update('promptDurationSec', v)}
             min={10}
             max={120}
+            decreaseLabel={t('decreaseLabel')}
+            increaseLabel={t('increaseLabel')}
           />
         </Section>
         <Section label={t('votingDuration')}>
@@ -116,6 +118,8 @@ export function SettingsForm() {
             onChange={(v) => update('votingDurationSec', v)}
             min={5}
             max={60}
+            decreaseLabel={t('decreaseLabel')}
+            increaseLabel={t('increaseLabel')}
           />
         </Section>
       </div>
@@ -148,7 +152,7 @@ export function SettingsForm() {
           type="text"
           value={settings.theme}
           onChange={(e) => update('theme', e.target.value)}
-          placeholder="Maç teması (örn. 'Üniversite hayatı')"
+          placeholder={t('themePlaceholder')}
           className="q-field"
         />
       </Section>
@@ -264,11 +268,15 @@ function NumberField({
   onChange,
   min,
   max,
+  decreaseLabel,
+  increaseLabel,
 }: {
   value: number;
   onChange: (v: number) => void;
   min: number;
   max: number;
+  decreaseLabel: string;
+  increaseLabel: string;
 }) {
   return (
     <div className="inline-flex items-center gap-2">
@@ -276,7 +284,7 @@ function NumberField({
         type="button"
         onClick={() => onChange(Math.max(min, value - 5))}
         className="w-10 h-10 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold"
-        aria-label="azalt"
+        aria-label={decreaseLabel}
       >
         −
       </button>
@@ -287,7 +295,7 @@ function NumberField({
         type="button"
         onClick={() => onChange(Math.min(max, value + 5))}
         className="w-10 h-10 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold"
-        aria-label="artır"
+        aria-label={increaseLabel}
       >
         +
       </button>

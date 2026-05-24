@@ -25,7 +25,7 @@ export function StageGenerating({ scoringMode }: Props) {
         <>
           <div className="flex items-center gap-4">
             <span className="q-display text-2xl text-primary">prompt clash</span>
-            <LiveBadge />
+            <LiveBadge label={t('live')} />
           </div>
           <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
         </>
@@ -34,9 +34,9 @@ export function StageGenerating({ scoringMode }: Props) {
       <div className="w-full max-w-7xl">
         {/* Headline */}
         <div className="text-center mb-10">
-          <span className="q-label q-label-primary text-base">{scoringMode ? 'AI puanlıyor' : 'AI çiziyor'}</span>
+          <span className="q-label q-label-primary text-base">{scoringMode ? t('aiScoring') : t('aiDrawing')}</span>
           <h1 className="mt-2 q-display text-display-xl text-ink">
-            {scoringMode ? 'Sonuçlar hesaplanıyor.' : 'AI promptları görseliyor.'}
+            {scoringMode ? t('scoringHeading') : t('generatingHeading')}
           </h1>
         </div>
 

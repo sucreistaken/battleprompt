@@ -26,7 +26,7 @@ export function StageResult() {
         <>
           <div className="flex items-center gap-4">
             <span className="q-display text-2xl text-primary">prompt clash</span>
-            <LiveBadge />
+            <LiveBadge label={t('live')} />
           </div>
           <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
         </>
@@ -73,7 +73,7 @@ export function StageResult() {
         {/* AI reasoning */}
         {aiMode && state.aiReasoning && (
           <div className="q-card-soft p-6 mt-10 max-w-3xl mx-auto">
-            <p className="q-label text-base mb-2">AI değerlendirmesi</p>
+            <p className="q-label text-base mb-2">{t('aiEvaluation')}</p>
             <p className="text-xl text-ink-variant leading-relaxed">{state.aiReasoning}</p>
           </div>
         )}

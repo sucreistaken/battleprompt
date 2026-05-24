@@ -24,7 +24,7 @@ export function AdminPanel() {
       <main className="min-h-screen grid place-items-center bg-surface">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full border-[3px] border-primary-100 border-t-primary animate-spin" />
-          <p className="q-label">yetki kontrolü</p>
+          <p className="q-label">{t('authChecking')}</p>
         </div>
       </main>
     );
@@ -51,20 +51,20 @@ export function AdminPanel() {
             }}
             className="q-link text-sm"
           >
-            Çıkış
+            {t('logout')}
           </button>
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8">
         <section>
-          <h2 className="q-display text-display-lg text-ink mb-2">Ayarlar</h2>
-          <p className="text-ink-variant mb-6">Maç parametreleri ve sahne tercihleri.</p>
+          <h2 className="q-display text-display-lg text-ink mb-2">{t('settings')}</h2>
+          <p className="text-ink-variant mb-6">{t('adminSettingsSubtitle')}</p>
           <SettingsForm />
         </section>
         <aside>
           <h2 className="q-display text-display-lg text-ink mb-2">{t('matchHistory')}</h2>
-          <p className="text-ink-variant mb-6">Son 20 maç.</p>
+          <p className="text-ink-variant mb-6">{t('matchHistorySubtitle')}</p>
           <MatchHistory />
         </aside>
       </div>

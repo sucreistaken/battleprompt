@@ -26,7 +26,7 @@ export function StagePrompting() {
         <>
           <div className="flex items-center gap-4">
             <span className="q-display text-2xl text-primary">prompt clash</span>
-            <LiveBadge />
+            <LiveBadge label={t('live')} />
           </div>
           <StageMatchMeta theme={state.theme} matchLabel={`${t('match')} #${state.matchId?.slice(-4) ?? ''}`} />
         </>
@@ -42,6 +42,9 @@ export function StagePrompting() {
             promptText={livePrompts.A}
             showPrompt={state.showLivePrompts}
             submittedLabel={t('submitted')}
+            playerLabel={t('playerLabel')}
+            typingLabel={t('typing')}
+            promptHiddenLabel={t('promptHidden')}
           />
 
           {/* Reference + countdown (center) */}
@@ -56,7 +59,7 @@ export function StagePrompting() {
                 />
               ) : (
                 <div className="w-full h-full q-skeleton grid place-items-center">
-                  <span className="q-label">yükleniyor</span>
+                  <span className="q-label">{t('loadingText')}</span>
                 </div>
               )}
             </div>
@@ -76,6 +79,9 @@ export function StagePrompting() {
             promptText={livePrompts.B}
             showPrompt={state.showLivePrompts}
             submittedLabel={t('submitted')}
+            playerLabel={t('playerLabel')}
+            typingLabel={t('typing')}
+            promptHiddenLabel={t('promptHidden')}
           />
         </div>
       </div>
@@ -90,6 +96,9 @@ function PromptPanel({
   promptText,
   showPrompt,
   submittedLabel,
+  playerLabel,
+  typingLabel,
+  promptHiddenLabel,
 }: {
   slot: 'A' | 'B';
   nickname: string;
@@ -97,6 +106,9 @@ function PromptPanel({
   promptText: string;
   showPrompt: boolean;
   submittedLabel: string;
+  playerLabel: string;
+  typingLabel: string;
+  promptHiddenLabel: string;
 }) {
   return (
     <div
@@ -115,7 +127,7 @@ function PromptPanel({
             {slot}
           </span>
           <div className="flex flex-col">
-            <span className="q-label">Player {slot}</span>
+            <span className="q-label">{playerLabel} {slot}</span>
             <span className="text-2xl font-semibold text-ink truncate max-w-[260px]">{nickname}</span>
           </div>
         </div>
@@ -129,10 +141,10 @@ function PromptPanel({
               promptText ? 'text-2xl text-ink' : 'text-xl text-ink-light',
             )}
           >
-            {promptText || 'yazıyor…'}
+            {promptText || typingLabel}
           </p>
         ) : (
-          <p className="q-label text-ink-light">prompt gizli</p>
+          <p className="q-label text-ink-light">{promptHiddenLabel}</p>
         )}
       </div>
     </div>

@@ -27,10 +27,10 @@ export function MatchHistory() {
       .then((r) => r.json())
       .then((d) => {
         if (d.ok) setMatches(d.matches);
-        else setError('yüklenemedi');
+        else setError(t('loadFailed'));
       })
-      .catch(() => setError('yüklenemedi'));
-  }, []);
+      .catch(() => setError(t('loadFailed')));
+  }, [t]);
 
   if (matches === null && !error) {
     return (
@@ -53,9 +53,9 @@ export function MatchHistory() {
   if (!matches || matches.length === 0) {
     return (
       <div className="q-card-soft p-6 text-center">
-        <p className="q-label">Henüz maç yok</p>
+        <p className="q-label">{t('noMatches')}</p>
         <p className="mt-1 text-sm text-ink-variant">
-          İlk maç sonuçlandığında burada görünür.
+          {t('noMatchesBody')}
         </p>
       </div>
     );

@@ -32,7 +32,7 @@ export function StageIdle({ showWaiting }: Props) {
         <>
           <div className="flex items-center gap-4">
             <span className="q-display text-3xl text-primary">prompt clash</span>
-            <LiveBadge />
+            <LiveBadge label={t('live')} />
           </div>
           <StageMatchMeta theme={state?.theme ?? ''} matchLabel={`${t('match')} #${state?.matchId?.slice(-4) ?? '—'}`} />
         </>
@@ -41,13 +41,13 @@ export function StageIdle({ showWaiting }: Props) {
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-16 items-center">
         {/* Left: headline + meta */}
         <div className="flex flex-col gap-6">
-          <span className="q-label q-label-primary text-base">{t('audience')} mode</span>
+          <span className="q-label q-label-primary text-base">{t('audienceMode')}</span>
           <h1 className="q-display text-display-2xl text-ink">
-            QR'ı oku,<br />
-            <span className="text-primary">sırada</span> sen ol.
+            {t('stageIdleHero1')}<br />
+            <span className="text-primary">{t('stageIdleAccent')}</span> {t('stageIdleHero2')}
           </h1>
           <p className="text-2xl text-ink-variant max-w-xl leading-snug">
-            Telefonunla katıl, AI senin için çizsin, sahnede yansıt.
+            {t('stageIdleSubtitle')}
           </p>
 
           {showWaiting && player1 && (
@@ -56,7 +56,7 @@ export function StageIdle({ showWaiting }: Props) {
                 A
               </span>
               <div className="flex flex-col">
-                <span className="q-label">Player A katıldı</span>
+                <span className="q-label">{t('playerAJoined')}</span>
                 <span className="text-xl font-semibold">{player1.nickname}</span>
               </div>
             </div>

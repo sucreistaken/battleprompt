@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prompt Clash · Stage PROMPTING mockup</title>
+  <title>Prompt Clash · Stage PROMPTING mockup (stream + ambient)</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,7 +11,7 @@
       theme: {
         extend: {
           colors: {
-            primary: { DEFAULT: '#541fc4', 50: '#f5f0ff', 100: '#ebe1ff', 300: '#b89cff', 600: '#541fc4', 700: '#4118a3' },
+            primary: { DEFAULT: '#541fc4', 50: '#f5f0ff', 100: '#ebe1ff', 200: '#d4c0ff', 300: '#b89cff', 600: '#541fc4', 700: '#4118a3' },
             surface: { DEFAULT: '#ffffff', low: '#faf7ff', container: '#f3edff' },
             ink: { DEFAULT: '#1f1633', variant: '#6b5e85', light: '#a89db8' },
             border: { DEFAULT: '#e8e0f4' },
@@ -23,7 +23,7 @@
     };
   </script>
   <style>
-    body { font-family: 'Poppins', system-ui, sans-serif; background: #fff; color: #1f1633; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Poppins', system-ui, sans-serif; background: #fff; color: #1f1633; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
     .q-display { font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; }
     .q-h1 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
     .q-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5e85; }
@@ -35,18 +35,68 @@
     .q-pill-live { background: #ff3838; color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
     .q-stage-bg { background: radial-gradient(circle at top, #f5f0ff 0%, #ffffff 60%); }
     .shadow-cta { box-shadow: 0 1px 2px rgba(84, 31, 196, 0.20), 0 12px 32px rgba(84, 31, 196, 0.24); }
-    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.06); } }
-    .anim-pulse { animation: pulse 1.4s ease-in-out infinite; }
+
+    /* Ambient drifting bokeh + twinkle dots (premium hava, AI-slope yok) */
+    .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .ambient > * { position: absolute; will-change: transform, opacity; }
+    .bokeh { border-radius: 9999px; filter: blur(64px); }
+    @keyframes drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px,-40px); } }
+    @keyframes drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px,30px); } }
+    @keyframes drift3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,40px); } }
+    .anim-drift1 { animation: drift1 22s ease-in-out infinite; }
+    .anim-drift2 { animation: drift2 28s ease-in-out infinite; }
+    .anim-drift3 { animation: drift3 35s ease-in-out infinite; }
+    @keyframes twinkle { 0%,100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.3); } }
+    .dot { background: #541fc4; border-radius: 9999px; width: 6px; height: 6px; }
+    .dot-sm { width: 4px; height: 4px; opacity: 0.4; }
+    .dot-lg { width: 8px; height: 8px; }
+    .anim-twinkle { animation: twinkle 3.2s ease-in-out infinite; }
+
+    /* Streaming cursor caret */
+    @keyframes cursorBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    .cursor-caret { display: inline-block; width: 3px; height: 1.1em; background: #541fc4; vertical-align: middle; margin-left: 6px; transform: translateY(-2px); animation: cursorBlink 1.06s steps(1) infinite; }
+
+    /* Typing halo around avatar */
+    @keyframes haloPulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.55); opacity: 0; } }
+    .typing-halo { position: absolute; inset: 0; border-radius: 9999px; background: #541fc4; animation: haloPulse 1.4s ease-out infinite; }
+    .typing-halo-2 { animation-delay: 0.7s; }
+
+    /* Panel typing breath */
+    @keyframes streamGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(84, 31, 196, 0); } 50% { box-shadow: 0 0 0 6px rgba(84, 31, 196, 0.08); } }
+    .panel-typing { animation: streamGlow 2.4s ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-drift1, .anim-drift2, .anim-drift3, .anim-twinkle, .cursor-caret, .typing-halo, .panel-typing {
+        animation: none !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <main class="min-h-screen q-stage-bg flex flex-col">
+  <div class="ambient" aria-hidden="true">
+    <div class="bokeh anim-drift1" style="width:640px;height:640px;background:#ebe1ff;opacity:0.55;top:-180px;left:-120px;"></div>
+    <div class="bokeh anim-drift2" style="width:720px;height:720px;background:#d4c0ff;opacity:0.40;bottom:-220px;right:-160px;"></div>
+    <div class="bokeh anim-drift3" style="width:420px;height:420px;background:#f5f0ff;opacity:0.70;top:35%;left:55%;"></div>
+    <span class="dot anim-twinkle" style="top:14%;left:18%;animation-delay:0s;"></span>
+    <span class="dot dot-sm anim-twinkle" style="top:22%;left:42%;animation-delay:0.8s;"></span>
+    <span class="dot dot-lg anim-twinkle" style="top:8%;left:68%;animation-delay:1.4s;"></span>
+    <span class="dot anim-twinkle" style="top:33%;left:88%;animation-delay:2.1s;"></span>
+    <span class="dot dot-sm anim-twinkle" style="top:58%;left:8%;animation-delay:0.4s;"></span>
+    <span class="dot anim-twinkle" style="top:62%;left:32%;animation-delay:1.7s;"></span>
+    <span class="dot dot-sm anim-twinkle" style="top:71%;left:54%;animation-delay:2.5s;"></span>
+    <span class="dot dot-lg anim-twinkle" style="top:78%;left:78%;animation-delay:0.6s;"></span>
+    <span class="dot anim-twinkle" style="top:88%;left:22%;animation-delay:1.2s;"></span>
+    <span class="dot dot-sm anim-twinkle" style="top:42%;left:62%;animation-delay:2.8s;"></span>
+    <span class="dot anim-twinkle" style="top:50%;left:92%;animation-delay:1.0s;"></span>
+    <span class="dot dot-sm anim-twinkle" style="top:18%;left:82%;animation-delay:2.3s;"></span>
+  </div>
 
+  <main class="min-h-screen q-stage-bg flex flex-col" style="position:relative;z-index:1;">
     <header class="px-12 py-6 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <span class="q-display text-2xl text-primary lowercase">prompt clash</span>
         <span class="q-pill-live">
-          <span class="w-2 h-2 rounded-full bg-white anim-pulse"></span>
+          <span class="w-2 h-2 rounded-full bg-white" style="animation: twinkle 1.2s ease-in-out infinite;"></span>
           CANLI
         </span>
       </div>
@@ -61,23 +111,29 @@
       <div class="w-full max-w-[1440px] mx-auto">
         <div class="grid grid-cols-[1fr_auto_1fr] gap-8 items-stretch">
 
-          <div class="q-card-elevated overflow-hidden flex flex-col min-h-[520px]">
+          <!-- A · TYPING (halo + cursor + panel breath) -->
+          <div class="q-card-elevated overflow-hidden flex flex-col min-h-[520px] panel-typing">
             <div class="px-6 py-4 flex items-center justify-between border-b border-border bg-white">
               <div class="flex items-center gap-3">
-                <span class="q-display w-14 h-14 rounded-full bg-primary text-white grid place-items-center text-3xl shadow-cta">A</span>
+                <div class="relative w-14 h-14">
+                  <span class="typing-halo"></span>
+                  <span class="typing-halo typing-halo-2"></span>
+                  <span class="q-display w-14 h-14 rounded-full bg-primary text-white grid place-items-center text-3xl shadow-cta relative">A</span>
+                </div>
                 <div class="flex flex-col">
-                  <span class="q-label">Player A</span>
+                  <span class="q-label">Player A · yazıyor</span>
                   <span class="text-2xl font-semibold text-ink">alice</span>
                 </div>
               </div>
             </div>
             <div class="flex-1 p-8 bg-primary-50 flex items-start">
               <p class="q-mono leading-relaxed text-2xl text-ink">
-                a futuristic cyberpunk cat with neon eyes on a rainy rooftop in Tokyo
+                a futuristic cyberpunk cat with neon eyes on a rainy rooftop in T<span class="cursor-caret"></span>
               </p>
             </div>
           </div>
 
+          <!-- Reference + countdown -->
           <div class="flex flex-col items-center gap-5 w-[440px]">
             <span class="q-label text-base">HEDEF GÖRSEL</span>
             <div class="q-card-elevated overflow-hidden w-full aspect-square bg-primary-50">
@@ -89,20 +145,19 @@
                   <circle cx="80" cy="80" r="74" fill="none" stroke="#ebe1ff" stroke-width="12" />
                   <circle cx="80" cy="80" r="74" fill="none" stroke="#541fc4" stroke-width="12" stroke-linecap="round" stroke-dasharray="465" stroke-dashoffset="155" />
                 </svg>
-                <div class="absolute inset-0 flex items-center justify-center q-display tabular-nums text-ink" style="font-size:64px;">
-                  18
-                </div>
+                <div class="absolute inset-0 flex items-center justify-center q-display tabular-nums text-ink" style="font-size:64px;">18</div>
               </div>
               <span class="q-label text-base">KALAN SÜRE</span>
             </div>
           </div>
 
-          <div class="q-card-elevated overflow-hidden flex flex-col min-h-[520px] ring-2 ring-primary/40">
+          <!-- B · SUBMITTED (solid ring, no halo, no cursor) -->
+          <div class="q-card-elevated overflow-hidden flex flex-col min-h-[520px]" style="box-shadow: 0 0 0 2px rgba(84, 31, 196, 0.40), 0 2px 4px rgba(84, 31, 196, 0.06), 0 16px 40px rgba(84, 31, 196, 0.10), 0 48px 96px rgba(84, 31, 196, 0.08);">
             <div class="px-6 py-4 flex items-center justify-between border-b border-border bg-white">
               <div class="flex items-center gap-3">
                 <span class="q-display w-14 h-14 rounded-full bg-primary text-white grid place-items-center text-3xl shadow-cta">B</span>
                 <div class="flex flex-col">
-                  <span class="q-label">Player B</span>
+                  <span class="q-label">Player B · hazır</span>
                   <span class="text-2xl font-semibold text-ink">bob</span>
                 </div>
               </div>
@@ -118,7 +173,6 @@
         </div>
       </div>
     </div>
-
   </main>
 </body>
 </html>
