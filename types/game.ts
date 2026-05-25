@@ -31,6 +31,7 @@ export interface StateSnapshot {
   winnerMode: WinnerMode;
   showLivePrompts: boolean;
   stageLanguage: 'tr' | 'en';
+  stageTheme: 'dark' | 'light';
   referenceImageUrl: string | null;
   players: {
     A: PlayerSnapshot | null;

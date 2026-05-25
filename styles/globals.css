@@ -34,10 +34,57 @@
   --shadow-signature: 0 10px 30px rgba(84, 31, 196, 0.10);
   --shadow-card: 0 1px 2px rgba(84, 31, 196, 0.04), 0 12px 32px rgba(84, 31, 196, 0.08), 0 32px 64px rgba(84, 31, 196, 0.06);
   --shadow-cta: 0 1px 2px rgba(84, 31, 196, 0.20), 0 12px 32px rgba(84, 31, 196, 0.24);
+
+  /* ─── Broadcast/arcade theme tokens (consumed by atmosphere.tsx `C` as
+     var(--pc-*)). DARK (dusk) is the default; <html data-pc-theme="light">
+     flips the neutrals. Brand violet accent is shared; player B's jersey is
+     bright lime on dusk, deeper grass-green on paper (lime washes out on white). */
+  --pc-ink: #22202b;
+  --pc-ink2: #2d2b38;
+  --pc-ink3: #383545;
+  --pc-ink4: #454253;
+  --pc-line: #4a4757;
+  --pc-line2: #615d72;
+  --pc-text: #f7f4ec;
+  --pc-text2: #c0bdca;
+  --pc-text3: #8c8898;
+  --pc-text4: #605d6c;
+  --pc-bone: #ffffff;
+  --pc-live: #ff5c5c;
+  --pc-letterbox: #060608;
+  --pc-accent: #7c4dff;
+  --pc-accent-ink: #ffffff;
+  --pc-accent-soft: rgba(124, 77, 255, 0.18);
+  --pc-a: #7c4dff;
+  --pc-a-ink: #ffffff;
+  --pc-b: #c5ff3a;
+  --pc-b-ink: #0e0e10;
+}
+
+[data-pc-theme='light'] {
+  --pc-ink: #f6f7f9; /* clean white base — cool neutral, no cream (Red Bull white) */
+  --pc-ink2: #ffffff; /* white cards pop on the off-white base */
+  --pc-ink3: #eef0f3;
+  --pc-ink4: #e3e6eb;
+  --pc-line: #e3e5ea;
+  --pc-line2: #c6cad2;
+  --pc-text: #2b2933;
+  --pc-text2: #565563;
+  --pc-text3: #868593;
+  --pc-text4: #a7a6b1;
+  --pc-bone: #14121a; /* crispest emphasis = near-black on light */
+  --pc-live: #e23b3b;
+  --pc-letterbox: #dfe1e6;
+  --pc-accent-soft: rgba(124, 77, 255, 0.16);
+  --pc-b: #5f9e00; /* deeper grass-green, legible on white */
+  --pc-b-ink: #ffffff;
 }
 
 html, body {
-  background: var(--color-surface);
+  /* Broadcast theme base (flips with [data-pc-theme]) — keeps the app seamless
+     under iOS rubber-band/overscroll and any dvh rounding. Light surfaces
+     (admin) paint their own bg-surface over this, so they stay white. */
+  background: var(--pc-ink);
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

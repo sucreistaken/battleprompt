@@ -11,6 +11,7 @@ import {
   Avatar,
   Lbl,
   StageImage,
+  ReferenceChip,
   C,
   FONT,
 } from './atmosphere';
@@ -58,7 +59,7 @@ export function StageResult() {
           left: 60,
           right: 60,
           display: 'grid',
-          gridTemplateColumns: '1fr auto',
+          gridTemplateColumns: '1fr auto auto',
           gap: 60,
           alignItems: 'flex-end',
         }}
@@ -73,6 +74,15 @@ export function StageResult() {
             </>
           )}
         </div>
+
+        {state.referenceImageUrl && (
+          <ReferenceChip
+            src={state.referenceImageUrl}
+            size={200}
+            loadingLabel={t('loadingText')}
+            label={t('referenceImage')}
+          />
+        )}
 
         {!isTie && (
           <motion.div
@@ -108,7 +118,7 @@ export function StageResult() {
         style={{
           position: 'absolute',
           top: 470,
-          bottom: 70,
+          bottom: aiMode && state.aiReasoning ? 150 : 70,
           left: 60,
           right: 60,
           display: 'grid',
@@ -144,12 +154,12 @@ export function StageResult() {
         <div
           style={{
             position: 'absolute',
-            bottom: 18,
+            bottom: 30,
             left: 60,
             right: 60,
             display: 'flex',
             flexDirection: 'column',
-            gap: 4,
+            gap: 6,
           }}
         >
           <Lbl size={10} color="text3">
@@ -160,9 +170,9 @@ export function StageResult() {
               fontFamily: FONT.mono,
               fontSize: 14,
               color: C.text2,
-              lineHeight: 1.4,
+              lineHeight: 1.45,
               display: '-webkit-box',
-              WebkitLineClamp: 1,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             }}

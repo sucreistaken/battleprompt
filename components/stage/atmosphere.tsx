@@ -14,7 +14,7 @@
  * scale-in callouts) is framer-motion, wired per phase.
  */
 
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion } from 'framer-motion';
 
@@ -29,41 +29,54 @@ export const FONT = {
   mono: "'JetBrains Mono', monospace",
 } as const;
 
-// ─── Palette - dusk theme, violet accent, lime jersey for B ──────────────
-const ACCENT = { hex: '#7c4dff', ink: '#ffffff', soft: 'rgba(124,77,255,0.18)' };
-const JERSEY_B = { hex: '#c5ff3a', ink: '#0e0e10' };
-
+// ─── Palette - sourced from CSS custom properties (--pc-*, see globals.css) ──
+// `C` holds var() strings, so every `style={{ background: C.ink }}` resolves to
+// whatever the active theme sets. Flip themes by setting <html data-pc-theme>
+// via useStageTheme() — no per-component theme wiring. CAVEAT: CSS vars do NOT
+// resolve in SVG presentation *attributes* (e.g. <circle stroke={C.line}>) —
+// pass those through style={{ stroke }} instead.
 export const C = {
-  ink: '#22202b', // lifted warm slate (not pitch black)
-  ink2: '#2d2b38', // raised panel
-  ink3: '#383545', // header / hover
-  ink4: '#454253', // strong surface
-  line: '#4a4757', // hairline
-  line2: '#615d72', // stronger
-  text: '#f7f4ec', // body bone
-  text2: '#c0bdca', // mid
-  text3: '#8c8898', // dim
-  text4: '#605d6c', // very dim
-  bone: '#ffffff', // crispest highlight
-  live: '#ff5c5c', // softer signal red
-  letterbox: '#060608', // outside the 1920x1080 frame
+  ink: 'var(--pc-ink)',
+  ink2: 'var(--pc-ink2)',
+  ink3: 'var(--pc-ink3)',
+  ink4: 'var(--pc-ink4)',
+  line: 'var(--pc-line)',
+  line2: 'var(--pc-line2)',
+  text: 'var(--pc-text)',
+  text2: 'var(--pc-text2)',
+  text3: 'var(--pc-text3)',
+  text4: 'var(--pc-text4)',
+  bone: 'var(--pc-bone)',
+  live: 'var(--pc-live)',
+  letterbox: 'var(--pc-letterbox)',
 
-  accent: ACCENT.hex,
-  accentInk: ACCENT.ink,
-  accentSoft: ACCENT.soft,
+  accent: 'var(--pc-accent)',
+  accentInk: 'var(--pc-accent-ink)',
+  accentSoft: 'var(--pc-accent-soft)',
 
-  aColor: ACCENT.hex,
-  aInk: ACCENT.ink,
-  bColor: JERSEY_B.hex,
-  bInk: JERSEY_B.ink,
+  aColor: 'var(--pc-a)',
+  aInk: 'var(--pc-a-ink)',
+  bColor: 'var(--pc-b)',
+  bInk: 'var(--pc-b-ink)',
 
   player(letter: 'A' | 'B') {
-    return letter === 'A' ? ACCENT.hex : JERSEY_B.hex;
+    return letter === 'A' ? 'var(--pc-a)' : 'var(--pc-b)';
   },
   playerInk(letter: 'A' | 'B') {
-    return letter === 'A' ? ACCENT.ink : JERSEY_B.ink;
+    return letter === 'A' ? 'var(--pc-a-ink)' : 'var(--pc-b-ink)';
   },
 };
+
+/**
+ * Apply the broadcast theme by setting `data-pc-theme` on <html>. The stage and
+ * every phone read the SAME server `state.stageTheme`, so calling this from each
+ * shell keeps all devices in sync. Defaults to dark.
+ */
+export function useStageTheme(theme?: 'dark' | 'light' | null) {
+  useEffect(() => {
+    document.documentElement.dataset.pcTheme = theme === 'light' ? 'light' : 'dark';
+  }, [theme]);
+}
 
 // ─── Google fonts (Next hoists <link> into <head>) ───────────────────────
 export function StageFonts() {
@@ -97,31 +110,71 @@ export function StageKeyframes() {
 // ─── StageScaler - fit the fixed 1920x1080 stage into any viewport ───────
 export function StageScaler({ children }: { children: ReactNode }) {
   const [scale, setScale] = useState(1);
+  // `ready` gates visibility until the first measurement lands. Without it the
+  // SSR/pre-hydration paint shows the board at scale(1) (full 1920x1080, clipped
+  // to the viewport centre) and then snaps to the fitted scale — a visible jump.
+  // Hidden-until-measured trades that jump for one imperceptible frame of letterbox.
+  const [ready, setReady] = useState(false);
+  const frameRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const fit = () =>
-      setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
+    // Measure against the document element, not window.innerWidth/Height: the
+    // latter drifts from the painted area under browser zoom / DPR quirks and
+    // lets the board overflow (clipped right edge). clientWidth/Height track the
+    // real layout viewport (and exclude scrollbars), so min() always fits.
+    const fit = () => {
+      const vw = document.documentElement.clientWidth;
+      const vh = document.documentElement.clientHeight;
+      setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
+      setReady(true);
+    };
     fit();
+    // One more pass after layout/fonts settle.
+    const raf = requestAnimationFrame(fit);
+
     window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', fit);
+    vv?.addEventListener('scroll', fit);
+
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined' && frameRef.current) {
+      ro = new ResizeObserver(fit);
+      ro.observe(frameRef.current);
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', fit);
+      vv?.removeEventListener('resize', fit);
+      vv?.removeEventListener('scroll', fit);
+      ro?.disconnect();
+    };
   }, []);
   return (
     <div
+      ref={frameRef}
       style={{
         position: 'fixed',
         inset: 0,
         background: C.letterbox,
-        display: 'grid',
-        placeItems: 'center',
         overflow: 'hidden',
       }}
     >
+      {/* Centre by the element's own box (translate -50%), NOT grid/flex centring:
+          when the 1920x1080 layout box is larger than the viewport (e.g. 100% zoom
+          on a <1920px screen), `place-items:center` start-aligns the overflowing
+          item, shifting the scaled board down-right off-screen. translate(-50%,-50%)
+          pins the board's centre to the viewport centre at any size. */}
       <div
         style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
           width: STAGE_W,
           height: STAGE_H,
-          flex: 'none',
-          transform: `scale(${scale})`,
+          transform: `translate(-50%, -50%) scale(${scale})`,
           transformOrigin: 'center center',
+          visibility: ready ? 'visible' : 'hidden',
         }}
       >
         {children}
@@ -483,18 +536,17 @@ export function CountdownRing({
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.line} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} style={{ stroke: C.line }} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={color}
           strokeWidth={stroke}
           strokeLinecap="butt"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - progress)}
-          style={{ transition: 'stroke-dashoffset 250ms linear, stroke 200ms ease-out' }}
+          style={{ stroke: color, transition: 'stroke-dashoffset 250ms linear, stroke 200ms ease-out' }}
         />
       </svg>
       <div
@@ -548,7 +600,10 @@ export function StageImage({
         overflow: 'hidden',
         background: C.ink,
         opacity: dim ? 0.5 : 1,
-        filter: dim ? 'grayscale(0.55) brightness(0.75)' : 'none',
+        // Grayscale-only de-emphasis (no brightness drop): brightness(0.75) read
+        // as muddy/dead on the light surface; grayscale + 0.5 opacity fades the
+        // loser cleanly in both themes.
+        filter: dim ? 'grayscale(0.6)' : 'none',
       }}
     >
       {src ? (
@@ -582,7 +637,7 @@ function Skeleton({ accent, label }: { accent: string; label: string }) {
           top: 0,
           bottom: 0,
           width: '30%',
-          background: `linear-gradient(90deg, transparent 0%, ${accent}33 50%, transparent 100%)`,
+          background: `linear-gradient(90deg, transparent 0%, color-mix(in srgb, ${accent} 20%, transparent) 50%, transparent 100%)`,
           animation: 'pcShimmer 1.6s linear infinite',
           mixBlendMode: 'screen',
         }}
@@ -649,6 +704,37 @@ export function ReferenceFrame({
       <div style={crop({ top: 6, right: 6, borderTop: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` })} />
       <div style={crop({ bottom: 6, left: 6, borderBottom: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` })} />
       <div style={crop({ bottom: 6, right: 6, borderBottom: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` })} />
+    </div>
+  );
+}
+
+// ─── Reference chip - compact labelled frame for top bands of post-prompt phases ──
+// Keeps the target image on screen as an anchor through generating/voting/result.
+export function ReferenceChip({
+  src,
+  size = 200,
+  loadingLabel,
+  label,
+}: {
+  src: string | null;
+  size?: number;
+  loadingLabel: string;
+  label: string;
+}) {
+  return (
+    <div
+      style={{
+        background: C.ink2,
+        border: `1px solid ${C.line}`,
+        padding: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        alignItems: 'center',
+      }}
+    >
+      <Lbl size={10}>{label}</Lbl>
+      <ReferenceFrame src={src} alt={label} size={size} loadingLabel={loadingLabel} />
     </div>
   );
 }

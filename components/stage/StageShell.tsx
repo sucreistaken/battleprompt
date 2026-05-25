@@ -3,7 +3,7 @@
 import { MotionConfig } from 'framer-motion';
 import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
-import { StageFonts, StageKeyframes, StageScaler, LoadingStage } from './atmosphere';
+import { StageFonts, StageKeyframes, StageScaler, LoadingStage, useStageTheme } from './atmosphere';
 import { StageIdle } from './StageIdle';
 import { StageVS } from './StageVS';
 import { StagePrompting } from './StagePrompting';
@@ -19,6 +19,7 @@ import { StageResult } from './StageResult';
 export function StageShell() {
   const { state } = useGameState();
   const { t } = useI18n();
+  useStageTheme(state?.stageTheme);
 
   return (
     <MotionConfig reducedMotion="user">

@@ -16,6 +16,7 @@ const SettingsSchema = new mongoose.Schema(
     },
     showLivePrompts: { type: Boolean, default: true },
     stageLanguage: { type: String, enum: ['tr', 'en'], default: 'tr' },
+    stageTheme: { type: String, enum: ['dark', 'light'], default: 'dark' },
     updatedAt: { type: Date, default: Date.now }
   },
   { _id: false, versionKey: false }
@@ -34,7 +35,8 @@ const DEFAULTS = {
   theme: 'a single futuristic cyberpunk cat with neon lights',
   winnerMode: 'AI_SCORE',
   showLivePrompts: true,
-  stageLanguage: 'tr'
+  stageLanguage: 'tr',
+  stageTheme: 'dark'
 };
 
 async function loadSettings() {
@@ -59,7 +61,8 @@ async function saveSettings(patch) {
     'theme',
     'winnerMode',
     'showLivePrompts',
-    'stageLanguage'
+    'stageLanguage',
+    'stageTheme'
   ];
   const clean = {};
   for (const k of allowed) {

@@ -66,11 +66,15 @@ export function StageIdle() {
           </div>
         </div>
 
-        {/* Right - QR card (printed code: always ink on white) */}
+        {/* Right - QR card. Printed-code semantics: ALWAYS ink-on-white in both
+            themes (scanners expect dark modules on light; a theme-flipped card
+            would invert and look broken). Hairline edge so the white card still
+            reads on the light/paper surface. */}
         <div
           style={{
-            background: C.bone,
-            color: C.ink,
+            background: '#ffffff',
+            color: '#0e0e10',
+            border: '1px solid rgba(0,0,0,0.10)',
             padding: 36,
             display: 'flex',
             flexDirection: 'column',
@@ -82,7 +86,7 @@ export function StageIdle() {
             style={{
               fontFamily: FONT.pixel,
               fontSize: 16,
-              color: C.ink,
+              color: '#0e0e10',
               letterSpacing: '0.06em',
               alignSelf: 'flex-start',
             }}
@@ -94,7 +98,7 @@ export function StageIdle() {
             style={{
               fontFamily: FONT.mono,
               fontSize: 19,
-              color: C.ink,
+              color: '#0e0e10',
               letterSpacing: '0.02em',
               alignSelf: 'stretch',
               textAlign: 'center',
@@ -103,7 +107,6 @@ export function StageIdle() {
             }}
           >
             {host}
-            {matchId && <span style={{ color: '#9c9aa3' }}>/{matchId}</span>}
           </span>
         </div>
       </div>

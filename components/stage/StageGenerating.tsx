@@ -2,7 +2,7 @@
 
 import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
-import { StageFrame, TopBar, PixelText, Avatar, Lbl, StageImage, C, FONT } from './atmosphere';
+import { StageFrame, TopBar, PixelText, Avatar, Lbl, StageImage, ReferenceChip, C, FONT } from './atmosphere';
 import type { PlayerSnapshot } from '@/types/game';
 
 interface Props {
@@ -36,11 +36,21 @@ export function StageGenerating({ scoringMode }: Props) {
           flexDirection: 'column',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 22, marginBottom: 36 }}>
-          <PixelText size={88}>{t('aiHeadLead')}</PixelText>
-          <PixelText size={88} color={C.accent}>
-            {scoringMode ? t('aiHeadScoring') : t('aiHeadWorking')}
-          </PixelText>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 22, marginBottom: 36 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 22 }}>
+            <PixelText size={88}>{t('aiHeadLead')}</PixelText>
+            <PixelText size={88} color={C.accent}>
+              {scoringMode ? t('aiHeadScoring') : t('aiHeadWorking')}
+            </PixelText>
+          </div>
+          {state.referenceImageUrl && (
+            <ReferenceChip
+              src={state.referenceImageUrl}
+              size={170}
+              loadingLabel={t('loadingText')}
+              label={t('referenceImage')}
+            />
+          )}
         </div>
 
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>

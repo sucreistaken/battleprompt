@@ -8,6 +8,7 @@ import {
   PixelText,
   Lbl,
   StageImage,
+  ReferenceChip,
   CountdownRing,
   useCountdown,
   C,
@@ -57,13 +58,23 @@ export function StageVoting() {
             {t('whichTail')}
           </PixelText>
         </div>
-        <CountdownRing size={130} progress={cd.progress} value={cd.value} danger={cd.danger} stroke={5} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+          {state.referenceImageUrl && (
+            <ReferenceChip
+              src={state.referenceImageUrl}
+              size={132}
+              loadingLabel={t('loadingText')}
+              label={t('referenceImage')}
+            />
+          )}
+          <CountdownRing size={130} progress={cd.progress} value={cd.value} danger={cd.danger} stroke={5} />
+        </div>
       </div>
 
       <div
         style={{
           position: 'absolute',
-          top: 320,
+          top: 348,
           bottom: 70,
           left: 60,
           right: 60,

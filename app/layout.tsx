@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#541fc4',
+  themeColor: '#22202b',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -31,7 +31,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" className={poppins.variable}>
-      <body className="font-body bg-surface text-ink antialiased">{children}</body>
+      {/* No bg-surface here: the body inherits the dusk base from globals.css so
+          the dark broadcast app never flashes white. Admin sets its own light
+          bg-surface on its <main>. */}
+      <body className="font-body text-ink antialiased">{children}</body>
     </html>
   );
 }

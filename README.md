@@ -1,104 +1,95 @@
-# Prompt Clash
+# ⚔️ Prompt Clash
 
-Etkinliklerde QR ile katılımlı 1v1 AI görsel üretme yarışması.
+**Telefonunla katıl, prompt yaz, AI'a çizdir, kazanan sen ol.**
 
-## Hızlı başlangıç
+Etkinlikler için tasarlanmış, QR ile katılımlı **1v1 AI görsel üretme yarışması**. İki oyuncu aynı temayı alır, en iyi prompt'u yazmaya çalışır, AI görselleri üretir ve kazanan ya AI puanıyla ya da izleyici oylamasıyla belli olur. Hepsi büyük ekranda canlı akar.
+
+<p align="center">
+  <img src="theme-preview/stage-2-vs-dark.png" alt="Prompt Clash — ALICE vs BOB" width="100%">
+</p>
+
+---
+
+## 🎮 Nasıl çalışıyor?
+
+Üç ekran var: **telefon** (oyuncu + izleyici), **sahne** (TV/projeksiyon) ve **admin**.
+
+| 1. Katıl | 2. Üret | 3. Oyla |
+|:---:|:---:|:---:|
+| <img src="theme-preview/phone-1-join-dark.png" width="260"> | <img src="theme-preview/stage-4-generating-dark.png" width="260"> | <img src="theme-preview/phone-4-voting-dark.png" width="260"> |
+| QR'ı tara, takma adını gir, maça gir. | 60 saniyede prompt yaz — AI ikisini de çizer. | Berabere kalınca izleyici karar verir. |
+
+Sonunda kazanan sahnede ilan edilir:
+
+<p align="center">
+  <img src="theme-preview/stage-6-result-dark.png" alt="Kazanan ekranı" width="100%">
+</p>
+
+**Akış:** `VS` → 60sn prompt → AI görsel üretimi → AI skoru *(berabere ise izleyici oylaması)* → kazanan → tekrar başa.
+
+---
+
+## ⚡ Hızlı başlangıç
 
 ```bash
-# 1. .env oluştur
-cp .env.example .env
-# Düzenle: MONGODB_URI, GEMINI_API_KEY, GCS_BUCKET, ADMIN_PASSWORD, ADMIN_COOKIE_SECRET
+# 1. Ortam değişkenleri
+cp .env.example .env      # MONGODB_URI, GEMINI_API_KEY, GCS_BUCKET, ADMIN_PASSWORD'u doldur
 
-# 2. Bağımlılıklar
+# 2. Kur ve çalıştır
 npm install
-
-# 3. Geliştirme
 npm run dev
-# → http://localhost:3000 (mobil + izleyici)
-# → http://localhost:3000/stage (TV ekranı)
-# → http://localhost:3000/admin (admin paneli)
 ```
 
-## Ön koşullar
+Sonra:
 
-- **Node.js 20+**
-- **MongoDB Atlas** cluster (M0 free yeterli). `MONGODB_URI` olarak bağla.
-- **Google Cloud Storage** bucket. Şu seçeneklerden biri:
-  - Lokal: `GOOGLE_APPLICATION_CREDENTIALS=./gcs-key.json` (SA JSON dosya yolu)
-  - Cloud Run: bucket'a yazma yetkisi olan bir Service Account ile çalıştır (ADC)
-  - Inline: `GCS_SA_KEY_JSON='{...}'` (Secret Manager'dan)
-- **Gemini API key** ([aistudio.google.com](https://aistudio.google.com)). `GEMINI_API_KEY`.
+| Adres | Ne için |
+|---|---|
+| `localhost:3000` | 📱 Telefon — katıl / izle |
+| `localhost:3000/stage` | 📺 Sahne — TV / projeksiyon |
+| `localhost:3000/admin` | 🛠️ Admin — ayarlar & kontrol |
 
-Bucket public read olmalı veya uygun signed URL stratejisi seçilmeli (kod şu an public URL döndürüyor).
+**Gerekenler:** Node.js 20+, MongoDB Atlas (M0 free yeter), Google Cloud Storage bucket ve bir [Gemini API key](https://aistudio.google.com).
 
-## Mimari
+---
 
-- Tek Node.js süreci: Next.js (App Router) + Socket.io aynı portta (`server.js`)
-- Tek global maç, oda yok — RAM'de singleton state
-- MongoDB sadece ayarlar + maç geçmişi + oy audit'i için
-- Görseller GCS'te, public URL ile servis
-- Gemini API: hem görsel üretimi (`gemini-2.5-flash-image`) hem skorlama (`gemini-2.5-flash` vision)
+## 🧱 Mimari
 
-Detaylı tasarım: `C:\Users\kadir\.claude\plans\we-are-building-an-prancy-harbor.md`
+- **Tek Node.js süreci** — Next.js (App Router) + Socket.io aynı portta (`server.js`)
+- **Tek global maç** — oda yok, durum RAM'de singleton olarak tutulur
+- **MongoDB** — sadece ayarlar, maç geçmişi ve oy denetimi için
+- **Görseller** GCS'te tutulur, public URL ile servis edilir
+- **Gemini** hem görsel üretir (`gemini-2.5-flash-image`) hem skorlar (`gemini-2.5-flash` vision)
 
-## Cloud Run deploy
+---
+
+## ☁️ Cloud Run'a deploy
+
+Tek instance, session affinity ve CPU throttling kapalı (canlı socket için şart):
 
 ```bash
-# Bir kerelik:
-gcloud services enable run.googleapis.com artifactregistry.googleapis.com
-gcloud artifacts repositories create prompt-clash \
-  --repository-format=docker --location=europe-west1
-
-# Build + push
-gcloud builds submit \
-  --tag europe-west1-docker.pkg.dev/$PROJECT/prompt-clash/app:latest
-
-# Deploy (tek instance, session affinity, no cpu throttling)
 gcloud run deploy prompt-clash \
   --image europe-west1-docker.pkg.dev/$PROJECT/prompt-clash/app:latest \
-  --region europe-west1 \
-  --platform managed \
-  --allow-unauthenticated \
-  --min-instances=1 \
-  --max-instances=1 \
-  --session-affinity \
-  --cpu-throttling=disabled \
-  --port=3000 \
-  --memory=1Gi \
-  --set-env-vars NEXT_PUBLIC_APP_URL=https://your-domain.example,GEMINI_IMAGE_MODEL=gemini-2.5-flash-image,GEMINI_TEXT_MODEL=gemini-2.5-flash,GCS_BUCKET=prompt-clash-images \
+  --region europe-west1 --platform managed --allow-unauthenticated \
+  --min-instances=1 --max-instances=1 \
+  --session-affinity --cpu-throttling=disabled \
+  --port=3000 --memory=1Gi \
+  --set-env-vars NEXT_PUBLIC_APP_URL=https://your-domain.example,GCS_BUCKET=prompt-clash-images \
   --set-secrets MONGODB_URI=mongodb-uri:latest,GEMINI_API_KEY=gemini-key:latest,ADMIN_PASSWORD=admin-password:latest,ADMIN_COOKIE_SECRET=admin-cookie-secret:latest,GCS_SA_KEY_JSON=gcs-sa-key:latest
 ```
 
-## Test akışı
+---
 
-1. `npm run dev`
-2. 4 tarayıcı sekmesi:
-   - `/stage` — TV görünümü
-   - `/` (1. oyuncu) — nickname gir → Join → Player A
-   - `/` (2. oyuncu, farklı sekme/incognito) — Join → Player B
-   - `/` (3. izleyici) — otomatik izleyici
-   - `/admin` — şifre gir, ayarları gör
-3. Maç akar: VS → 60s prompt → görsel üretimi → AI skoru (veya oylama) → result → idle
+## 🛠️ Komutlar
 
-## Edge case testleri
+| Komut | Açıklama |
+|---|---|
+| `npm run dev` | Lokal geliştirme |
+| `npm run build` | Production build |
+| `npm start` | Production sunucu |
+| `npm run typecheck` | TypeScript kontrolü |
 
-- **Disconnect:** Player A sekmesini kapat → 10s sonra mevcut prompt otomatik gönderilir
-- **Gen failure:** `GEMINI_API_KEY`'i bozuk değer ayarla → 3x retry sonrası forfeit + diğer oyuncu kazanır
-- **Berabere:** AI skorlama beraber çıkarsa sudden-death izleyici oylaması açılır
-- **Profanite:** Küfürlü nickname → reject; küfürlü prompt → sahnede maskelenir
-- **Çift oy:** Aynı cihazdan ikinci oy → reject (cookie dedup + Mongo unique index)
+---
 
-## Komutlar
+## 🧰 Tech stack
 
-- `npm run dev` — lokal geliştirme
-- `npm run build` — Next.js build
-- `npm start` — production
-- `npm run typecheck` — TS kontrolü
-
-## Yapılacaklar (v2 fikirleri)
-
-- Çoklu eşzamanlı maç / oda sistemi
-- Nickname istatistikleri ve leaderboard
-- Replay paylaşımı
-- Tema rotasyonu (admin'in seçtiği havuzdan rastgele)
-- Stage'de ses efektleri
+`Next.js 14` · `React 18` · `Socket.io` · `Tailwind CSS` · `Framer Motion` · `MongoDB / Mongoose` · `Google Gemini` · `Google Cloud Storage`

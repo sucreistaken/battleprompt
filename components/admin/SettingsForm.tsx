@@ -11,6 +11,7 @@ interface SettingsShape {
   promptDurationSec: number;
   votingDurationSec: number;
   stageLanguage: 'tr' | 'en';
+  stageTheme: 'dark' | 'light';
   theme: string;
 }
 
@@ -20,6 +21,7 @@ const DEFAULTS: SettingsShape = {
   promptDurationSec: 30,
   votingDurationSec: 20,
   stageLanguage: 'tr',
+  stageTheme: 'dark',
   theme: '',
 };
 
@@ -141,6 +143,28 @@ export function SettingsForm() {
               )}
             >
               {l}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Stage theme (dark / light) — synced to every device via state */}
+      <Section label={t('stageTheme')}>
+        <div className="inline-flex rounded-full bg-surface-low p-1 gap-1">
+          {(['dark', 'light'] as const).map((th) => (
+            <button
+              key={th}
+              type="button"
+              onClick={() => update('stageTheme', th)}
+              aria-pressed={settings.stageTheme === th}
+              className={cn(
+                'px-4 py-2 rounded-full text-sm font-semibold tracking-wide transition-colors',
+                settings.stageTheme === th
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-ink-variant',
+              )}
+            >
+              {th === 'dark' ? t('themeDark') : t('themeLight')}
             </button>
           ))}
         </div>

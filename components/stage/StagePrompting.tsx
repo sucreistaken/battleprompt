@@ -212,7 +212,7 @@ function PlayerPanel({
             }}
           >
             <svg width="12" height="12" viewBox="0 0 14 14">
-              <path d="M2 7 L6 11 L12 3" stroke={ink} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 7 L6 11 L12 3" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ink }} />
             </svg>
             {t('lockedLabel')}
           </div>
