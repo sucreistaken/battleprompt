@@ -58,7 +58,7 @@ Sonra:
 - **Tek global maç** — oda yok, durum RAM'de singleton olarak tutulur
 - **MongoDB** — sadece ayarlar, maç geçmişi ve oy denetimi için
 - **Görseller** GCS'te tutulur, public URL ile servis edilir
-- **Gemini** hem görsel üretir (`gemini-2.5-flash-image`) hem skorlar (`gemini-2.5-flash` vision)
+- **Gemini** hem görsel üretir (`gemini-2.5-flash-image`) hem skorlar (`gemini-2.5-flash-lite` vision)
 
 ---
 

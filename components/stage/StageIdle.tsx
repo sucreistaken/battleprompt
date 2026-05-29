@@ -5,6 +5,7 @@ import { useGameState } from '@/components/client/useGameState';
 import { useI18n } from '@/components/client/i18nContext';
 import {
   StageFrame,
+  StageBackdrop,
   TopBar,
   PixelText,
   Avatar,
@@ -34,7 +35,8 @@ export function StageIdle() {
 
   return (
     <StageFrame>
-      <TopBar liveLabel={t('live')} matchId={matchId} theme={state?.theme ?? ''} />
+      <StageBackdrop />
+      <TopBar liveLabel={t('live')} matchId={matchId} category={state?.roundCategoryLabel} difficulty={state?.roundDifficultyLabel} />
 
       <div
         style={{
@@ -42,16 +44,16 @@ export function StageIdle() {
           inset: 0,
           display: 'grid',
           gridTemplateColumns: '1fr 560px',
-          gap: 100,
+          gap: 80,
           alignItems: 'center',
-          padding: '160px 110px 120px',
+          padding: '70px 60px 70px',
         }}
       >
         {/* Left */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 64 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <PixelText size={220}>PROMPT</PixelText>
-            <PixelText size={220} color={C.accent}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <PixelText size={184}>PROMPT</PixelText>
+            <PixelText size={184} color={C.accent}>
               CLASH
             </PixelText>
           </div>
@@ -59,6 +61,15 @@ export function StageIdle() {
           <Lbl color="text2" size={18} style={{ letterSpacing: '0.24em' }}>
             {t('scanJoinDuel')}
           </Lbl>
+
+          {/* one-line explainer - says what the game is in 3 seconds */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, maxWidth: 760, marginTop: -22 }}>
+            <span style={{ width: 3, height: 40, background: C.accent }} />
+            <p style={{ fontFamily: FONT.body, fontSize: 21, fontWeight: 500, lineHeight: 1.4, color: C.text2 }}>
+              {t('idleExplain')}{' '}
+              <span style={{ color: C.bone, fontWeight: 600 }}>{t('idleExplainAccent')}</span>
+            </p>
+          </div>
 
           <div style={{ display: 'flex', gap: 16 }}>
             <SlotChip letter="A" name={state?.players.A?.nickname ?? null} />
@@ -108,6 +119,53 @@ export function StageIdle() {
           >
             {host}
           </span>
+
+          {/* 3-step strip - lowers perceived join cost (scan, nick, enter) */}
+          <div
+            style={{
+              display: 'flex',
+              alignSelf: 'stretch',
+              justifyContent: 'space-between',
+              gap: 8,
+              borderTop: '1px solid #ece9e2',
+              paddingTop: 18,
+            }}
+          >
+            {[t('stepScan'), t('stepNick'), t('stepEnter')].map((label, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  textAlign: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    width: 26,
+                    height: 26,
+                    background: '#0e0e10',
+                    color: '#fff',
+                    borderRadius: 2,
+                    fontFamily: FONT.mono,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {i + 1}
+                </span>
+                <span style={{ fontFamily: FONT.body, fontSize: 15, fontWeight: 500, color: '#4a4754', lineHeight: 1.25 }}>
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </StageFrame>

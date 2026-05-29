@@ -24,6 +24,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: result.reason, retryInMs: result.retryInMs }, { status });
   }
 
+  if (!result.token || !result.maxAge) {
+    return NextResponse.json({ ok: false, reason: 'login_failed' }, { status: 500 });
+  }
+
   const res = NextResponse.json({ ok: true });
   res.cookies.set(COOKIE_NAME, result.token, {
     httpOnly: true,

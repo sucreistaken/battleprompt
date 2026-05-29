@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash · Stage IDLE (mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root{
+    --ink:#22202b; --ink2:#2d2b38; --ink3:#383545;
+    --line:#4a4757; --line2:#615d72;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --accent:#7c4dff; --b:#c5ff3a;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--ink);overflow:hidden}
+  #fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--ink)}
+  #board{position:relative;width:1920px;height:1080px;background:var(--ink);
+    color:var(--text);font-family:var(--body);overflow:hidden;isolation:isolate;transform-origin:center center}
+
+  /* ── subtle background energy (restrained, only addition vs current) ── */
+  .bg-glow{position:absolute;z-index:0;pointer-events:none;width:1100px;height:1100px;left:-200px;top:-300px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.12) 0%,rgba(124,77,255,.03) 36%,transparent 60%);filter:blur(8px)}
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(124,77,255,.028) 1px,transparent 1px);
+    background-size:54px 54px;mask-image:radial-gradient(ellipse 62% 60% at 32% 42%,#000 28%,transparent 76%)}
+  .bg-arena{position:absolute;left:0;right:0;bottom:0;height:280px;z-index:0;pointer-events:none;
+    mask-image:linear-gradient(90deg,#000 0%,transparent 40%,transparent 60%,#000 100%)}
+  .motes{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .mote{position:absolute;width:5px;height:5px;background:var(--accent);opacity:0;animation:drift 11s linear infinite}
+  .mote.b{background:var(--b)}
+  @keyframes drift{0%{transform:translateY(40px);opacity:0}16%{opacity:.35}84%{opacity:.35}100%{transform:translateY(-260px);opacity:0}}
+
+  /* ── existing stage frame layers ─────────────────────────────── */
+  .bg-vig{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at top,rgba(255,255,255,.04) 0%,transparent 55%),radial-gradient(ellipse at bottom,rgba(0,0,0,.25) 0%,transparent 60%)}
+  .bg-scan{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.008) 0,rgba(255,255,255,.008) 1px,transparent 1px,transparent 3px)}
+  .tick{position:absolute;background:var(--text4);opacity:.6;z-index:4}
+
+  /* ── top bar (current style) ─────────────────────────────────── */
+  .topbar{position:absolute;top:56px;left:60px;right:60px;z-index:20;display:flex;align-items:center;justify-content:space-between}
+  .tb-left{display:flex;align-items:center;gap:18px}
+  .wordmark-sm{font-family:var(--pixel);font-size:24px;letter-spacing:.04em;color:var(--bone)}
+  .vsep{width:1px;height:18px;background:var(--line2)}
+  .live{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--live);border-radius:2px}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.4s ease-in-out infinite}
+  .live-txt{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;color:#fff}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.82)}}
+  .tb-right{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--text2)}
+  .chip{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid var(--line2);color:var(--text);letter-spacing:.12em;text-transform:uppercase}
+  .chip.diff{background:var(--live);color:#fff;border:none;font-weight:700;letter-spacing:.14em}
+
+  /* ── main grid (current geometry) ────────────────────────────── */
+  .main{position:absolute;inset:0;z-index:10;display:grid;grid-template-columns:1fr 560px;gap:100px;
+    align-items:start;padding:118px 110px 90px}
+  .left{display:flex;flex-direction:column;gap:40px}
+  .wordmark{display:flex;flex-direction:column;gap:12px;line-height:1}
+  .wm{font-family:var(--pixel);font-size:184px;line-height:.96;letter-spacing:.02em;color:var(--bone)}
+  .wm.accent{color:var(--accent)}
+
+  .tagline{font-family:var(--mono);font-size:18px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--text2)}
+
+  /* single explainer line (new, subtle) */
+  .explain{display:flex;align-items:center;gap:14px;max-width:760px;margin-top:-22px}
+  .explain .bar{width:3px;height:40px;background:var(--accent)}
+  .explain p{font-family:var(--body);font-size:21px;font-weight:500;line-height:1.4;color:var(--text2)}
+  .explain p em{font-style:normal;color:var(--bone);font-weight:600}
+
+  /* slot chips (current style) */
+  .slots{display:flex;gap:16px}
+  .slot{flex:1;display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--ink2);
+    border:1px solid var(--line);border-left:4px solid var(--line2)}
+  .slot.locked{border-color:var(--accent);border-left-color:var(--accent)}
+  .ava{width:48px;height:48px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:23px;border-radius:2px;background:var(--bone);color:var(--ink)}
+  .slot.empty .ava{background:var(--ink3);color:var(--text3)}
+  .slot .meta{display:flex;flex-direction:column;gap:2px}
+  .slot .lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+  .slot.locked .lbl{color:var(--accent)}
+  .slot .name{font-family:var(--body);font-size:24px;font-weight:700;color:var(--bone)}
+  .slot .wait{font-family:var(--body);font-size:20px;font-weight:500;font-style:italic;color:var(--text3)}
+  .dot-dot span{animation:dotdot 1.4s infinite;color:var(--accent)}
+  .dot-dot span:nth-child(2){animation-delay:.2s}
+  .dot-dot span:nth-child(3){animation-delay:.4s}
+  @keyframes dotdot{0%,20%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+  /* ── QR card (current white card + steps merged in) ──────────── */
+  .qrcard{background:#fff;color:#0e0e10;border:1px solid rgba(0,0,0,.10);padding:32px;
+    display:flex;flex-direction:column;gap:18px}
+  .qr-title{font-family:var(--pixel);font-size:16px;letter-spacing:.06em;color:#0e0e10;align-self:flex-start}
+  .qr-img{width:100%;aspect-ratio:1;background:conic-gradient(#0e0e10 25%,#fff 0 50%,#0e0e10 0 75%,#fff 0);
+    background-size:24px 24px}
+  .qr-host{font-family:var(--mono);font-size:19px;letter-spacing:.02em;text-align:center;color:#0e0e10;
+    border-top:1px solid #d4d2cc;padding-top:16px}
+  .qr-steps{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #ece9e2;padding-top:16px}
+  .qr-step{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1;text-align:center}
+  .qr-step .n{width:24px;height:24px;background:#0e0e10;color:#fff;border-radius:2px;
+    font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .qr-step span{font-family:var(--body);font-size:14px;font-weight:500;color:#4a4754;line-height:1.25}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="fit">
+  <div id="board">
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <svg class="bg-arena" viewBox="0 0 1920 280" preserveAspectRatio="none" aria-hidden="true">
+      <g stroke="#7c4dff" stroke-width="1.5" fill="none" opacity="0.16">
+        <line x1="960" y1="280" x2="120" y2="0"/><line x1="960" y1="280" x2="470" y2="0"/>
+        <line x1="960" y1="280" x2="1450" y2="0"/><line x1="960" y1="280" x2="1800" y2="0"/>
+      </g>
+      <g stroke="#7c4dff" stroke-width="1" fill="none" opacity="0.1">
+        <line x1="0" y1="210" x2="1920" y2="210"/><line x1="0" y1="140" x2="1920" y2="140"/>
+      </g>
+    </svg>
+    <div class="motes">
+      <div class="mote"   style="left:15%;animation-delay:0s"></div>
+      <div class="mote b" style="left:28%;animation-delay:3.4s"></div>
+      <div class="mote"   style="left:7%; animation-delay:6.6s"></div>
+    </div>
+    <div class="bg-vig"></div>
+    <div class="bg-scan"></div>
+
+    <div class="tick" style="left:28px;top:28px;width:12px;height:1.5px"></div>
+    <div class="tick" style="left:28px;top:28px;width:1.5px;height:12px"></div>
+    <div class="tick" style="right:28px;top:28px;width:12px;height:1.5px"></div>
+    <div class="tick" style="right:28px;top:28px;width:1.5px;height:12px"></div>
+    <div class="tick" style="left:28px;bottom:28px;width:12px;height:1.5px"></div>
+    <div class="tick" style="left:28px;bottom:28px;width:1.5px;height:12px"></div>
+    <div class="tick" style="right:28px;bottom:28px;width:12px;height:1.5px"></div>
+    <div class="tick" style="right:28px;bottom:28px;width:1.5px;height:12px"></div>
+
+    <!-- top bar -->
+    <div class="topbar">
+      <div class="tb-left">
+        <span class="wordmark-sm">PROMPT CLASH</span>
+        <span class="vsep"></span>
+        <span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span>
+      </div>
+      <div class="tb-right">
+        <span class="chip">HAYVANLAR</span>
+        <span class="chip diff">ZOR</span>
+        <span class="chip">12AB</span>
+      </div>
+    </div>
+
+    <!-- main -->
+    <div class="main">
+      <div class="left">
+        <div class="wordmark"><span class="wm">PROMPT</span><span class="wm accent">CLASH</span></div>
+        <div class="tagline">TARA · KATIL · KAPIŞ</div>
+        <div class="explain">
+          <div class="bar"></div>
+          <p>60 saniyede hedef görsele en yakın prompt'u yaz. <em>Kazananı yapay zeka seçer.</em></p>
+        </div>
+        <div class="slots">
+          <div class="slot locked">
+            <div class="ava">A</div>
+            <div class="meta"><span class="lbl">PLAYER A</span><span class="name">ZEYNEP</span></div>
+          </div>
+          <div class="slot empty">
+            <div class="ava">B</div>
+            <div class="meta"><span class="lbl">PLAYER B</span>
+              <span class="wait">bekleniyor<span class="dot-dot"><span>.</span><span>.</span><span>.</span></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR card -->
+      <div class="qrcard">
+        <span class="qr-title">OYNAMAK İÇİN TARA</span>
+        <div class="qr-img" role="img" aria-label="QR kod"></div>
+        <div class="qr-host">promptclash.app</div>
+        <div class="qr-steps">
+          <div class="qr-step"><span class="n">1</span><span>QR okut</span></div>
+          <div class="qr-step"><span class="n">2</span><span>Nick yaz</span></div>
+          <div class="qr-step"><span class="n">3</span><span>Kapışmaya gir</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function fit(){var s=Math.min(innerWidth/1920,innerHeight/1080);
+    document.getElementById('board').style.transform='scale('+s+')';}
+  addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

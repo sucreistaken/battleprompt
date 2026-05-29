@@ -30,18 +30,18 @@ export function StagePrompting() {
 
   return (
     <StageFrame>
-      <TopBar liveLabel={t('live')} matchId={matchId} theme={state.theme} />
+      <TopBar liveLabel={t('live')} matchId={matchId} category={state.roundCategoryLabel} difficulty={state.roundDifficultyLabel} />
 
       <div
         style={{
           position: 'absolute',
-          top: 140,
-          bottom: 60,
-          left: 60,
-          right: 60,
+          top: 132,
+          bottom: 52,
+          left: 44,
+          right: 44,
           display: 'grid',
-          gridTemplateColumns: '1fr 480px 1fr',
-          gap: 36,
+          gridTemplateColumns: '1fr 560px 1fr',
+          gap: 32,
         }}
       >
         <PlayerPanel
@@ -52,15 +52,15 @@ export function StagePrompting() {
           showPrompt={state.showLivePrompts}
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
           <div
             style={{
               background: C.ink2,
               border: `1px solid ${C.line}`,
-              padding: 22,
+              padding: 18,
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
+              gap: 14,
               alignItems: 'center',
             }}
           >
@@ -68,37 +68,27 @@ export function StagePrompting() {
             <ReferenceFrame
               src={state.referenceImageUrl}
               alt={t('referenceImage')}
-              size={384}
+              size={480}
               loadingLabel={t('loadingText')}
             />
-            <div
-              style={{
-                alignSelf: 'stretch',
-                textAlign: 'center',
-                fontFamily: FONT.body,
-                fontSize: 16,
-                color: C.text2,
-                fontStyle: 'italic',
-                lineHeight: 1.4,
-              }}
-            >
-              &ldquo;{state.theme}&rdquo;
-            </div>
+            {/* Tema metni gizli: oyuncu hedef görseli yorumlamalı. */}
           </div>
 
           <div
             style={{
+              flex: 1,
               background: C.ink2,
               border: `1px solid ${C.line}`,
-              padding: '28px 22px',
+              padding: '24px 20px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 18,
+              justifyContent: 'center',
+              gap: 20,
             }}
           >
             <Lbl size={11}>{t('timeLeft')}</Lbl>
-            <CountdownRing size={180} progress={cd.progress} value={cd.value} danger={cd.danger} stroke={6} />
+            <CountdownRing size={172} progress={cd.progress} value={cd.value} danger={cd.danger} stroke={6} />
           </div>
         </div>
 
@@ -180,7 +170,7 @@ function PlayerPanel({
           flexDirection: mirrored ? 'row-reverse' : 'row',
         }}
       >
-        <Avatar letter={letter} size={88} player={letter} />
+        <Avatar letter={letter} size={80} player={letter} />
         <div
           style={{
             display: 'flex',
@@ -192,7 +182,7 @@ function PlayerPanel({
           <Lbl size={12} color={color}>
             {t('playerLabel')} {letter}
           </Lbl>
-          <span style={{ fontFamily: FONT.body, fontSize: 38, fontWeight: 700, color: C.bone, lineHeight: 1 }}>
+          <span style={{ fontFamily: FONT.body, fontSize: 35, fontWeight: 700, color: C.bone, lineHeight: 1 }}>
             {name}
           </span>
         </div>
@@ -230,7 +220,7 @@ function PlayerPanel({
           <div
             style={{
               fontFamily: FONT.mono,
-              fontSize: 30,
+              fontSize: 28,
               lineHeight: 1.52,
               color: submitted ? C.text2 : C.bone,
               letterSpacing: '-0.005em',
@@ -241,8 +231,8 @@ function PlayerPanel({
               <span
                 style={{
                   display: 'inline-block',
-                  width: 14,
-                  height: 34,
+                  width: 13,
+                  height: 31,
                   background: color,
                   verticalAlign: 'text-bottom',
                   marginLeft: 4,

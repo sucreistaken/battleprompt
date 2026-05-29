@@ -27,7 +27,7 @@ export function StageVS() {
 
   return (
     <StageFrame>
-      <TopBar liveLabel={t('live')} matchId={matchId} theme={state.theme} />
+      <TopBar liveLabel={t('live')} matchId={matchId} category={state.roundCategoryLabel} difficulty={state.roundDifficultyLabel} />
 
       <div
         style={{
@@ -86,37 +86,7 @@ export function StageVS() {
         </div>
       </div>
 
-      {/* Theme */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 80,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <Lbl size={11} color="text3">
-          {t('theme')}
-        </Lbl>
-        <div
-          style={{
-            fontFamily: FONT.body,
-            fontSize: 24,
-            fontWeight: 500,
-            fontStyle: 'italic',
-            color: C.bone,
-            letterSpacing: '0.01em',
-            textAlign: 'center',
-            maxWidth: 1100,
-          }}
-        >
-          &ldquo;{state.theme}&rdquo;
-        </div>
-      </div>
+      {/* Tema metni gizli: hedef, prompting'de gösterilen referans GÖRSELİDİR. */}
     </StageFrame>
   );
 }

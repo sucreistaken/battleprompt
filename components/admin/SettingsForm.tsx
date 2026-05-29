@@ -12,7 +12,13 @@ interface SettingsShape {
   votingDurationSec: number;
   stageLanguage: 'tr' | 'en';
   stageTheme: 'dark' | 'light';
-  theme: string;
+  lockedCategory: string;
+  lockedDifficulty: string;
+}
+
+interface Option {
+  code: string;
+  label: string;
 }
 
 const DEFAULTS: SettingsShape = {
@@ -22,12 +28,15 @@ const DEFAULTS: SettingsShape = {
   votingDurationSec: 20,
   stageLanguage: 'tr',
   stageTheme: 'dark',
-  theme: '',
+  lockedCategory: '',
+  lockedDifficulty: '',
 };
 
 export function SettingsForm() {
   const { t } = useI18n();
   const [settings, setSettings] = useState<SettingsShape>(DEFAULTS);
+  const [categories, setCategories] = useState<Option[]>([]);
+  const [difficulties, setDifficulties] = useState<Option[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [busy, setBusy] = useState<'reset' | 'force' | null>(null);
@@ -37,6 +46,8 @@ export function SettingsForm() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.settings) setSettings({ ...DEFAULTS, ...d.settings });
+        if (Array.isArray(d?.categories)) setCategories(d.categories);
+        if (Array.isArray(d?.difficulties)) setDifficulties(d.difficulties);
       })
       .catch(() => {});
   }, []);
@@ -75,24 +86,6 @@ export function SettingsForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Winner mode */}
-      <Section label={t('winnerMode')}>
-        <div className="grid grid-cols-2 gap-3">
-          <RadioCard
-            checked={settings.winnerMode === 'AI_SCORE'}
-            onClick={() => update('winnerMode', 'AI_SCORE')}
-            label={t('aiScore')}
-            hint={t('aiScoreHint')}
-          />
-          <RadioCard
-            checked={settings.winnerMode === 'AUDIENCE_VOTE'}
-            onClick={() => update('winnerMode', 'AUDIENCE_VOTE')}
-            label={t('audienceVote')}
-            hint={t('audienceVoteHint')}
-          />
-        </div>
-      </Section>
-
       {/* Live prompts toggle */}
       <Section label={t('showLivePrompts')}>
         <Toggle
@@ -170,16 +163,37 @@ export function SettingsForm() {
         </div>
       </Section>
 
-      {/* Theme */}
-      <Section label={t('theme')}>
-        <input
-          type="text"
-          value={settings.theme}
-          onChange={(e) => update('theme', e.target.value)}
-          placeholder={t('themePlaceholder')}
-          className="q-field"
-        />
-      </Section>
+      {/* Hedef kategori + zorluk kilidi (boş = otomatik rastgele) */}
+      <div className="grid grid-cols-2 gap-4">
+        <Section label={t('categorySetting')}>
+          <select
+            value={settings.lockedCategory}
+            onChange={(e) => update('lockedCategory', e.target.value)}
+            className="q-field"
+          >
+            <option value="">{t('autoOption')}</option>
+            {categories.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </Section>
+        <Section label={t('difficultySetting')}>
+          <select
+            value={settings.lockedDifficulty}
+            onChange={(e) => update('lockedDifficulty', e.target.value)}
+            className="q-field"
+          >
+            <option value="">{t('autoOption')}</option>
+            {difficulties.map((d) => (
+              <option key={d.code} value={d.code}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </Section>
+      </div>
 
       {/* Save + actions */}
       <div className="flex flex-col gap-3 pt-4 border-t border-border">
@@ -220,35 +234,6 @@ function Section({ label, children }: { label: string; children: React.ReactNode
       <label className="q-label mb-3 block">{label}</label>
       {children}
     </div>
-  );
-}
-
-function RadioCard({
-  checked,
-  onClick,
-  label,
-  hint,
-}: {
-  checked: boolean;
-  onClick: () => void;
-  label: string;
-  hint: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={checked}
-      className={cn(
-        'text-left rounded-2xl border-2 p-4 transition-all',
-        checked
-          ? 'border-primary bg-primary-50'
-          : 'border-border bg-surface hover:border-primary-200',
-      )}
-    >
-      <p className="font-semibold text-ink">{label}</p>
-      <p className="mt-1 text-xs text-ink-variant">{hint}</p>
-    </button>
   );
 }
 

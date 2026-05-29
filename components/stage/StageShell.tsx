@@ -10,6 +10,7 @@ import { StagePrompting } from './StagePrompting';
 import { StageGenerating } from './StageGenerating';
 import { StageVoting } from './StageVoting';
 import { StageResult } from './StageResult';
+import { StageAudio } from './StageAudio';
 
 /**
  * Stage root - broadcast/arcade dark stage scaled into any projector viewport.
@@ -28,6 +29,7 @@ export function StageShell() {
       <StageScaler>
         {state ? <PhaseBoard phase={state.phase} /> : <LoadingStage label={t('connecting')} />}
       </StageScaler>
+      <StageAudio phase={state?.phase} />
     </MotionConfig>
   );
 }

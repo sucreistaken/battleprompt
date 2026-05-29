@@ -17,3 +17,10 @@ gcs-key.json
 /*.png
 .playwright-mcp/
 tsconfig.tsbuildinfo
+
+# Local Claude Code config (per-machine skills/state)
+.claude/
+
+# Runtime-generated local uploads (keep folder marker only)
+/public/uploads/*
+!/public/uploads/.gitkeep

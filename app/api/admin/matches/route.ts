@@ -14,7 +14,25 @@ export async function GET() {
   }
   try {
     await connectMongo();
-    const matches = await recentMatches(20);
+    const rows = await recentMatches(20);
+    const matches = rows.map((m: any) => ({
+      _id: String(m._id),
+      matchId: String(m._id).slice(-8),
+      targetPrompt: m.targetPrompt,
+      category: m.category,
+      difficulty: m.difficulty,
+      winner: m.winner,
+      winnerMode: m.winnerMode,
+      players: {
+        A: m.playerA ? { nickname: m.playerA.nickname, aiScore: m.playerA.aiScore ?? null } : null,
+        B: m.playerB ? { nickname: m.playerB.nickname, aiScore: m.playerB.aiScore ?? null } : null
+      },
+      votes: {
+        A: m.playerA?.voteCount ?? 0,
+        B: m.playerB?.voteCount ?? 0
+      },
+      finishedAt: m.endedAt || m.startedAt
+    }));
     return NextResponse.json({ ok: true, matches });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });

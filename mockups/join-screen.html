@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash · Join ekranı (mockup v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root{
+    --ink:#22202b; --ink2:#2d2b38; --ink3:#383545;
+    --line:#4a4757; --line2:#615d72;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --accent:#7c4dff; --b:#c5ff3a;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#16151c;font-family:var(--body);color:var(--text);
+    display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center;padding:56px 40px;min-height:100vh}
+  .col{display:flex;flex-direction:column;align-items:center;gap:18px}
+  .cap{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--text3)}
+  .cap b{color:var(--accent)}
+
+  .phone{width:390px;height:800px;background:var(--ink);border-radius:38px;overflow:hidden;
+    border:8px solid #0c0b10;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;display:flex;flex-direction:column}
+  .ph-glow{position:absolute;z-index:0;pointer-events:none;width:520px;height:520px;left:-160px;top:-180px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,rgba(124,77,255,.03) 38%,transparent 62%);filter:blur(6px)}
+  .ph-body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;padding:50px 26px 26px}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between}
+  .wm-sm{font-family:var(--pixel);font-size:15px;letter-spacing:.04em;color:var(--bone)}
+  /* informative chip (replaces decorative CANLI on phone) */
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02)}
+  .chip .d{width:6px;height:6px;border-radius:50%;background:var(--b)}
+  .chip span{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text2);text-transform:uppercase}
+
+  .hero{display:flex;flex-direction:column;gap:6px;line-height:.96;margin-top:20px}
+  .wm{font-family:var(--pixel);font-size:50px;color:var(--bone);line-height:.96}
+  .wm.accent{color:var(--accent)}
+  .explain{font-size:18px;font-weight:500;line-height:1.45;color:var(--text2);margin-top:18px;max-width:310px}
+  .explain em{font-style:normal;color:var(--bone);font-weight:600}
+
+  .form{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+  .flabel{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+  .field{width:100%;height:62px;border-radius:14px;background:var(--ink2);border:1.5px solid var(--line);
+    padding:0 18px;font-family:var(--body);font-size:18px;color:var(--text);display:flex;align-items:center}
+  .field.filled{border-color:var(--accent);color:var(--bone);font-weight:600}
+  .field .ph{color:var(--text4)}
+  /* CTA: clear disabled state (bordered, not broken-dark) + active */
+  .cta{width:100%;height:62px;border-radius:14px;font-family:var(--body);font-size:19px;font-weight:700;letter-spacing:.01em;
+    display:flex;align-items:center;justify-content:center;gap:10px;border:none}
+  .cta.active{background:var(--accent);color:#fff;box-shadow:0 14px 34px rgba(124,77,255,.34)}
+  .cta.idle{background:transparent;color:var(--text3);border:1.5px solid var(--line);font-weight:600}
+  .foot{font-size:13px;color:var(--text3);text-align:center;margin-top:14px}
+  .grow{flex:1}
+
+  /* post-join */
+  .lock{display:flex;flex-direction:column;align-items:center;text-align:center;margin:auto 0}
+  .ava{width:88px;height:88px;border-radius:16px;background:var(--accent);color:#fff;
+    font-family:var(--pixel);font-size:42px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 1px rgba(124,77,255,.5),0 16px 40px rgba(124,77,255,.3)}
+  .lock .nm{font-family:var(--pixel);font-size:30px;color:var(--bone);margin-top:24px;letter-spacing:0}
+  /* role line: readable body font, sentence case (not cramped pixel caps) */
+  .lock .role{font-family:var(--body);font-size:17px;font-weight:600;color:var(--accent);margin-top:14px}
+  .wait-card{margin-top:28px;align-self:stretch;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:20px;
+    display:flex;flex-direction:column;align-items:center;gap:14px}
+  .wait-card .lbl{font-size:16px;font-weight:600;color:var(--text)}
+  .meter{display:flex;align-items:center;gap:10px}
+  .meter .seg{width:42px;height:8px;border-radius:2px;background:var(--ink3);border:1px solid var(--line)}
+  .meter .seg.on{background:var(--accent);border-color:var(--accent)}
+  .meter .c{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--text2)}
+  /* "what happens next" made prominent: own card */
+  .next{margin-top:18px;align-self:stretch;background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.22);
+    border-radius:14px;padding:16px 18px;text-align:center}
+  .next .a{font-size:16px;font-weight:700;color:var(--bone)}
+  .next .b{font-size:14px;color:var(--text2);margin-top:6px;line-height:1.4}
+
+  /* desktop */
+  .desk{width:760px;height:520px;background:var(--ink);border-radius:18px;overflow:hidden;position:relative;
+    border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5);display:flex}
+  .desk .dk-glow{position:absolute;z-index:0;width:700px;height:700px;left:-200px;top:-200px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.12) 0%,transparent 60%);filter:blur(8px)}
+  .desk-main{position:relative;z-index:1;flex:1;padding:50px;display:flex;flex-direction:column;justify-content:center}
+  .desk .wm{font-size:64px}
+  .desk .explain{font-size:18px;margin-top:20px;max-width:390px}
+  .desk .form{margin-top:28px;max-width:390px}
+  .desk-aside{position:relative;z-index:1;width:248px;border-left:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:36px 26px;background:rgba(255,255,255,.015)}
+  .desk-aside .title{font-family:var(--pixel);font-size:18px;color:var(--bone);letter-spacing:.02em}
+  .qr{width:186px;height:186px;background:conic-gradient(#0e0e10 25%,#fff 0 50%,#0e0e10 0 75%,#fff 0);background-size:15.5px 15.5px;
+    border:8px solid #fff;border-radius:6px}
+  .desk-aside .sub{font-size:14px;font-weight:500;color:var(--text2);text-align:center;line-height:1.4}
+  .desk-aside .host{font-family:var(--mono);font-size:13px;color:var(--text4)}
+</style>
+</head>
+<body>
+
+  <!-- 1 · phone pre-join -->
+  <div class="col">
+    <div class="cap"><b>1</b> · telefon · kayıt öncesi</div>
+    <div class="phone">
+      <div class="ph-glow"></div>
+      <div class="ph-body">
+        <div class="topbar">
+          <span class="wm-sm">PROMPT CLASH</span>
+          <span class="chip"><span class="d"></span><span>2 oyuncu gerekli</span></span>
+        </div>
+        <div class="hero">
+          <span class="wm">PROMPT</span>
+          <span class="wm accent">CLASH</span>
+        </div>
+        <p class="explain">60 saniyede hedef görsele en yakın prompt'u yaz. <em>Kazananı yapay zeka seçer.</em></p>
+        <div class="form">
+          <span class="flabel">Takma adın</span>
+          <div class="field"><span class="ph">örn. zeynep</span></div>
+          <button class="cta idle">Takma adını yaz</button>
+          <p class="foot">2 oyuncu girince maç otomatik başlar.</p>
+        </div>
+        <div class="grow"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 · phone post-join -->
+  <div class="col">
+    <div class="cap"><b>2</b> · telefon · kayıt sonrası</div>
+    <div class="phone">
+      <div class="ph-glow"></div>
+      <div class="ph-body">
+        <div class="topbar">
+          <span class="wm-sm">PROMPT CLASH</span>
+          <span class="chip"><span class="d"></span><span>lobide</span></span>
+        </div>
+        <div class="lock">
+          <div class="ava">A</div>
+          <div class="nm">ZEYNEP</div>
+          <div class="role">Oyuncu A olarak kilitlendin</div>
+          <div class="wait-card">
+            <span class="lbl">Rakip bekleniyor…</span>
+            <span class="meter"><span class="seg on"></span><span class="seg"></span><span class="c">1 / 2 hazır</span></span>
+          </div>
+          <div class="next">
+            <div class="a">Bu ekranı kapatma.</div>
+            <div class="b">Rakip gelince maç otomatik başlayacak.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 · desktop -->
+  <div class="col">
+    <div class="cap"><b>3</b> · masaüstü · ikincil QR (aktif buton)</div>
+    <div class="desk">
+      <div class="dk-glow"></div>
+      <div class="desk-main">
+        <div class="hero" style="margin-top:0">
+          <span class="wm">PROMPT</span>
+          <span class="wm accent">CLASH</span>
+        </div>
+        <p class="explain">60 saniyede hedef görsele en yakın prompt'u yaz. <em>Kazananı yapay zeka seçer.</em></p>
+        <div class="form">
+          <span class="flabel">Takma adın</span>
+          <div class="field filled">zeynep</div>
+          <button class="cta active">Kapışmaya Gir</button>
+        </div>
+      </div>
+      <div class="desk-aside">
+        <span class="title">TELEFONDAN KATIL</span>
+        <div class="qr"></div>
+        <p class="sub">QR'ı okut, nickname yaz</p>
+        <span class="host">promptclash.app</span>
+      </div>
+    </div>
+    <div class="cap" style="max-width:760px;text-align:center;color:var(--text4);letter-spacing:.02em;text-transform:none;font-family:var(--body);font-size:13px">
+      Telefonda QR hiç görünmez. Buton boşken "Takma adını yaz", yazınca "Kapışmaya Gir".
+    </div>
+  </div>
+
+</body>
+</html>

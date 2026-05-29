@@ -51,7 +51,7 @@
   --pc-text4: #605d6c;
   --pc-bone: #ffffff;
   --pc-live: #ff5c5c;
-  --pc-letterbox: #060608;
+  --pc-letterbox: #22202b; /* sahne zeminiyle aynı: yanlarda siyah bar yerine kaynaşan kenar */
   --pc-accent: #7c4dff;
   --pc-accent-ink: #ffffff;
   --pc-accent-soft: rgba(124, 77, 255, 0.18);
@@ -74,7 +74,7 @@
   --pc-text4: #a7a6b1;
   --pc-bone: #14121a; /* crispest emphasis = near-black on light */
   --pc-live: #e23b3b;
-  --pc-letterbox: #dfe1e6;
+  --pc-letterbox: #f6f7f9; /* light sahne zemini ile aynı */
   --pc-accent-soft: rgba(124, 77, 255, 0.16);
   --pc-b: #5f9e00; /* deeper grass-green, legible on white */
   --pc-b-ink: #ffffff;

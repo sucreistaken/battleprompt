@@ -144,7 +144,7 @@ export function AudienceView() {
         style={{ minHeight: '100dvh', background: C.ink, color: C.text, fontFamily: FONT.body }}
         className="flex flex-col"
       >
-        <div className="w-full max-w-md mx-auto px-5 pt-5 pb-6 flex-1 flex flex-col gap-4">
+        <div className="w-full max-w-md md:max-w-4xl mx-auto px-5 pt-5 pb-6 flex-1 flex flex-col gap-4">
           <header className="flex items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <Lbl size={11} color="accent">
@@ -178,7 +178,7 @@ export function AudienceView() {
             </section>
           )}
 
-          <section className="flex-1 flex flex-col gap-3">
+          <section className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
             {strip('A')}
             {strip('B')}
           </section>

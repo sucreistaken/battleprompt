@@ -6,7 +6,9 @@ import { useI18n } from '@/components/client/i18nContext';
 interface MatchRow {
   _id: string;
   matchId: string;
-  theme: string;
+  targetPrompt: string | null;
+  category: string | null;
+  difficulty: string | null;
   winner: 'A' | 'B' | 'TIE' | null;
   winnerMode: 'AI_SCORE' | 'AUDIENCE_VOTE';
   players: {
@@ -92,8 +94,8 @@ export function MatchHistory() {
               align="right"
             />
           </div>
-          {m.theme && (
-            <p className="mt-2 text-xs text-ink-variant truncate">{m.theme}</p>
+          {m.targetPrompt && (
+            <p className="mt-2 text-xs text-ink-variant truncate">{m.targetPrompt}</p>
           )}
           {m.winner === 'TIE' && (
             <p className="mt-1 q-label">{t('tie')}</p>

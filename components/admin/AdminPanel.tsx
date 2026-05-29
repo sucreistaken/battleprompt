@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AdminLogin } from './AdminLogin';
 import { SettingsForm } from './SettingsForm';
 import { MatchHistory } from './MatchHistory';
+import { SystemStatus } from './SystemStatus';
 import { useI18n } from '@/components/client/i18nContext';
 
 type AuthState = 'checking' | 'unauth' | 'auth';
@@ -63,6 +64,7 @@ export function AdminPanel() {
           <SettingsForm />
         </section>
         <aside>
+          <SystemStatus />
           <h2 className="q-display text-display-lg text-ink mb-2">{t('matchHistory')}</h2>
           <p className="text-ink-variant mb-6">{t('matchHistorySubtitle')}</p>
           <MatchHistory />

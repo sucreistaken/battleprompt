@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash · Ekran seti (mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root{
+    --ink:#22202b; --ink2:#2d2b38; --ink3:#383545;
+    --line:#4a4757; --line2:#615d72;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --accent:#7c4dff;        /* Player A + brand */
+    --b:#c5ff3a;             /* Player B */
+    --b-soft:#a8d92f;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#141319;font-family:var(--body);color:var(--text);padding:48px 28px 120px}
+  .page-head{max-width:980px;margin:0 auto 44px}
+  .page-head h1{font-family:var(--pixel);font-size:28px;color:var(--bone);letter-spacing:.02em}
+  .page-head .accent{color:var(--accent)}
+  .page-head p{margin-top:14px;font-size:15px;line-height:1.6;color:var(--text2);max-width:680px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--text3)}
+  .legend b{display:inline-flex;align-items:center;gap:7px;text-transform:uppercase}
+  .legend .sw{width:11px;height:11px;border-radius:2px}
+
+  .group{max-width:980px;margin:0 auto}
+  .group-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--text3);margin:54px 0 20px;padding-bottom:10px;border-bottom:1px solid #2a2933}
+  .group-title b{color:var(--accent)}
+
+  .shot{margin-bottom:40px}
+  .shot .cap{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+  .shot .cap .k{font-family:var(--pixel);font-size:13px;color:var(--bone)}
+  .shot .cap .d{font-size:13px;color:var(--text3)}
+
+  /* ── stage board scaler (1920x1080 -> gallery width) ── */
+  .stage-wrap{width:920px;height:517.5px;overflow:hidden;border:1px solid #2a2933;border-radius:10px;
+    background:var(--ink);position:relative}
+  .board{position:absolute;top:0;left:0;width:1920px;height:1080px;transform:scale(.479166);transform-origin:top left;
+    background:var(--ink);color:var(--text);font-family:var(--body);overflow:hidden;isolation:isolate}
+
+  /* backdrop layers */
+  .bg-glow{position:absolute;z-index:0;pointer-events:none;width:1100px;height:1100px;left:-200px;top:-300px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.12) 0%,rgba(124,77,255,.03) 36%,transparent 60%);filter:blur(8px)}
+  .bg-glow.r{left:auto;right:-200px;background:radial-gradient(circle at center,rgba(197,255,58,.07) 0%,transparent 60%)}
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(124,77,255,.028) 1px,transparent 1px);
+    background-size:54px 54px;mask-image:radial-gradient(ellipse 70% 64% at 50% 46%,#000 30%,transparent 78%)}
+  .bg-vig{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at top,rgba(255,255,255,.04) 0%,transparent 55%),radial-gradient(ellipse at bottom,rgba(0,0,0,.28) 0%,transparent 60%)}
+  .bg-scan{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.008) 0,rgba(255,255,255,.008) 1px,transparent 1px,transparent 3px)}
+  .tick{position:absolute;background:var(--text4);opacity:.6;z-index:4}
+
+  /* top bar */
+  .topbar{position:absolute;top:52px;left:64px;right:64px;z-index:20;display:flex;align-items:center;justify-content:space-between}
+  .tb-left{display:flex;align-items:center;gap:18px}
+  .wordmark-sm{font-family:var(--pixel);font-size:24px;letter-spacing:.04em;color:var(--bone)}
+  .vsep{width:1px;height:18px;background:var(--line2)}
+  .live{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--live);border-radius:2px}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.4s ease-in-out infinite}
+  .live-txt{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;color:#fff}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.82)}}
+  .tb-right{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--text2)}
+  .chip{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid var(--line2);color:var(--text);letter-spacing:.12em;text-transform:uppercase}
+  .chip.diff{background:var(--live);color:#fff;border:none;font-weight:700}
+
+  /* narrator strip */
+  .narrator{position:absolute;top:118px;left:0;right:0;z-index:18;display:flex;justify-content:center}
+  .narrator .pill{display:inline-flex;align-items:center;gap:14px;padding:12px 26px;background:rgba(124,77,255,.10);
+    border:1px solid rgba(124,77,255,.28);border-radius:999px}
+  .narrator .bar{width:3px;height:22px;background:var(--accent);border-radius:2px}
+  .narrator p{font-family:var(--body);font-size:24px;font-weight:600;color:var(--bone)}
+  .narrator p em{font-style:normal;color:var(--text2);font-weight:500}
+
+  /* corner ticks helper */
+  .ticks .tick:nth-child(1){left:28px;top:28px;width:12px;height:1.5px}
+  .ticks .tick:nth-child(2){left:28px;top:28px;width:1.5px;height:12px}
+  .ticks .tick:nth-child(3){right:28px;top:28px;width:12px;height:1.5px}
+  .ticks .tick:nth-child(4){right:28px;top:28px;width:1.5px;height:12px}
+  .ticks .tick:nth-child(5){left:28px;bottom:28px;width:12px;height:1.5px}
+  .ticks .tick:nth-child(6){left:28px;bottom:28px;width:1.5px;height:12px}
+  .ticks .tick:nth-child(7){right:28px;bottom:28px;width:12px;height:1.5px}
+  .ticks .tick:nth-child(8){right:28px;bottom:28px;width:1.5px;height:12px}
+
+  /* ── target image (the psychological center) ── */
+  .target{position:relative;border-radius:6px;overflow:hidden;
+    background:linear-gradient(135deg,#3a2f63 0%,#241f3a 55%,#1c2b2b 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.06),0 30px 90px rgba(0,0,0,.5)}
+  .target .frame{position:absolute;inset:0;border:2px solid rgba(255,255,255,.12);border-radius:6px;pointer-events:none}
+  .target .corner{position:absolute;width:26px;height:26px;border:3px solid var(--bone);opacity:.9}
+  .target .c1{top:14px;left:14px;border-right:0;border-bottom:0}
+  .target .c2{top:14px;right:14px;border-left:0;border-bottom:0}
+  .target .c3{bottom:14px;left:14px;border-right:0;border-top:0}
+  .target .c4{bottom:14px;right:14px;border-left:0;border-top:0}
+  .target .badge{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:3;
+    font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.22em;color:var(--bone);
+    background:rgba(0,0,0,.45);padding:7px 16px;border-radius:999px}
+  .target .glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;opacity:.5}
+  .target.locked .glyph{filter:blur(0)}
+  .target .mask{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:rgba(20,18,28,.72);backdrop-filter:blur(3px)}
+  .target .mask .ico{font-size:46px}
+  .target .mask .t{font-family:var(--mono);font-size:15px;letter-spacing:.18em;color:var(--text2);text-transform:uppercase}
+
+  /* generic candidate image */
+  .cand{position:relative;border-radius:6px;overflow:hidden;background:var(--ink2);border:1px solid var(--line)}
+  .cand .glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;opacity:.55}
+  .cand.a{box-shadow:0 0 0 1px rgba(124,77,255,.4)}
+  .cand.b{box-shadow:0 0 0 1px rgba(197,255,58,.35)}
+  .shimmer{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);
+    background-size:220% 100%;animation:sh 1.6s linear infinite}
+  @keyframes sh{0%{background-position:140% 0}100%{background-position:-40% 0}}
+
+  /* player rail panel */
+  .prail{position:absolute;top:0;bottom:0;width:430px;z-index:14;display:flex;flex-direction:column;justify-content:center;gap:26px;padding:0 56px}
+  .prail.left{left:0;align-items:flex-start}
+  .prail.right{right:0;align-items:flex-end;text-align:right}
+  .pcard{width:100%;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:30px}
+  .prail.left .pcard{border-top:4px solid var(--accent)}
+  .prail.right .pcard{border-top:4px solid var(--b)}
+  .phead{display:flex;align-items:center;gap:16px}
+  .prail.right .phead{flex-direction:row-reverse}
+  .pava{width:64px;height:64px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:6px;
+    font-family:var(--pixel);font-size:30px}
+  .pava.a{background:var(--accent);color:#fff}
+  .pava.b{background:var(--b);color:#1a1d10}
+  .pmeta{display:flex;flex-direction:column;gap:3px}
+  .plbl{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+  .prail.left .plbl{color:var(--accent)}
+  .prail.right .plbl{color:var(--b-soft)}
+  .pname{font-family:var(--body);font-size:30px;font-weight:700;color:var(--bone)}
+  .pstatus{margin-top:22px;display:flex;align-items:center;gap:10px;font-family:var(--body);font-size:19px;font-weight:600;color:var(--text)}
+  .prail.right .pstatus{flex-direction:row-reverse}
+  .typing span{animation:dotdot 1.4s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes dotdot{0%,20%{opacity:0}50%{opacity:1}100%{opacity:0}}
+  .pbar{margin-top:16px;height:8px;border-radius:999px;background:var(--ink3);overflow:hidden}
+  .pbar i{display:block;height:100%;border-radius:999px}
+  .prail.left .pbar i{background:var(--accent)}
+  .prail.right .pbar i{background:var(--b)}
+  .pcount{margin-top:12px;font-family:var(--mono);font-size:15px;letter-spacing:.06em;color:var(--text3)}
+  .pgen{margin-top:22px;height:170px;border-radius:10px;position:relative;overflow:hidden;background:var(--ink3)}
+  .pgen .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:14px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase}
+
+  /* center column */
+  .center{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);z-index:16;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding-top:60px}
+
+  /* timer */
+  .timer{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .timer .num{font-family:var(--mono);font-size:120px;font-weight:700;line-height:.9;color:var(--bone);letter-spacing:.02em}
+  .timer .num.warn{color:var(--live);animation:beat .9s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .timer .ring{width:520px;height:6px;border-radius:999px;background:var(--ink3);overflow:hidden}
+  .timer .ring i{display:block;height:100%;background:var(--accent)}
+  .timer .ring.warn i{background:var(--live)}
+  .timer .cap{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+
+  /* result */
+  .winner-head{position:absolute;top:120px;left:0;right:0;z-index:20;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .winner-head .k{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:var(--b-soft)}
+  .winner-head .nm{font-family:var(--pixel);font-size:84px;color:var(--bone);line-height:.95}
+  .reveal-row{position:absolute;top:300px;left:50%;transform:translateX(-50%);z-index:16;display:flex;align-items:center;gap:34px}
+  .reveal-card{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .reveal-card .rl{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+  .reveal-card.win .rl{color:var(--b-soft)}
+  .reveal-card.loss{opacity:.5}
+  .reveal-prompt{margin-top:6px;max-width:260px;font-size:14px;line-height:1.45;color:var(--text2);text-align:center}
+  .ai-card{position:absolute;bottom:118px;left:50%;transform:translateX(-50%);z-index:20;width:1120px;
+    background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:26px 34px;display:flex;gap:22px;align-items:flex-start}
+  .ai-card .tag{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--accent);text-transform:uppercase;white-space:nowrap;padding-top:3px}
+  .ai-card p{font-size:20px;line-height:1.45;color:var(--text)}
+  .ai-card p b{color:var(--bone)}
+  .result-foot{position:absolute;bottom:48px;left:0;right:0;z-index:20;text-align:center;
+    font-family:var(--mono);font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+  .target-prompt{margin-top:14px;max-width:300px;text-align:center;font-size:15px;line-height:1.45;color:var(--bone);
+    background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+
+  /* confetti dots (minimal) */
+  .confetti span{position:absolute;width:8px;height:8px;border-radius:1px;opacity:.85;z-index:19}
+
+  /* ── phones ── */
+  .phones{display:flex;gap:30px;flex-wrap:wrap}
+  .phone{width:360px;height:740px;background:var(--ink);border-radius:34px;overflow:hidden;
+    border:7px solid #0c0b10;box-shadow:0 24px 60px rgba(0,0,0,.5);position:relative;display:flex;flex-direction:column}
+  .ph-glow{position:absolute;z-index:0;pointer-events:none;width:480px;height:480px;left:-150px;top:-160px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,transparent 60%)}
+  .ph-body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;padding:42px 22px 22px}
+  .ph-top{display:flex;align-items:center;justify-content:space-between}
+  .ph-wm{font-family:var(--pixel);font-size:14px;letter-spacing:.04em;color:var(--bone)}
+  .ph-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px}
+  .ph-chip .d{width:6px;height:6px;border-radius:50%;background:var(--b)}
+  .ph-chip span{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;color:var(--text2);text-transform:uppercase}
+  .ph-chip.live{border-color:var(--live)}.ph-chip.live .d{background:var(--live)}
+  .ph-target{margin-top:18px;width:100%;aspect-ratio:1;border-radius:14px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#3a2f63 0%,#241f3a 55%,#1c2b2b 100%);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+  .ph-target .glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:74px;opacity:.55}
+  .ph-target .tag{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;
+    color:var(--bone);background:rgba(0,0,0,.45);padding:5px 10px;border-radius:999px}
+  .ph-timer{margin-top:16px;display:flex;align-items:center;justify-content:space-between}
+  .ph-timer .num{font-family:var(--mono);font-size:38px;font-weight:700;color:var(--bone)}
+  .ph-timer .num.warn{color:var(--live)}
+  .ph-timer .ring{flex:1;margin-left:16px;height:6px;border-radius:999px;background:var(--ink3);overflow:hidden}
+  .ph-timer .ring i{display:block;height:100%;background:var(--accent)}
+  .ph-timer .ring.warn i{background:var(--live)}
+  .ph-area{margin-top:14px;flex:1;border-radius:14px;background:var(--ink2);border:1.5px solid var(--line);padding:14px 16px;
+    font-size:16px;line-height:1.5;color:var(--text);position:relative}
+  .ph-area .ph-ph{color:var(--text4)}
+  .ph-area.focus{border-color:var(--accent)}
+  .ph-count{position:absolute;right:14px;bottom:12px;font-family:var(--mono);font-size:12px;color:var(--text3)}
+  .ph-fair{margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.4;color:var(--text3)}
+  .ph-fair .lk{color:var(--accent)}
+  .ph-warn{margin-top:12px;text-align:center;font-size:13px;font-weight:600;color:var(--live)}
+  .ph-cta{margin-top:14px;width:100%;height:58px;border-radius:14px;font-family:var(--body);font-size:18px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+  .ph-cta.active{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(124,77,255,.34)}
+  .ph-cta.idle{background:transparent;color:var(--text3);border:1.5px solid var(--line);font-weight:600}
+  .ph-hero{display:flex;flex-direction:column;gap:5px;margin-top:18px;line-height:.96}
+  .ph-hero .wm{font-family:var(--pixel);font-size:46px;color:var(--bone)}
+  .ph-hero .wm.accent{color:var(--accent)}
+  .ph-explain{font-size:17px;font-weight:500;line-height:1.45;color:var(--text2);margin-top:16px}
+  .ph-explain em{font-style:normal;color:var(--bone);font-weight:600}
+  .ph-form{display:flex;flex-direction:column;gap:11px;margin-top:24px}
+  .ph-flabel{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+  .ph-field{width:100%;height:58px;border-radius:14px;background:var(--ink2);border:1.5px solid var(--line);
+    padding:0 16px;font-size:17px;color:var(--text);display:flex;align-items:center}
+  .ph-field.filled{border-color:var(--accent);color:var(--bone);font-weight:600}
+  .ph-field .ph-ph{color:var(--text4)}
+  .ph-foot{font-size:12px;color:var(--text3);text-align:center;margin-top:12px}
+  .grow{flex:1}
+  /* lock state */
+  .ph-lock{display:flex;flex-direction:column;align-items:center;text-align:center;margin:auto 0}
+  .ph-ava{width:84px;height:84px;border-radius:16px;color:#fff;font-family:var(--pixel);font-size:40px;
+    display:flex;align-items:center;justify-content:center;background:var(--accent);
+    box-shadow:0 0 0 1px rgba(124,77,255,.5),0 16px 40px rgba(124,77,255,.3)}
+  .ph-lock .nm{font-family:var(--pixel);font-size:28px;color:var(--bone);margin-top:22px}
+  .ph-lock .role{font-size:16px;font-weight:600;color:var(--accent);margin-top:12px}
+  .ph-wait{margin-top:26px;align-self:stretch;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:18px;
+    display:flex;flex-direction:column;align-items:center;gap:13px}
+  .ph-wait .lbl{font-size:15px;font-weight:600;color:var(--text)}
+  .meter{display:flex;align-items:center;gap:9px}
+  .meter .seg{width:40px;height:8px;border-radius:2px;background:var(--ink3);border:1px solid var(--line)}
+  .meter .seg.on{background:var(--accent);border-color:var(--accent)}
+  .meter .c{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--text2)}
+  .ph-next{margin-top:16px;align-self:stretch;background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.22);
+    border-radius:14px;padding:15px 16px;text-align:center}
+  .ph-next .a{font-size:15px;font-weight:700;color:var(--bone)}
+  .ph-next .b{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.4}
+  /* phone result */
+  .ph-verdict{text-align:center;margin-top:8px}
+  .ph-verdict .k{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
+  .ph-verdict.win .k{color:var(--b-soft)}.ph-verdict.loss .k{color:var(--text3)}
+  .ph-verdict .big{font-family:var(--pixel);font-size:40px;color:var(--bone);margin-top:8px}
+  .ph-pair{display:flex;gap:10px;margin-top:16px}
+  .ph-mini{flex:1;display:flex;flex-direction:column;gap:6px}
+  .ph-mini .img{width:100%;aspect-ratio:1;border-radius:10px;background:var(--ink3);position:relative;overflow:hidden}
+  .ph-mini .img .glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.55}
+  .ph-mini.win .img{box-shadow:0 0 0 2px var(--b)}
+  .ph-mini .ml{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);text-align:center}
+  .ph-mini.win .ml{color:var(--b-soft)}
+  .ph-prow{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .ph-prompt{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .ph-prompt .pl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+  .ph-prompt .pt{font-size:14px;line-height:1.4;color:var(--text);margin-top:4px}
+  .ph-ai{margin-top:12px;background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.22);border-radius:10px;padding:12px 14px}
+  .ph-ai .pl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .ph-ai .pt{font-size:14px;line-height:1.45;color:var(--text);margin-top:4px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Prompt Clash <span class="accent">·</span> ekran seti</h1>
+  <p>Hedef görseli en iyi tarif eden kazanır. Sahne ekranı izleyici odaklı, telefon ekranı oyuncu odaklı. Promptlar PROMPTING ve GENERATING boyunca gizli, sadece RESULT'ta reveal edilir. Hiyerarşi her ekranda sabit: hedef görsel, timer, oyuncu durumu, anlatıcı metin, ikincil bilgi.</p>
+  <div class="legend">
+    <b><span class="sw" style="background:var(--accent)"></span>Player A / brand</b>
+    <b><span class="sw" style="background:var(--b)"></span>Player B</b>
+    <b><span class="sw" style="background:var(--live)"></span>Canlı / son 10 sn</b>
+    <b><span class="sw" style="background:var(--bone)"></span>Hedef / reveal</b>
+  </div>
+</div>
+
+<!-- ════════════════ STAGE ════════════════ -->
+<div class="group">
+  <div class="group-title"><b>SAHNE</b> · büyük ekran (1920 x 1080) · izleyici odaklı</div>
+
+  <!-- 1 · STAGE IDLE -->
+  <div class="shot">
+    <div class="cap"><span class="k">1 · IDLE</span><span class="d">ekrana bakan oyunu anlasın, QR ile katılsın</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span><span class="chip">12AB</span></div>
+        </div>
+        <div style="position:absolute;inset:0;z-index:10;display:grid;grid-template-columns:1fr 560px;gap:90px;align-items:center;padding:140px 110px 90px">
+          <div style="display:flex;flex-direction:column;gap:40px">
+            <div style="display:flex;flex-direction:column;gap:12px;line-height:1"><span style="font-family:var(--pixel);font-size:172px;color:var(--bone);line-height:.96">PROMPT</span><span style="font-family:var(--pixel);font-size:172px;color:var(--accent);line-height:.96">CLASH</span></div>
+            <div style="display:flex;align-items:center;gap:14px;max-width:760px">
+              <span style="width:3px;height:44px;background:var(--accent)"></span>
+              <p style="font-family:var(--body);font-size:26px;font-weight:600;line-height:1.4;color:var(--bone)">Hedef görseli en iyi tarif eden kazanır.</p>
+            </div>
+            <p style="font-family:var(--body);font-size:19px;color:var(--text2);max-width:620px;line-height:1.5;margin-top:-22px">Oyuncular 60 saniyede prompt yazar, kazananı yapay zeka seçer. <em style="font-style:normal;color:var(--text3)">2 oyuncu girince maç otomatik başlar.</em></p>
+            <div style="display:flex;gap:16px;margin-top:6px">
+              <div style="flex:1;display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--ink2);border:1px solid var(--line);border-left:4px solid var(--line2)">
+                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:23px;border-radius:2px;background:var(--ink3);color:var(--text3)">A</div>
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--text3)">PLAYER A</span><span style="font-family:var(--body);font-size:20px;font-weight:500;font-style:italic;color:var(--text3)">bekleniyor...</span></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--ink2);border:1px solid var(--line);border-left:4px solid var(--line2)">
+                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:23px;border-radius:2px;background:var(--ink3);color:var(--text3)">B</div>
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--text3)">PLAYER B</span><span style="font-family:var(--body);font-size:20px;font-weight:500;font-style:italic;color:var(--text3)">bekleniyor...</span></div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#fff;color:#0e0e10;border:1px solid rgba(0,0,0,.10);padding:32px;display:flex;flex-direction:column;gap:18px">
+            <span style="font-family:var(--pixel);font-size:16px;letter-spacing:.06em;color:#0e0e10">TELEFONDAN KATIL</span>
+            <div style="width:100%;aspect-ratio:1;background:conic-gradient(#0e0e10 25%,#fff 0 50%,#0e0e10 0 75%,#fff 0);background-size:24px 24px"></div>
+            <div style="font-family:var(--mono);font-size:19px;text-align:center;color:#0e0e10;border-top:1px solid #d4d2cc;padding-top:16px">promptclash.app</div>
+            <div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid #ece9e2;padding-top:16px">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center"><span style="width:24px;height:24px;background:#0e0e10;color:#fff;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</span><span style="font-family:var(--body);font-size:14px;color:#4a4754">QR okut</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center"><span style="width:24px;height:24px;background:#0e0e10;color:#fff;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</span><span style="font-family:var(--body);font-size:14px;color:#4a4754">Nick yaz</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center"><span style="width:24px;height:24px;background:#0e0e10;color:#fff;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</span><span style="font-family:var(--body);font-size:14px;color:#4a4754">Kapış</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 · STAGE PROMPTING -->
+  <div class="shot">
+    <div class="cap"><span class="k">2 · PROMPTING</span><span class="d">60 sn düello, promptlar gizli, sadece aktivite görünür</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow"></div><div class="bg-glow r"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+        </div>
+        <div class="narrator"><span class="pill"><span class="bar"></span><p>Hedef görseli en iyi tarif eden kazanır.</p></span></div>
+
+        <div class="prail left">
+          <div class="pcard">
+            <div class="phead"><div class="pava a">A</div><div class="pmeta"><span class="plbl">PLAYER A</span><span class="pname">ZEYNEP</span></div></div>
+            <div class="pstatus"><span class="typing">Yazıyor<span>.</span><span>.</span><span>.</span></span></div>
+            <div class="pbar"><i style="width:46%"></i></div>
+            <div class="pcount">128 / 280 karakter</div>
+          </div>
+        </div>
+        <div class="prail right">
+          <div class="pcard">
+            <div class="phead"><div class="pava b">B</div><div class="pmeta"><span class="plbl">PLAYER B</span><span class="pname">EMRE</span></div></div>
+            <div class="pstatus"><span class="typing">Yazıyor<span>.</span><span>.</span><span>.</span></span></div>
+            <div class="pbar"><i style="width:71%"></i></div>
+            <div class="pcount">203 / 280 karakter</div>
+          </div>
+        </div>
+
+        <div class="center">
+          <div class="target locked" style="width:520px;height:520px">
+            <div class="badge">HEDEF GÖRSEL</div>
+            <div class="glyph">🦊</div>
+            <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+            <div class="frame"></div>
+          </div>
+          <div class="timer">
+            <div class="num">0:42</div>
+            <div class="ring"><i style="width:70%"></i></div>
+            <div class="cap">kalan süre</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2b · PROMPTING last 10s -->
+  <div class="shot">
+    <div class="cap"><span class="k">2b · PROMPTING · son 10 sn</span><span class="d">dramatize: timer kırmızı + nabız, hedef frame canlanır</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow" style="background:radial-gradient(circle at center,rgba(255,92,92,.10) 0%,transparent 60%)"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+        </div>
+        <div class="narrator"><span class="pill" style="background:rgba(255,92,92,.10);border-color:rgba(255,92,92,.3)"><span class="bar" style="background:var(--live)"></span><p>Son saniyeler. <em>Tarifini bitir.</em></p></span></div>
+        <div class="prail left"><div class="pcard"><div class="phead"><div class="pava a">A</div><div class="pmeta"><span class="plbl">PLAYER A</span><span class="pname">ZEYNEP</span></div></div><div class="pstatus"><span class="typing">Yazıyor<span>.</span><span>.</span><span>.</span></span></div><div class="pbar"><i style="width:88%"></i></div><div class="pcount">241 / 280 karakter</div></div></div>
+        <div class="prail right"><div class="pcard"><div class="phead"><div class="pava b">B</div><div class="pmeta"><span class="plbl">PLAYER B</span><span class="pname">EMRE</span></div></div><div class="pstatus" style="color:var(--b-soft)">Gönderildi</div><div class="pbar"><i style="width:100%"></i></div><div class="pcount">280 / 280 karakter</div></div></div>
+        <div class="center">
+          <div class="target locked" style="width:520px;height:520px;box-shadow:0 0 0 2px rgba(255,92,92,.5),0 30px 90px rgba(0,0,0,.5)">
+            <div class="badge">HEDEF GÖRSEL</div><div class="glyph">🦊</div>
+            <div class="corner c1" style="border-color:var(--live)"></div><div class="corner c2" style="border-color:var(--live)"></div><div class="corner c3" style="border-color:var(--live)"></div><div class="corner c4" style="border-color:var(--live)"></div>
+          </div>
+          <div class="timer"><div class="num warn">0:07</div><div class="ring warn"><i style="width:12%"></i></div><div class="cap" style="color:var(--live)">son saniyeler</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 · STAGE GENERATING -->
+  <div class="shot">
+    <div class="cap"><span class="k">3 · GENERATING</span><span class="d">promptlar gönderildi, AI görselleri üretiyor (hâlâ gizli)</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow"></div><div class="bg-glow r"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+        </div>
+        <div class="narrator"><span class="pill"><span class="bar"></span><p>Yapay zeka görselleri hazırlıyor<em> ...</em></p></span></div>
+        <div class="prail left"><div class="pcard"><div class="phead"><div class="pava a">A</div><div class="pmeta"><span class="plbl">PLAYER A</span><span class="pname">ZEYNEP</span></div></div><div class="pgen"><div class="shimmer"></div><div class="lab">görsel üretiliyor</div></div></div></div>
+        <div class="prail right"><div class="pcard"><div class="phead"><div class="pava b">B</div><div class="pmeta"><span class="plbl">PLAYER B</span><span class="pname">EMRE</span></div></div><div class="pgen"><div class="shimmer"></div><div class="lab">görsel üretiliyor</div></div></div></div>
+        <div class="center">
+          <div class="target locked" style="width:480px;height:480px"><div class="badge">HEDEF GÖRSEL</div><div class="glyph">🦊</div><div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div></div>
+          <div style="display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2)">
+            <span style="display:flex;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent);animation:dotdot 1.2s infinite"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:dotdot 1.2s infinite .2s"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--b);animation:dotdot 1.2s infinite .4s"></span></span>
+            iki görsel hazırlanıyor
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 · STAGE SCORING -->
+  <div class="shot">
+    <div class="cap"><span class="k">4 · SCORING</span><span class="d">iki görsel hazır, AI hedefe en yakını seçiyor (kazanan gizli)</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow"></div><div class="bg-glow r"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+        </div>
+        <div class="narrator"><span class="pill"><span class="bar"></span><p>Yapay zeka hedefe en yakın görseli seçiyor<em> ...</em></p></span></div>
+        <div style="position:absolute;inset:0;z-index:14;display:flex;align-items:center;justify-content:center;gap:48px;padding-top:70px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span class="plbl" style="color:var(--accent)">ZEYNEP · A</span>
+            <div class="cand a" style="width:340px;height:340px"><div class="glyph">🦊</div><div class="shimmer"></div></div>
+            <span style="font-family:var(--mono);font-size:14px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase">değerlendiriliyor</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <div class="badge" style="position:static;transform:none;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.22em;color:var(--bone);background:rgba(0,0,0,.45);padding:7px 16px;border-radius:999px">HEDEF</div>
+            <div class="target locked" style="width:400px;height:400px"><div class="glyph">🦊</div><div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div></div>
+            <span style="font-family:var(--mono);font-size:15px;letter-spacing:.16em;color:var(--text2);text-transform:uppercase">karşılaştırılıyor</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span class="plbl" style="color:var(--b-soft)">EMRE · B</span>
+            <div class="cand b" style="width:340px;height:340px"><div class="glyph">🦊</div><div class="shimmer"></div></div>
+            <span style="font-family:var(--mono);font-size:14px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase">değerlendiriliyor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 · STAGE RESULT -->
+  <div class="shot">
+    <div class="cap"><span class="k">5 · RESULT</span><span class="d">en dramatik ekran: kazanan + promptlar + hedef + AI gerekçesi reveal</span></div>
+    <div class="stage-wrap">
+      <div class="board">
+        <div class="bg-glow" style="background:radial-gradient(circle at center,rgba(197,255,58,.10) 0%,transparent 60%);left:50%;top:-360px;transform:translateX(-50%)"></div>
+        <div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+        <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+        <div class="confetti">
+          <span style="background:var(--b);left:22%;top:200px"></span><span style="background:var(--accent);left:34%;top:160px"></span>
+          <span style="background:var(--bone);left:62%;top:180px"></span><span style="background:var(--b);left:74%;top:220px"></span>
+          <span style="background:var(--accent);left:48%;top:150px"></span>
+        </div>
+        <div class="topbar">
+          <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+          <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+        </div>
+        <div class="winner-head"><span class="k">Kazanan</span><span class="nm">EMRE</span></div>
+        <div class="reveal-row">
+          <div class="reveal-card loss">
+            <span class="rl">ZEYNEP · A</span>
+            <div class="cand a" style="width:280px;height:280px"><div class="glyph">🦊</div></div>
+            <p class="reveal-prompt">turuncu tüylü bir tilki, karlı orman, yandan profil, yumuşak ışık</p>
+          </div>
+          <div class="reveal-card">
+            <span class="rl" style="color:var(--bone)">HEDEF</span>
+            <div class="target locked" style="width:300px;height:300px"><div class="glyph">🦊</div><div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div></div>
+            <div class="target-prompt">karda yürüyen kızıl tilki, profilden, sinematik altın saat ışığı</div>
+          </div>
+          <div class="reveal-card win">
+            <span class="rl">EMRE · B</span>
+            <div class="cand b" style="width:300px;height:300px;box-shadow:0 0 0 3px var(--b),0 0 60px rgba(197,255,58,.4)"><div class="glyph">🦊</div></div>
+            <p class="reveal-prompt">kızıl tilki karda yürüyor, sinematik altın ışık, profil, detaylı tüy</p>
+          </div>
+        </div>
+        <div class="ai-card"><span class="tag">AI değerlendirme</span><p>Emre'nin görseli <b>ışık yönü ve tilkinin profil duruşunda</b> hedefe daha yakın. Zeynep'in karesi güçlü ama orman fazla yoğun, hedef sade bir kar zemini istiyordu.</p></div>
+        <div class="result-foot">Yeni maç birazdan başlıyor</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PHONE ════════════════ -->
+<div class="group">
+  <div class="group-title"><b>TELEFON</b> · oyuncu odaklı · QR hiç görünmez</div>
+  <div class="phones">
+
+    <!-- 6 · JOIN BEFORE -->
+    <div class="shot" style="margin-bottom:0">
+      <div class="cap"><span class="k">6 · JOIN · önce</span></div>
+      <div class="phone">
+        <div class="ph-glow"></div>
+        <div class="ph-body">
+          <div class="ph-top"><span class="ph-wm">PROMPT CLASH</span><span class="ph-chip"><span class="d"></span><span>2 oyuncu gerekli</span></span></div>
+          <div class="ph-hero"><span class="wm">PROMPT</span><span class="wm accent">CLASH</span></div>
+          <p class="ph-explain">60 saniyede hedef görsele en yakın prompt'u yaz. <em>Kazananı yapay zeka seçer.</em></p>
+          <div class="ph-form">
+            <span class="ph-flabel">Takma adın</span>
+            <div class="ph-field"><span class="ph-ph">örn. zeynep</span></div>
+            <button class="ph-cta idle">Önce takma adını yaz</button>
+            <p class="ph-foot">2 oyuncu girince maç otomatik başlar.</p>
+          </div>
+          <div class="grow"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 · JOIN AFTER -->
+    <div class="shot" style="margin-bottom:0">
+      <div class="cap"><span class="k">7 · JOIN · sonra</span></div>
+      <div class="phone">
+        <div class="ph-glow"></div>
+        <div class="ph-body">
+          <div class="ph-top"><span class="ph-wm">PROMPT CLASH</span><span class="ph-chip"><span class="d"></span><span>lobide</span></span></div>
+          <div class="ph-lock">
+            <div class="ph-ava">A</div>
+            <div class="nm">ZEYNEP</div>
+            <div class="role">Oyuncu A olarak kilitlendin</div>
+            <div class="ph-wait"><span class="lbl">Rakip bekleniyor...</span><span class="meter"><span class="seg on"></span><span class="seg"></span><span class="c">1 / 2 hazır</span></span></div>
+            <div class="ph-next"><div class="a">Bu ekranı kapatma.</div><div class="b">Rakip gelince maç otomatik başlayacak.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 · PHONE PROMPTING -->
+    <div class="shot" style="margin-bottom:0">
+      <div class="cap"><span class="k">8 · PROMPTING</span></div>
+      <div class="phone">
+        <div class="ph-glow"></div>
+        <div class="ph-body">
+          <div class="ph-top"><span class="ph-wm">PROMPT CLASH</span><span class="ph-chip live"><span class="d"></span><span>canlı</span></span></div>
+          <div class="ph-target"><span class="tag">HEDEF GÖRSEL</span><div class="glyph">🦊</div></div>
+          <div class="ph-timer"><span class="num">0:42</span><span class="ring"><i style="width:70%"></i></span></div>
+          <div class="ph-area focus">turuncu tüylü tilki, karlı orman zemini, yandan profil<span class="ph-count">128 / 280</span></div>
+          <div class="ph-fair"><span class="lk">&#128274;</span> Rakibin promptunu göremezsin, o da seninkini göremez.</div>
+          <button class="ph-cta active">Gönder</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8b · PHONE PROMPTING last 10s -->
+    <div class="shot" style="margin-bottom:0">
+      <div class="cap"><span class="k">8b · PROMPTING · son 10 sn</span></div>
+      <div class="phone">
+        <div class="ph-glow" style="background:radial-gradient(circle at center,rgba(255,92,92,.16) 0%,transparent 60%)"></div>
+        <div class="ph-body">
+          <div class="ph-top"><span class="ph-wm">PROMPT CLASH</span><span class="ph-chip live"><span class="d"></span><span>canlı</span></span></div>
+          <div class="ph-target"><span class="tag">HEDEF GÖRSEL</span><div class="glyph">🦊</div></div>
+          <div class="ph-timer"><span class="num warn">0:07</span><span class="ring warn"><i style="width:12%"></i></span></div>
+          <div class="ph-area focus" style="border-color:var(--live)">turuncu tüylü tilki, karlı orman zemini, yandan profil, yumuşak<span class="ph-count" style="color:var(--live)">241 / 280</span></div>
+          <div class="ph-warn">Son saniyeler. Gönder butonuna bas.</div>
+          <button class="ph-cta active" style="background:var(--live);box-shadow:0 12px 30px rgba(255,92,92,.34)">Gönder</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 · PHONE RESULT -->
+    <div class="shot" style="margin-bottom:0">
+      <div class="cap"><span class="k">9 · RESULT · kazanan</span></div>
+      <div class="phone">
+        <div class="ph-glow" style="background:radial-gradient(circle at center,rgba(197,255,58,.12) 0%,transparent 60%)"></div>
+        <div class="ph-body" style="overflow-y:auto">
+          <div class="ph-verdict win"><span class="k">Sonuç</span><div class="big">KAZANDIN</div></div>
+          <div class="ph-pair">
+            <div class="ph-mini win"><div class="img"><div class="glyph">🦊</div></div><span class="ml">Senin görselin</span></div>
+            <div class="ph-mini"><div class="img" style="box-shadow:0 0 0 2px var(--line)"><div class="glyph">🦊</div></div><span class="ml">Hedef</span></div>
+            <div class="ph-mini"><div class="img"><div class="glyph">🦊</div></div><span class="ml">Rakip</span></div>
+          </div>
+          <div class="ph-prow">
+            <div class="ph-prompt"><div class="pl">Senin promptun</div><div class="pt">kızıl tilki karda yürüyor, sinematik altın ışık, profil</div></div>
+            <div class="ph-prompt"><div class="pl">Rakip promptu</div><div class="pt">turuncu tüylü tilki, karlı orman, yandan profil</div></div>
+          </div>
+          <div class="ph-ai"><div class="pl">AI değerlendirme</div><div class="pt">Işık yönü ve profil duruşu hedefe daha yakındı.</div></div>
+          <button class="ph-cta active" style="margin-top:16px">Yeni maç için bekle</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -39,7 +39,7 @@ export function StageVoting() {
 
   return (
     <StageFrame>
-      <TopBar liveLabel={t('live')} matchId={matchId} theme={state.theme} />
+      <TopBar liveLabel={t('live')} matchId={matchId} category={state.roundCategoryLabel} difficulty={state.roundDifficultyLabel} />
 
       <div
         style={{

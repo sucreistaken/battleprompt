@@ -27,7 +27,11 @@ export interface StateSnapshot {
   phase: Phase;
   phaseEndsAt: number | null;
   matchId: string | null;
-  theme: string;
+  roundCategory: string | null;
+  roundDifficulty: string | null;
+  roundCategoryLabel: string | null;
+  roundDifficultyLabel: string | null;
+  targetPrompt: string | null;
   winnerMode: WinnerMode;
   showLivePrompts: boolean;
   stageLanguage: 'tr' | 'en';

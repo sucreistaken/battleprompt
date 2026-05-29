@@ -103,7 +103,87 @@ export function StageKeyframes() {
       @keyframes pcShimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
       @keyframes pcSpin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
       @keyframes pcDotDot { 0%,20% { opacity:0; } 50% { opacity:1; } 100% { opacity:0; } }
+      @keyframes pcDrift { 0% { transform:translateY(40px); opacity:0; } 16% { opacity:.35; } 84% { opacity:.35; } 100% { transform:translateY(-260px); opacity:0; } }
     `}</style>
+  );
+}
+
+// ─── StageBackdrop - restrained "arena energy" behind idle content ───────
+// Sits at z-index 0 (below StageFrame's vignette/scanlines). Four faint
+// layers: a single violet spotlight bloom (top-left), a masked pixel grid,
+// a dim perspective fan along the floor (faded out at centre so it never
+// crowds the slots), and a few slow drifting motes. Accent-only, no second
+// hue; kept low-alpha so the dusk surface still reads premium, not gamer-RGB.
+export function StageBackdrop() {
+  const accent = '#7c4dff';
+  const lime = '#c5ff3a';
+  const mote = (left: string, delay: string, b = false): CSSProperties => ({
+    position: 'absolute',
+    left,
+    width: 5,
+    height: 5,
+    background: b ? lime : accent,
+    opacity: 0,
+    animation: `pcDrift 11s linear ${delay} infinite`,
+  });
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {/* spotlight bloom */}
+      <div
+        style={{
+          position: 'absolute',
+          width: 1100,
+          height: 1100,
+          left: -200,
+          top: -300,
+          background:
+            'radial-gradient(circle at center, rgba(124,77,255,0.12) 0%, rgba(124,77,255,0.03) 36%, transparent 60%)',
+          filter: 'blur(8px)',
+        }}
+      />
+      {/* pixel grid, masked to upper-left so the centre stays calm */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage:
+            'linear-gradient(rgba(124,77,255,0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(124,77,255,0.028) 1px, transparent 1px)',
+          backgroundSize: '54px 54px',
+          WebkitMaskImage: 'radial-gradient(ellipse 62% 60% at 32% 42%, #000 28%, transparent 76%)',
+          maskImage: 'radial-gradient(ellipse 62% 60% at 32% 42%, #000 28%, transparent 76%)',
+        }}
+      />
+      {/* arena floor fan, faded out at horizontal centre */}
+      <svg
+        viewBox="0 0 1920 280"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: 280,
+          WebkitMaskImage: 'linear-gradient(90deg, #000 0%, transparent 40%, transparent 60%, #000 100%)',
+          maskImage: 'linear-gradient(90deg, #000 0%, transparent 40%, transparent 60%, #000 100%)',
+        }}
+      >
+        <g stroke={accent} strokeWidth={1.5} fill="none" opacity={0.16}>
+          <line x1={960} y1={280} x2={120} y2={0} />
+          <line x1={960} y1={280} x2={470} y2={0} />
+          <line x1={960} y1={280} x2={1450} y2={0} />
+          <line x1={960} y1={280} x2={1800} y2={0} />
+        </g>
+        <g stroke={accent} strokeWidth={1} fill="none" opacity={0.1}>
+          <line x1={0} y1={210} x2={1920} y2={210} />
+          <line x1={0} y1={140} x2={1920} y2={140} />
+        </g>
+      </svg>
+      {/* drifting motes */}
+      <div style={mote('15%', '0s')} />
+      <div style={mote('28%', '3.4s', true)} />
+      <div style={mote('7%', '6.6s')} />
+    </div>
   );
 }
 
@@ -117,36 +197,54 @@ export function StageScaler({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // Measure against the document element, not window.innerWidth/Height: the
-    // latter drifts from the painted area under browser zoom / DPR quirks and
-    // lets the board overflow (clipped right edge). clientWidth/Height track the
-    // real layout viewport (and exclude scrollbars), so min() always fits.
-    const fit = () => {
+    // clientWidth/Height track the real layout viewport (and exclude scrollbars),
+    // so min() always fits — unlike window.innerWidth/Height which drift under DPR quirks.
+    //
+    // Distinguish real window resize from browser zoom: under zoom the CSS viewport
+    // shrinks/grows but devicePixelRatio moves inversely, so physical pixels
+    // (clientWidth * dpr) stay ~constant. Under a real resize the physical area
+    // changes. We only refit on real resizes — browser zoom passes through, so the
+    // user can Ctrl+/- to inspect detail without us cancelling it.
+    let lastDPR = window.devicePixelRatio || 1;
+    let lastPhysW = document.documentElement.clientWidth * lastDPR;
+    let lastPhysH = document.documentElement.clientHeight * lastDPR;
+
+    const fit = (force = false) => {
       const vw = document.documentElement.clientWidth;
       const vh = document.documentElement.clientHeight;
-      setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
-      setReady(true);
+      const dpr = window.devicePixelRatio || 1;
+      const physW = vw * dpr;
+      const physH = vh * dpr;
+      const isZoom = !force && dpr !== lastDPR && Math.abs(physW - lastPhysW) < 4 && Math.abs(physH - lastPhysH) < 4;
+      if (!isZoom) {
+        setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
+        setReady(true);
+      }
+      lastDPR = dpr;
+      lastPhysW = physW;
+      lastPhysH = physH;
     };
-    fit();
+    fit(true);
     // One more pass after layout/fonts settle.
-    const raf = requestAnimationFrame(fit);
+    const raf = requestAnimationFrame(() => fit(true));
 
-    window.addEventListener('resize', fit);
+    const onResize = () => fit();
+    window.addEventListener('resize', onResize);
     const vv = window.visualViewport;
-    vv?.addEventListener('resize', fit);
-    vv?.addEventListener('scroll', fit);
+    vv?.addEventListener('resize', onResize);
+    vv?.addEventListener('scroll', onResize);
 
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined' && frameRef.current) {
-      ro = new ResizeObserver(fit);
+      ro = new ResizeObserver(onResize);
       ro.observe(frameRef.current);
     }
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', fit);
-      vv?.removeEventListener('resize', fit);
-      vv?.removeEventListener('scroll', fit);
+      window.removeEventListener('resize', onResize);
+      vv?.removeEventListener('resize', onResize);
+      vv?.removeEventListener('scroll', onResize);
       ro?.disconnect();
     };
   }, []);
@@ -263,11 +361,13 @@ function SafeAreaTicks() {
 export function TopBar({
   liveLabel,
   matchId,
-  theme,
+  category,
+  difficulty,
 }: {
   liveLabel: string;
   matchId: string;
-  theme: string;
+  category?: string | null;
+  difficulty?: string | null;
 }) {
   return (
     <div
@@ -331,25 +431,26 @@ export function TopBar({
           color: C.text2,
         }}
       >
-        {matchId && <BroadcastChip>{matchId}</BroadcastChip>}
-        {theme && (
+        {/* Kategori + zorluk rozeti. Gerçek prompt gizli; sadece "ne tür" ipucu. */}
+        {category && <BroadcastChip>{category}</BroadcastChip>}
+        {difficulty && (
           <span
             style={{
-              fontFamily: FONT.body,
-              fontSize: 13,
-              fontWeight: 400,
-              letterSpacing: '0.01em',
-              color: C.text3,
-              fontStyle: 'italic',
-              maxWidth: 460,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '4px 9px',
+              borderRadius: 2,
+              background: C.live,
+              color: '#fff',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
             }}
           >
-            &ldquo;{theme}&rdquo;
+            {difficulty}
           </span>
         )}
+        {matchId && <BroadcastChip>{matchId}</BroadcastChip>}
       </div>
     </div>
   );
@@ -582,14 +683,17 @@ export function StageImage({
   loadingLabel,
   dim = false,
   fill = false,
+  objectFit = 'cover',
 }: {
   src: string | null;
   alt: string;
   accent: string;
   loadingLabel: string;
   dim?: boolean;
-  /** Fill the remaining flex height (object-cover crop) instead of forcing a square. */
+  /** Fill the remaining flex height instead of forcing a square. */
   fill?: boolean;
+  /** 'cover' kırpar (varsayılan); 'contain' tüm görseli gösterir (kırpmaz). */
+  objectFit?: 'cover' | 'contain';
 }) {
   return (
     <div
@@ -609,7 +713,7 @@ export function StageImage({
       {src ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit, display: 'block' }} />
           <div
             style={{
               position: 'absolute',

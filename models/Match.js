@@ -16,7 +16,9 @@ const MatchSchema = new mongoose.Schema(
   {
     startedAt: { type: Date, default: Date.now },
     endedAt: Date,
-    theme: String,
+    targetPrompt: String,
+    category: String,
+    difficulty: String,
     referenceImageUrl: String,
     winnerMode: { type: String, enum: ['AI_SCORE', 'AUDIENCE_VOTE'] },
     playerA: PlayerSubSchema,

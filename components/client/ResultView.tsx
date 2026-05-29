@@ -56,7 +56,7 @@ export function ResultView() {
           {isWinner && <span style={{ fontSize: 18 }}>👑</span>}
         </div>
 
-        <StageImage src={p?.imageUrl ?? null} alt={p?.nickname ?? slot} accent={color} loadingLabel={t('loadingText')} dim={isLoser} />
+        <StageImage src={p?.imageUrl ?? null} alt={p?.nickname ?? slot} accent={color} loadingLabel={t('loadingText')} dim={isLoser} objectFit="contain" />
 
         <div
           style={{
@@ -122,6 +122,25 @@ export function ResultView() {
                 loadingLabel={t('loadingText')}
               />
               <Lbl size={10}>{t('referenceImage')}</Lbl>
+            </section>
+          )}
+
+          {state.targetPrompt && (
+            <section
+              style={{
+                background: C.ink2,
+                border: `1px solid ${C.accent}`,
+                borderLeft: `3px solid ${C.accent}`,
+                borderRadius: 12,
+                padding: 14,
+              }}
+            >
+              <Lbl size={10} color="accent">
+                {t('truePromptLabel')}
+              </Lbl>
+              <p style={{ fontFamily: FONT.mono, fontSize: 13, lineHeight: 1.5, color: C.text, marginTop: 8 }}>
+                {state.targetPrompt}
+              </p>
             </section>
           )}
 

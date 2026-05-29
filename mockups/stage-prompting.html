@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash · Stage PROMPTING (redesign)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root{
+    --ink:#22202b; --ink2:#2d2b38; --ink3:#383545;
+    --line:#4a4757; --line2:#615d72;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --accent:#7c4dff;          /* Player A */
+    --accent-soft:#8f6bff;
+    --b:#c5ff3a;               /* raw lime (avoid as large fill) */
+    --b-soft:#aedb4e;          /* softened Player B */
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#141319;font-family:var(--body);color:var(--text);padding:40px 24px 90px}
+  .head{max-width:980px;margin:0 auto 30px}
+  .head h1{font-family:var(--pixel);font-size:22px;color:var(--bone)}
+  .head h1 span{color:var(--accent)}
+  .head p{margin-top:12px;font-size:14px;line-height:1.6;color:var(--text2);max-width:680px}
+  .cap{display:flex;align-items:baseline;gap:12px;max-width:980px;margin:34px auto 12px}
+  .cap .k{font-family:var(--pixel);font-size:13px;color:var(--bone)}
+  .cap .d{font-size:13px;color:var(--text3)}
+
+  .stage-wrap{width:980px;height:551.25px;overflow:hidden;border:1px solid #2a2933;border-radius:12px;
+    background:var(--ink);position:relative;margin:0 auto}
+  .board{position:absolute;top:0;left:0;width:1920px;height:1080px;transform:scale(.510416);transform-origin:top left;
+    background:var(--ink);color:var(--text);font-family:var(--body);overflow:hidden;isolation:isolate}
+
+  /* backdrop */
+  .bg-glow{position:absolute;z-index:0;pointer-events:none;width:1300px;height:1300px;left:50%;top:-420px;transform:translateX(-50%);
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,rgba(124,77,255,.03) 38%,transparent 62%);filter:blur(10px)}
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.026) 1px,transparent 1px),linear-gradient(90deg,rgba(124,77,255,.026) 1px,transparent 1px);
+    background-size:56px 56px;mask-image:radial-gradient(ellipse 72% 66% at 50% 46%,#000 30%,transparent 80%)}
+  .bg-vig{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at top,rgba(255,255,255,.04) 0%,transparent 55%),radial-gradient(ellipse at bottom,rgba(0,0,0,.30) 0%,transparent 60%)}
+  .bg-scan{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.008) 0,rgba(255,255,255,.008) 1px,transparent 1px,transparent 3px)}
+  .tick{position:absolute;background:var(--text4);opacity:.55;z-index:4}
+  .ticks .tick:nth-child(1){left:30px;top:30px;width:13px;height:1.5px}
+  .ticks .tick:nth-child(2){left:30px;top:30px;width:1.5px;height:13px}
+  .ticks .tick:nth-child(3){right:30px;top:30px;width:13px;height:1.5px}
+  .ticks .tick:nth-child(4){right:30px;top:30px;width:1.5px;height:13px}
+  .ticks .tick:nth-child(5){left:30px;bottom:30px;width:13px;height:1.5px}
+  .ticks .tick:nth-child(6){left:30px;bottom:30px;width:1.5px;height:13px}
+  .ticks .tick:nth-child(7){right:30px;bottom:30px;width:13px;height:1.5px}
+  .ticks .tick:nth-child(8){right:30px;bottom:30px;width:1.5px;height:13px}
+
+  /* top bar (BUZZ removed) */
+  .topbar{position:absolute;top:50px;left:64px;right:64px;z-index:20;display:flex;align-items:center;justify-content:space-between}
+  .tb-left{display:flex;align-items:center;gap:18px}
+  .wordmark-sm{font-family:var(--pixel);font-size:24px;letter-spacing:.04em;color:var(--bone)}
+  .vsep{width:1px;height:18px;background:var(--line2)}
+  .live{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--live);border-radius:2px}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.4s ease-in-out infinite}
+  .live-txt{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;color:#fff}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.82)}}
+  .tb-right{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--text2)}
+  .chip{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid var(--line2);color:var(--text);letter-spacing:.12em;text-transform:uppercase}
+  .chip.diff{background:var(--live);color:#fff;border:none;font-weight:700}
+
+  /* narrator + support */
+  .narrator{position:absolute;top:108px;left:0;right:0;z-index:18;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .narrator .pill{display:inline-flex;align-items:center;gap:14px;padding:11px 28px;background:rgba(124,77,255,.10);
+    border:1px solid rgba(124,77,255,.30);border-radius:999px}
+  .narrator .bar{width:3px;height:22px;background:var(--accent);border-radius:2px}
+  .narrator .pill p{font-family:var(--body);font-size:25px;font-weight:600;color:var(--bone)}
+  .narrator .sub{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--text3)}
+
+  /* 3-col layout */
+  .grid{position:absolute;left:64px;right:64px;top:208px;bottom:96px;z-index:10;
+    display:grid;grid-template-columns:470px 1fr 470px;gap:60px;align-items:stretch}
+
+  /* player panel */
+  .panel{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--ink2);border:1px solid var(--line)}
+  .panel.a{border-top:4px solid var(--accent)}
+  .panel.b{border-top:4px solid var(--b-soft)}
+  .phead{display:flex;align-items:center;justify-content:space-between;padding:18px 26px}
+  .panel.a .phead{background:rgba(124,77,255,.14)}
+  .panel.b .phead{background:rgba(174,219,78,.12)}
+  .phead .st{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  .panel.a .phead .st{color:var(--accent-soft)}
+  .panel.b .phead .st{color:var(--b-soft)}
+  .phead .cnt{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.04em;color:var(--text2)}
+  .typing-dots span{display:inline-block;animation:dotdot 1.4s infinite}
+  .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dotdot{0%,20%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+  .pbody{flex:1;display:flex;flex-direction:column;padding:30px 30px 28px}
+  .pid{display:flex;align-items:center;gap:18px}
+  .pava{width:74px;height:74px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:var(--pixel);font-size:34px}
+  .pava.a{background:var(--accent);color:#fff}
+  .pava.b{background:var(--b-soft);color:#1c2208}
+  .pmeta{display:flex;flex-direction:column;gap:4px}
+  .pmeta .lbl{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+  .panel.a .pmeta .lbl{color:var(--accent-soft)}
+  .panel.b .pmeta .lbl{color:var(--b-soft)}
+  .pmeta .name{font-family:var(--body);font-size:32px;font-weight:700;color:var(--bone);line-height:1}
+
+  /* hidden-prompt activity visualization */
+  .activity{margin-top:34px;flex:1;display:flex;flex-direction:column}
+  .skel{display:flex;flex-direction:column;gap:16px}
+  .skel i{display:block;height:16px;border-radius:6px}
+  .panel.a .skel i{background:linear-gradient(90deg,rgba(124,77,255,.26),rgba(124,77,255,.10))}
+  .panel.b .skel i{background:linear-gradient(90deg,rgba(174,219,78,.24),rgba(174,219,78,.09))}
+  .skel i.s1{width:92%;animation:skp 2.2s ease-in-out infinite}
+  .skel i.s2{width:100%;animation:skp 2.2s ease-in-out infinite .25s}
+  .skel i.s3{width:78%;animation:skp 2.2s ease-in-out infinite .5s}
+  .skel i.s4{width:46%;position:relative;animation:skp 2.2s ease-in-out infinite .75s}
+  @keyframes skp{0%,100%{opacity:.45}50%{opacity:1}}
+  .caret{display:inline-block;width:3px;height:18px;margin-left:8px;vertical-align:-3px;animation:blink 1s steps(1) infinite}
+  .panel.a .caret{background:var(--accent)}.panel.b .caret{background:var(--b-soft)}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+  .pfoot{margin-top:auto;padding-top:26px}
+  .lockchip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;
+    background:var(--ink3);border:1px solid var(--line);font-family:var(--mono);font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text3)}
+  .pcap{margin-top:14px;font-size:16px;color:var(--text3)}
+  .pprog{margin-top:18px;height:10px;border-radius:999px;background:var(--ink3);overflow:hidden}
+  .pprog i{display:block;height:100%;border-radius:999px;transition:width .4s}
+  .panel.a .pprog i{background:var(--accent)}.panel.b .pprog i{background:var(--b-soft)}
+
+  /* center: target hero + circular timer */
+  .center{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:28px}
+  .target{position:relative;width:520px;height:520px;border-radius:10px;overflow:hidden;
+    background:linear-gradient(135deg,#352a5e 0%,#241f3a 55%,#1d2a2c 100%);
+    box-shadow:0 0 0 1px rgba(124,77,255,.18),0 0 70px rgba(124,77,255,.16),0 36px 90px rgba(0,0,0,.55)}
+  .target .badge{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:3;
+    font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.24em;color:var(--bone);
+    background:rgba(0,0,0,.42);padding:7px 18px;border-radius:999px}
+  .target .glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:150px;opacity:.55}
+  .target .corner{position:absolute;width:34px;height:34px;border:2px solid rgba(255,255,255,.55)}
+  .target .c1{top:18px;left:18px;border-right:0;border-bottom:0;border-top-left-radius:6px}
+  .target .c2{top:18px;right:18px;border-left:0;border-bottom:0;border-top-right-radius:6px}
+  .target .c3{bottom:18px;left:18px;border-right:0;border-top:0;border-bottom-left-radius:6px}
+  .target .c4{bottom:18px;right:18px;border-left:0;border-top:0;border-bottom-right-radius:6px}
+  /* loading variant */
+  .target.loading .glyph{display:none}
+  .target .loadwrap{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+  .target .spin{width:62px;height:62px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:var(--accent);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .target .loadtxt{font-family:var(--mono);font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--text2)}
+  .target.live{animation:tpulse 3.4s ease-in-out infinite}
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 1px rgba(124,77,255,.18),0 0 70px rgba(124,77,255,.16),0 36px 90px rgba(0,0,0,.55)}
+    50%{box-shadow:0 0 0 1px rgba(124,77,255,.30),0 0 96px rgba(124,77,255,.26),0 36px 90px rgba(0,0,0,.55)}}
+
+  .timer{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .timer .ringbox{position:relative;width:230px;height:230px}
+  .timer .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:74px;font-weight:700;color:var(--bone);letter-spacing:.02em}
+  .timer .lab{font-family:var(--mono);font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:var(--text3)}
+  .timer.warn .num{color:var(--live);animation:beat .9s ease-in-out infinite}
+  .timer.warn .lab{color:var(--live)}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+  /* minimal sound toggle */
+  .sound{position:absolute;left:60px;bottom:48px;z-index:20;display:inline-flex;align-items:center;gap:9px;
+    padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);
+    font-size:15px;color:var(--text3)}
+  .sound .ic{font-size:16px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>STAGE <span>·</span> PROMPTING redesign</h1>
+  <p>Hedef görsel kahraman objeye büyütüldü, dairesel timer güçlendirildi, BUZZ kaldırıldı. Boş "canlı prompt" alanı gizli aktivite görselleştirmesine dönüştü: skeleton satırlar, typing pulse, karakter progress barı, kilit etiketi. Gerçek prompt metni ekranda yok. Lime yumuşatıldı, iki panel eşit ağırlıkta.</p>
+</div>
+
+<!-- normal -->
+<div class="cap"><span class="k">PROMPTING</span><span class="d">60 sn, promptlar gizli</span></div>
+<div class="stage-wrap">
+  <div class="board">
+    <div class="bg-glow"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+    <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+
+    <div class="topbar">
+      <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+      <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+    </div>
+
+    <div class="narrator">
+      <span class="pill"><span class="bar"></span><p>Hedef görseli en iyi tarif eden kazanır.</p></span>
+      <span class="sub">Oyuncular 60 saniyede prompt yazar, kazananı yapay zeka seçer.</span>
+    </div>
+
+    <div class="grid">
+      <!-- A -->
+      <div class="panel a">
+        <div class="phead"><span class="st">Yazıyor<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span> · Player A</span><span class="cnt">128 / 280</span></div>
+        <div class="pbody">
+          <div class="pid"><div class="pava a">A</div><div class="pmeta"><span class="lbl">PLAYER A</span><span class="name">ZEYNEP</span></div></div>
+          <div class="activity">
+            <div class="skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i></div>
+          </div>
+          <div class="pfoot">
+            <span class="lockchip">&#128274; Gizli</span>
+            <p class="pcap">Prompt gizli, sonuçta açılacak.</p>
+            <div class="pprog"><i style="width:46%"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- center -->
+      <div class="center">
+        <div class="target live">
+          <div class="badge">HEDEF GÖRSEL</div>
+          <div class="glyph">🦊</div>
+          <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+        </div>
+        <div class="timer">
+          <span class="lab">kalan süre</span>
+          <div class="ringbox">
+            <svg width="230" height="230" viewBox="0 0 230 230">
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#383545" stroke-width="10"/>
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#7c4dff" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="653.45" stroke-dashoffset="196" transform="rotate(-90 115 115)"/>
+            </svg>
+            <div class="num">0:42</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="panel b">
+        <div class="phead"><span class="st">Yazıyor<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span> · Player B</span><span class="cnt">203 / 280</span></div>
+        <div class="pbody">
+          <div class="pid"><div class="pava b">B</div><div class="pmeta"><span class="lbl">PLAYER B</span><span class="name">EMRE</span></div></div>
+          <div class="activity">
+            <div class="skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i></div>
+          </div>
+          <div class="pfoot">
+            <span class="lockchip">&#128274; Gizli</span>
+            <p class="pcap">Prompt gizli, sonuçta açılacak.</p>
+            <div class="pprog"><i style="width:72%"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <span class="sound"><span class="ic">&#128266;</span> Sesi aç</span>
+  </div>
+</div>
+
+<!-- last 10s -->
+<div class="cap"><span class="k">PROMPTING · son 10 sn</span><span class="d">timer kırmızı + nabız, hedef köşeler ısınır, narrator değişir</span></div>
+<div class="stage-wrap">
+  <div class="board">
+    <div class="bg-glow" style="background:radial-gradient(circle at center,rgba(255,92,92,.12) 0%,transparent 60%)"></div>
+    <div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+    <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+
+    <div class="topbar">
+      <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+      <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+    </div>
+
+    <div class="narrator">
+      <span class="pill" style="background:rgba(255,92,92,.10);border-color:rgba(255,92,92,.32)"><span class="bar" style="background:var(--live)"></span><p>Son saniyeler. Tarifini bitir.</p></span>
+      <span class="sub" style="color:var(--live)">SON 10 SANİYE</span>
+    </div>
+
+    <div class="grid">
+      <div class="panel a">
+        <div class="phead"><span class="st">Yazıyor<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span> · Player A</span><span class="cnt">241 / 280</span></div>
+        <div class="pbody">
+          <div class="pid"><div class="pava a">A</div><div class="pmeta"><span class="lbl">PLAYER A</span><span class="name">ZEYNEP</span></div></div>
+          <div class="activity"><div class="skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4" style="width:62%"></i></div></div>
+          <div class="pfoot"><span class="lockchip">&#128274; Gizli</span><p class="pcap">Prompt gizli, sonuçta açılacak.</p><div class="pprog"><i style="width:86%"></i></div></div>
+        </div>
+      </div>
+
+      <div class="center">
+        <div class="target" style="box-shadow:0 0 0 1px rgba(255,92,92,.30),0 0 90px rgba(255,92,92,.22),0 36px 90px rgba(0,0,0,.55)">
+          <div class="badge">HEDEF GÖRSEL</div>
+          <div class="glyph">🦊</div>
+          <div class="corner c1" style="border-color:var(--live)"></div><div class="corner c2" style="border-color:var(--live)"></div><div class="corner c3" style="border-color:var(--live)"></div><div class="corner c4" style="border-color:var(--live)"></div>
+        </div>
+        <div class="timer warn">
+          <span class="lab">son saniyeler</span>
+          <div class="ringbox">
+            <svg width="230" height="230" viewBox="0 0 230 230">
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#3a2330" stroke-width="10"/>
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#ff5c5c" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="653.45" stroke-dashoffset="575" transform="rotate(-90 115 115)"/>
+            </svg>
+            <div class="num">0:07</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel b">
+        <div class="phead"><span class="st" style="color:var(--b-soft)">Gönderildi · Player B</span><span class="cnt">280 / 280</span></div>
+        <div class="pbody">
+          <div class="pid"><div class="pava b">B</div><div class="pmeta"><span class="lbl">PLAYER B</span><span class="name">EMRE</span></div></div>
+          <div class="activity"><div class="skel"><i class="s1" style="opacity:.5"></i><i class="s2" style="opacity:.5"></i><i class="s3" style="opacity:.5"></i><i class="s4" style="width:88%;opacity:.5"></i></div></div>
+          <div class="pfoot"><span class="lockchip" style="border-color:var(--b-soft);color:var(--b-soft)">&#10003; Tamam</span><p class="pcap">Prompt gizli, sonuçta açılacak.</p><div class="pprog"><i style="width:100%"></i></div></div>
+        </div>
+      </div>
+    </div>
+
+    <span class="sound"><span class="ic">&#128266;</span> Sesi aç</span>
+  </div>
+</div>
+
+<!-- loading target variant -->
+<div class="cap"><span class="k">PROMPTING · hedef yüklenirken</span><span class="d">hedef gelmeden: "Hedef hazırlanıyor"</span></div>
+<div class="stage-wrap">
+  <div class="board">
+    <div class="bg-glow"></div><div class="bg-grid"></div><div class="bg-vig"></div><div class="bg-scan"></div>
+    <div class="ticks"><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div></div>
+    <div class="topbar">
+      <div class="tb-left"><span class="wordmark-sm">PROMPT CLASH</span><span class="vsep"></span><span class="live"><span class="live-dot"></span><span class="live-txt">CANLI</span></span></div>
+      <div class="tb-right"><span class="chip">HAYVANLAR</span><span class="chip diff">ZOR</span></div>
+    </div>
+    <div class="narrator">
+      <span class="pill"><span class="bar"></span><p>Hedef görseli en iyi tarif eden kazanır.</p></span>
+      <span class="sub">Oyuncular 60 saniyede prompt yazar, kazananı yapay zeka seçer.</span>
+    </div>
+    <div class="grid">
+      <div class="panel a">
+        <div class="phead"><span class="st">Hazır · Player A</span><span class="cnt">0 / 280</span></div>
+        <div class="pbody"><div class="pid"><div class="pava a">A</div><div class="pmeta"><span class="lbl">PLAYER A</span><span class="name">ZEYNEP</span></div></div>
+          <div class="activity"><div class="skel"><i class="s1" style="opacity:.3"></i><i class="s2" style="opacity:.3"></i><i class="s3" style="opacity:.3"></i></div></div>
+          <div class="pfoot"><span class="lockchip">&#128274; Gizli</span><p class="pcap">Hedef gelince süre başlayacak.</p><div class="pprog"><i style="width:0%"></i></div></div>
+        </div>
+      </div>
+      <div class="center">
+        <div class="target loading">
+          <div class="badge">HEDEF GÖRSEL</div>
+          <div class="loadwrap"><div class="spin"></div><span class="loadtxt">Hedef hazırlanıyor</span></div>
+          <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+        </div>
+        <div class="timer">
+          <span class="lab">kalan süre</span>
+          <div class="ringbox">
+            <svg width="230" height="230" viewBox="0 0 230 230">
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#383545" stroke-width="10"/>
+              <circle cx="115" cy="115" r="104" fill="none" stroke="#7c4dff" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="653.45" stroke-dashoffset="0" transform="rotate(-90 115 115)"/>
+            </svg>
+            <div class="num">1:00</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel b">
+        <div class="phead"><span class="st" style="color:var(--b-soft)">Hazır · Player B</span><span class="cnt">0 / 280</span></div>
+        <div class="pbody"><div class="pid"><div class="pava b">B</div><div class="pmeta"><span class="lbl">PLAYER B</span><span class="name">EMRE</span></div></div>
+          <div class="activity"><div class="skel"><i class="s1" style="opacity:.3"></i><i class="s2" style="opacity:.3"></i><i class="s3" style="opacity:.3"></i></div></div>
+          <div class="pfoot"><span class="lockchip">&#128274; Gizli</span><p class="pcap">Hedef gelince süre başlayacak.</p><div class="pprog"><i style="width:0%"></i></div></div>
+        </div>
+      </div>
+    </div>
+    <span class="sound"><span class="ic">&#128266;</span> Sesi aç</span>
+  </div>
+</div>
+
+</body>
+</html>

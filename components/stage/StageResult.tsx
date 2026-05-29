@@ -29,7 +29,7 @@ export function StageResult() {
   const { t } = useI18n();
   if (!state) return null;
 
-  const aiMode = state.winnerMode === 'AI_SCORE';
+  const aiMode = true; // Kazanan her zaman AI ile belirlenir (kullanıcı oylaması kaldırıldı).
   const matchId = state.matchId ? state.matchId.slice(-4).toUpperCase() : '';
   const isTie = state.winner === 'TIE';
   const winnerLetter: 'A' | 'B' | null = state.winner === 'A' ? 'A' : state.winner === 'B' ? 'B' : null;
@@ -49,7 +49,7 @@ export function StageResult() {
 
   return (
     <StageFrame>
-      <TopBar liveLabel={t('live')} matchId={matchId} theme={state.theme} />
+      <TopBar liveLabel={t('live')} matchId={matchId} category={state.roundCategoryLabel} difficulty={state.roundDifficultyLabel} />
 
       {/* Headline band */}
       <div
@@ -112,6 +112,56 @@ export function StageResult() {
           </motion.div>
         )}
       </div>
+
+      {/* GERÇEK PROMPT reveal - payoff anı. Sadece RESULT'ta dolu gelir. */}
+      {state.targetPrompt && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: EASE_BACK, delay: 1.0 }}
+          style={{
+            position: 'absolute',
+            top: 366,
+            left: 60,
+            right: 60,
+            height: 82,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 22,
+            padding: '0 28px',
+            background: C.ink3,
+            border: `1px solid ${C.accent}`,
+            borderLeft: `4px solid ${C.accent}`,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: FONT.pixel,
+              fontSize: 16,
+              letterSpacing: '0.1em',
+              color: C.accent,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('truePromptLabel').toUpperCase()}
+          </span>
+          <span style={{ display: 'inline-block', width: 1, height: 40, background: C.line2 }} />
+          <span
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 17,
+              lineHeight: 1.4,
+              color: C.text,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {state.targetPrompt}
+          </span>
+        </motion.div>
+      )}
 
       {/* Card grid */}
       <div
@@ -231,7 +281,7 @@ function ResultCard({
         {winner && <span style={{ fontFamily: FONT.pixel, fontSize: 18, letterSpacing: '0.08em' }}>★ {t('winner')}</span>}
       </div>
 
-      <StageImage src={player?.imageUrl ?? null} alt={name} accent={color} loadingLabel={t('loadingText')} dim={dim} fill />
+      <StageImage src={player?.imageUrl ?? null} alt={name} accent={color} loadingLabel={t('loadingText')} dim={dim} fill objectFit="contain" />
 
       {/* Prompt */}
       <div style={{ padding: '14px 22px', background: C.ink3, borderTop: `1px solid ${C.line}`, display: 'flex', flexDirection: 'column', gap: 6, opacity: dim ? 0.72 : 1 }}>

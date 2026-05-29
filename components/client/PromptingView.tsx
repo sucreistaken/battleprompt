@@ -100,19 +100,7 @@ export function PromptingView() {
               size={refSize}
               loadingLabel={t('loadingText')}
             />
-            <div
-              style={{
-                fontFamily: FONT.body,
-                fontSize: 14,
-                color: C.text2,
-                fontStyle: 'italic',
-                textAlign: 'center',
-                lineHeight: 1.4,
-                maxWidth: refSize,
-              }}
-            >
-              &ldquo;{state.theme}&rdquo;
-            </div>
+            {/* Tema metni gizli: oyuncu hedef görseli yorumlamalı. */}
           </section>
 
           {/* Prompt input */}
