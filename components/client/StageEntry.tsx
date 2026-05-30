@@ -40,7 +40,14 @@ export function StageEntry() {
       <>
         <StageFonts />
         <main
-          style={{ minHeight: '100dvh', background: C.ink, color: C.text, fontFamily: FONT.body }}
+          style={{
+            minHeight: '100dvh',
+            background: C.ink,
+            color: C.text,
+            fontFamily: FONT.body,
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}
           className="flex flex-col"
         >
           <MiniBar chip={t('chipLobby')} />
@@ -105,7 +112,14 @@ export function StageEntry() {
     <>
       <StageFonts />
       <main
-        style={{ minHeight: '100dvh', background: C.ink, color: C.text, fontFamily: FONT.body }}
+        style={{
+          minHeight: '100dvh',
+          background: C.ink,
+          color: C.text,
+          fontFamily: FONT.body,
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
         className="flex flex-col"
       >
         <MiniBar chip={t('chipPlayersNeeded')} />

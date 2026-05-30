@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash, prompt yazma ekranı, redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --ink:#22202b; --ink2:#2d2b38; --ink3:#383545;
+    --line:#4a4757; --line2:#615d72;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --a:#7c4dff; --a-ink:#ffffff; --a-soft:rgba(124,77,255,.16);
+    --b:#aed24a; --b-ink:#0e0e10; --b-soft:rgba(174,210,74,.20);
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0d0d12;color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{padding:48px 24px 96px}
+
+  /* ── page chrome ───────────────────────────────────────────────────── */
+  .page{max-width:1240px;margin:0 auto}
+  .page h1{font-family:var(--pixel);font-size:24px;color:var(--bone);letter-spacing:.02em}
+  .page h1 span{color:var(--a)}
+  .page .lede{margin-top:14px;font-size:14px;line-height:1.6;color:var(--text2);max-width:780px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .legend span{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    padding:5px 10px;border:1px solid var(--line);color:var(--text3)}
+  .legend span b{color:var(--bone);font-weight:600}
+
+  /* ── case header ───────────────────────────────────────────────────── */
+  .case{margin-top:56px}
+  .cap{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .cap .k{font-family:var(--pixel);font-size:13px;color:var(--bone);letter-spacing:.04em}
+  .cap .s{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    padding:3px 8px;background:var(--ink2);border:1px solid var(--line);color:var(--text2)}
+  .cap .n{font-size:13px;color:var(--text3)}
+
+  /* ── viewport frames ───────────────────────────────────────────────── */
+  .frame{background:var(--ink);border:1px solid #2a2933;border-radius:14px;overflow:hidden;position:relative}
+  .frame .chrome{height:30px;background:#181821;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid #25242e}
+  .frame .chrome i{width:8px;height:8px;border-radius:50%;background:#2f2e3a;display:inline-block}
+  .frame .chrome span{margin-left:12px;font-family:var(--mono);font-size:10px;color:var(--text4);letter-spacing:.1em}
+  .frame .screen{position:relative}
+
+  .frame-desktop{width:1180px;margin:0 auto;max-width:100%}
+  .frame-desktop .screen{height:720px}
+  .frame-tablet{width:720px;margin:0 auto}
+  .frame-tablet .screen{height:980px}
+  .frame-mobile{width:375px;margin:0 auto}
+  .frame-mobile .screen{height:760px}
+  .frame-mobile.kbd .screen{height:520px}
+  .row{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start}
+
+  /* ── desktop layout ────────────────────────────────────────────────── */
+  .d-wrap{position:absolute;inset:0;display:grid;grid-template-columns:minmax(620px,1fr) 400px;gap:48px;
+    padding:48px 56px}
+  .d-left{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .d-right{display:flex;flex-direction:column;min-width:0}
+
+  .mini-label{font-family:var(--pixel);font-size:12px;letter-spacing:.18em;color:var(--text3);text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:10px}
+  .mini-label::after{content:'';display:inline-block;width:34px;height:1px;background:var(--line)}
+
+  .target{position:relative;aspect-ratio:1/1;width:100%;max-width:620px;background:#0f0f14;overflow:hidden;
+    border:1px solid var(--line2)}
+  .target img{width:100%;height:100%;object-fit:cover;display:block}
+  .target .corner{position:absolute;width:18px;height:18px}
+  .target .corner.tl{top:7px;left:7px;border-top:2px solid var(--a);border-left:2px solid var(--a)}
+  .target .corner.tr{top:7px;right:7px;border-top:2px solid var(--a);border-right:2px solid var(--a)}
+  .target .corner.bl{bottom:7px;left:7px;border-bottom:2px solid var(--a);border-left:2px solid var(--a)}
+  .target .corner.br{bottom:7px;right:7px;border-bottom:2px solid var(--a);border-right:2px solid var(--a)}
+  .target .fade{position:absolute;left:0;right:0;bottom:0;height:40%;
+    background:linear-gradient(180deg,rgba(14,14,16,0) 0%,rgba(14,14,16,.55) 100%);pointer-events:none}
+
+  .caption{margin-top:4px;font-size:15px;color:var(--text2);line-height:1.4;max-width:540px}
+  .caption b{color:var(--bone);font-weight:600}
+
+  .hint-row{margin-top:8px}
+  .hint-row .mini-label{font-size:11px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{font-family:var(--mono);font-size:11px;color:var(--text3);padding:5px 10px;border:1px solid var(--line);
+    letter-spacing:.04em;background:transparent;cursor:default;pointer-events:none;
+    display:inline-flex;align-items:center;gap:7px;border-radius:2px}
+  .chip::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--text4);display:inline-block;flex:none}
+
+  /* right column */
+  .ident-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+  .ident{display:flex;align-items:center;gap:12px;min-width:0}
+  .avatar{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);
+    font-size:17px;border-radius:3px;flex:none}
+  .avatar.a{background:var(--a);color:var(--a-ink)}
+  .avatar.b{background:var(--b);color:var(--b-ink)}
+  .ident .nameblk{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ident .you{font-family:var(--pixel);font-size:12px;letter-spacing:.14em}
+  .ident .you.a{color:var(--a)} .ident .you.b{color:var(--b)}
+  .ident .opp{font-family:var(--mono);font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ident .opp b{color:var(--bone);font-weight:600}
+
+  /* timer ring */
+  .timer{position:relative;width:120px;height:120px;flex:none}
+  .timer svg{transform:rotate(-90deg);display:block}
+  .timer .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--pixel);font-variant-numeric:tabular-nums;color:var(--bone)}
+  .timer.lg .num{font-size:46px}
+  .timer.md{width:84px;height:84px}
+  .timer.md .num{font-size:32px}
+  .timer.sm{width:56px;height:56px}
+  .timer.sm .num{font-size:22px}
+  .timer .ring-bg{stroke:var(--line);fill:none}
+  .timer .ring-fg{stroke:var(--a);fill:none;transition:stroke 400ms ease-out}
+  .timer.b .ring-fg{stroke:var(--b)}
+  .timer.danger .ring-fg{stroke:var(--live)}
+  .timer.danger .num{color:var(--live);animation:pulseSoft 1.4s ease-in-out infinite}
+  @keyframes pulseSoft{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.92}}
+
+  .timer-note{margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--text3);text-align:right}
+  .last10{display:inline-block;margin-top:8px;padding:3px 10px;background:var(--live);color:#fff;
+    font-family:var(--pixel);font-size:11px;letter-spacing:.12em;border-radius:2px}
+
+  .prompt-block{margin-top:28px;display:flex;flex-direction:column;gap:8px}
+  .prompt-block .lbl{font-family:var(--pixel);font-size:12px;letter-spacing:.18em;color:var(--a)}
+  .prompt-block.b .lbl{color:var(--b)}
+  textarea.ta,.ta{width:100%;min-height:200px;padding:18px 20px;border-radius:12px;background:var(--ink2);
+    color:var(--bone);border:1.5px solid var(--line);font-family:var(--mono);font-size:16px;line-height:1.55;
+    resize:none;outline:none;display:block}
+  .ta.focused{border-color:var(--a);box-shadow:0 0 0 4px var(--a-soft)}
+  .ta.b.focused{border-color:var(--b);box-shadow:0 0 0 4px var(--b-soft)}
+  .ta.locked{color:var(--text2);opacity:.7}
+  .ta.placeholder{color:var(--text3)}
+
+  .row-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .counter{font-family:var(--mono);font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
+  .counter.warn{color:var(--live);font-weight:700}
+  .hint-aside{font-family:var(--mono);font-size:11px;color:var(--text4);letter-spacing:.04em}
+
+  .cta{margin-top:14px;width:100%;height:60px;border-radius:12px;border:none;cursor:pointer;
+    font-family:var(--pixel);font-size:15px;letter-spacing:.06em;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform 120ms ease}
+  .cta.empty{background:transparent;color:var(--text3);border:1.5px solid var(--line);cursor:not-allowed}
+  .cta.ready.a{background:var(--a);color:var(--a-ink);box-shadow:0 14px 34px rgba(124,77,255,.32)}
+  .cta.ready.b{background:var(--b);color:var(--b-ink);box-shadow:0 14px 34px rgba(197,255,58,.22)}
+  .cta.sending{background:var(--ink3);color:var(--text2);border:1.5px solid var(--line)}
+
+  /* locked card replaces button when prompt is in */
+  .locked{margin-top:14px;background:var(--ink2);border:1px solid var(--line);border-left:3px solid var(--a);
+    padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+  .locked.b{border-left-color:var(--b)}
+  .locked.timeout{border-left-color:var(--live)}
+  .locked .title{font-family:var(--pixel);font-size:14px;letter-spacing:.08em;color:var(--a);display:flex;align-items:center;gap:10px}
+  .locked.b .title{color:var(--b)}
+  .locked.timeout .title{color:var(--live)}
+  .locked .title svg{flex:none}
+  .locked .body{font-family:var(--body);font-size:13px;color:var(--text2);line-height:1.5}
+
+  .notes{margin-top:18px;display:flex;flex-direction:column;gap:6px}
+  .notes .n1{font-size:13px;color:var(--text2);line-height:1.45}
+  .notes .n2{font-size:12px;color:var(--text3);line-height:1.45}
+
+  /* ── tablet layout (720) ───────────────────────────────────────────── */
+  .t-wrap{position:absolute;inset:0;padding:36px 28px;display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+  .t-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .t-topbar .ident{flex:1;min-width:0}
+  .t-target{align-self:center;width:100%;max-width:520px}
+  .t-cap{align-self:center;text-align:center}
+  .t-prompt{margin-top:6px}
+
+  /* ── mobile layout (375) ───────────────────────────────────────────── */
+  .m-wrap{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ink)}
+  .m-sticky-top{position:sticky;top:0;background:var(--ink);border-bottom:1px solid var(--line);
+    padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2}
+  .m-sticky-top .ident{gap:10px}
+  .m-sticky-top .avatar{width:32px;height:32px;font-size:15px}
+  .m-sticky-top .you{font-size:11px}
+  .m-sticky-top .opp{font-size:12px;max-width:140px}
+  .m-body{flex:1;overflow-y:auto;padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px}
+  .m-target{width:100%;aspect-ratio:1/1;max-width:340px;align-self:center}
+  .m-prompt-block{margin-top:4px}
+  .m-prompt-block .lbl{font-size:11px}
+  .m-prompt-block .ta{min-height:132px;font-size:15px;padding:14px 16px;border-radius:10px}
+  .m-prompt-block.kbd .ta{min-height:120px;max-height:140px}
+  .m-counter-row{display:flex;justify-content:flex-end;margin-top:2px}
+  .m-sticky-bot{position:sticky;bottom:0;background:var(--ink);border-top:1px solid var(--line);
+    padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px}
+  .m-sticky-bot .cta{height:52px;margin-top:0;font-size:14px}
+  .m-sticky-bot .micro{font-size:11px;color:var(--text3);text-align:center}
+  .kbd-hint{position:absolute;left:0;right:0;bottom:0;height:280px;background:repeating-linear-gradient(
+    45deg,rgba(255,255,255,.02) 0 8px,transparent 8px 16px);border-top:1px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;
+    letter-spacing:.18em;color:var(--text4);text-transform:uppercase;z-index:1}
+
+  .hr{height:1px;background:#1f1e27;margin:64px 0}
+  .footer{margin-top:48px;font-family:var(--mono);font-size:12px;color:var(--text4);text-align:center;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>PROMPT CLASH · PROMPT YAZMA EKRANI <span>REDESIGN</span></h1>
+  <p class="lede">
+    Oyuncunun telefonunda açtığı, 60 saniyede prompt yazdığı ekranın yeniden tasarımı.
+    Üç viewport (1180 desktop, 720 tablet, 375 mobil) ve beş state aşağıda sırasıyla görünür.
+    Hedef görsel ana referans olarak büyütüldü, timer göz hizasına çekildi, copy Türkçeleştirildi,
+    submit textarea ile aynı blokta. Stage, result ve join ekranları bu mockup'a dahil değildir.
+  </p>
+  <div class="legend">
+    <span><b>EMPTY</b> oyuncu henüz yazmadı</span>
+    <span><b>TYPING</b> aktif yazıyor, buton hazır</span>
+    <span><b>SON 10 SN</b> timer kırmızı pulse</span>
+    <span><b>SUBMITTED</b> kilitli, AI üretecek</span>
+    <span><b>TIMEOUT</b> süre bitti, otomatik kilit</span>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 1, DESKTOP EMPTY, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">EMPTY STATE</span>
+      <span class="n">oyuncu yeni geldi, buton koçluk metni gösteriyor</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <!-- left -->
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <!-- right -->
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar a">A</div>
+                <div class="nameblk">
+                  <span class="you a">SEN, PLAYER A</span>
+                  <span class="opp">Rakip: <b>kadir</b></span>
+                </div>
+              </div>
+              <div class="timer lg">
+                <svg width="120" height="120">
+                  <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                  <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                    stroke-dasharray="339.29" stroke-dashoffset="13.57" stroke-linecap="butt"/>
+                </svg>
+                <div class="num">58</div>
+              </div>
+            </div>
+            <div class="timer-note">Süre bitince prompt otomatik kilitlenir.</div>
+
+            <div class="prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta placeholder">Görselde ne var, ortam nasıl, ışık ve stil nasıl? Kısaca tarif et.</div>
+              <div class="row-meta">
+                <span class="counter">0 / 280</span>
+                <span class="hint-aside">Görseli tarif et</span>
+              </div>
+              <button class="cta empty" disabled>ÖNCE PROMPT YAZ</button>
+            </div>
+
+            <div class="notes">
+              <span class="n1">Rakibin promptunu göremezsin, o da seninkini göremez.</span>
+              <span class="n2">Promptun sonuç ekranında gösterilebilir.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 2, DESKTOP TYPING, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">TYPING STATE</span>
+      <span class="n">odaklı textarea, sayaç aktif, buton hazır</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar a">A</div>
+                <div class="nameblk">
+                  <span class="you a">SEN, PLAYER A</span>
+                  <span class="opp">Rakip: <b>kadir</b></span>
+                </div>
+              </div>
+              <div class="timer lg">
+                <svg width="120" height="120">
+                  <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                  <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                    stroke-dasharray="339.29" stroke-dashoffset="113.10" stroke-linecap="butt"/>
+                </svg>
+                <div class="num">42</div>
+              </div>
+            </div>
+            <div class="timer-note">Süre bitince prompt otomatik kilitlenir.</div>
+
+            <div class="prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta focused">Göl kenarında bir adam, arka planda kar kaplı sıradağlar. Pus var, ışık yumuşak ve sabah erken. Renkler soğuk mavi ve gri tonlarda. Sinematik, dengeli kompozisyon.</div>
+              <div class="row-meta">
+                <span class="counter">187 / 280</span>
+                <span class="hint-aside">&nbsp;</span>
+              </div>
+              <button class="cta ready a">PROMPTU GÖNDER</button>
+            </div>
+
+            <div class="notes">
+              <span class="n1">Rakibin promptunu göremezsin, o da seninkini göremez.</span>
+              <span class="n2">Promptun sonuç ekranında gösterilebilir.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 3, DESKTOP LAST 10 SN, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">SON 10 SANİYE</span>
+      <span class="n">timer rengi live'a geçti, sayı pulse atıyor, panik yapmadan gönderilebilir</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar a">A</div>
+                <div class="nameblk">
+                  <span class="you a">SEN, PLAYER A</span>
+                  <span class="opp">Rakip: <b>kadir</b></span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <div class="timer lg danger">
+                  <svg width="120" height="120">
+                    <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                    <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                      stroke-dasharray="339.29" stroke-dashoffset="278.22" stroke-linecap="butt"/>
+                  </svg>
+                  <div class="num">7</div>
+                </div>
+                <span class="last10">SON 10 SANİYE</span>
+              </div>
+            </div>
+            <div class="timer-note">Süre bitince prompt otomatik kilitlenir.</div>
+
+            <div class="prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta focused">Göl kenarında bir adam, arka planda kar kaplı sıradağlar. Pus var, ışık yumuşak ve sabah erken. Renkler soğuk mavi ve gri tonlarda. Sinematik, dengeli kompozisyon. Hafif sis, dingin atmosfer.</div>
+              <div class="row-meta">
+                <span class="counter warn">253 / 280</span>
+                <span class="hint-aside">&nbsp;</span>
+              </div>
+              <button class="cta ready a">PROMPTU GÖNDER</button>
+            </div>
+
+            <div class="notes">
+              <span class="n1">Rakibin promptunu göremezsin, o da seninkini göremez.</span>
+              <span class="n2">Promptun sonuç ekranında gösterilebilir.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 4, DESKTOP SUBMITTED, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">SUBMITTED STATE</span>
+      <span class="n">buton yerine locked card, oyuncu ne olacağını biliyor</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar a">A</div>
+                <div class="nameblk">
+                  <span class="you a">SEN, PLAYER A</span>
+                  <span class="opp">Rakip: <b>kadir</b></span>
+                </div>
+              </div>
+              <div class="timer lg">
+                <svg width="120" height="120">
+                  <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                  <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                    stroke-dasharray="339.29" stroke-dashoffset="200.18" stroke-linecap="butt"/>
+                </svg>
+                <div class="num">23</div>
+              </div>
+            </div>
+            <div class="timer-note">Süre bitince prompt otomatik kilitlenir.</div>
+
+            <div class="prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta locked">Göl kenarında bir adam, arka planda kar kaplı sıradağlar. Pus var, ışık yumuşak ve sabah erken. Renkler soğuk mavi ve gri tonlarda. Sinematik, dengeli kompozisyon.</div>
+              <div class="row-meta">
+                <span class="counter">187 / 280</span>
+                <span class="hint-aside">&nbsp;</span>
+              </div>
+              <div class="locked">
+                <div class="title">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  PROMPT KİLİTLENDİ
+                </div>
+                <div class="body">AI birazdan görseli üretecek. Karşılaştırmayı sahnede izle.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 5, DESKTOP TIMEOUT, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">TIMEOUT STATE</span>
+      <span class="n">süre doldu, prompt yazılmış son haliyle otomatik kilitlendi</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar a">A</div>
+                <div class="nameblk">
+                  <span class="you a">SEN, PLAYER A</span>
+                  <span class="opp">Rakip: <b>kadir</b></span>
+                </div>
+              </div>
+              <div class="timer lg danger">
+                <svg width="120" height="120">
+                  <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                  <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                    stroke-dasharray="339.29" stroke-dashoffset="339.29" stroke-linecap="butt"/>
+                </svg>
+                <div class="num">0</div>
+              </div>
+            </div>
+            <div class="timer-note">Süre doldu.</div>
+
+            <div class="prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta locked">Göl kenarında bir adam, kar kaplı dağlar arka planda. Pus, soğuk ton.</div>
+              <div class="row-meta">
+                <span class="counter">64 / 280</span>
+                <span class="hint-aside">&nbsp;</span>
+              </div>
+              <div class="locked timeout">
+                <div class="title">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M8 4 V8 L11 10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.6" fill="none"/>
+                  </svg>
+                  SÜRE BİTTİ
+                </div>
+                <div class="body">Prompt son yazdığın haliyle kilitlendi. AI birazdan görseli üretecek.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 6, DESKTOP TYPING, slot B (lime variant)
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP · 1180</span>
+      <span class="s">PLAYER B VARYANT</span>
+      <span class="n">lime tonu agresif olmasın diye buton + border, geri kalan ton aynı</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost · /  ·  PROMPT</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="d-left">
+            <span class="mini-label">Hedef görsel</span>
+            <div class="target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption">Görseli en iyi tarif eden <b>kazanır</b>.</div>
+            <div class="hint-row">
+              <span class="mini-label">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-right">
+            <div class="ident-row">
+              <div class="ident">
+                <div class="avatar b">B</div>
+                <div class="nameblk">
+                  <span class="you b">SEN, PLAYER B</span>
+                  <span class="opp">Rakip: <b>asdadasw</b></span>
+                </div>
+              </div>
+              <div class="timer lg b">
+                <svg width="120" height="120">
+                  <circle class="ring-bg" cx="60" cy="60" r="54" stroke-width="6"/>
+                  <circle class="ring-fg" cx="60" cy="60" r="54" stroke-width="6"
+                    stroke-dasharray="339.29" stroke-dashoffset="130.10" stroke-linecap="butt"/>
+                </svg>
+                <div class="num">37</div>
+              </div>
+            </div>
+            <div class="timer-note">Süre bitince prompt otomatik kilitlenir.</div>
+
+            <div class="prompt-block b">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta b focused">Sisli dağ manzarası, ön planda yürüyen bir figür silueti. Sabah ışığı, soluk mavi tonlar. Sade ve sinematik.</div>
+              <div class="row-meta">
+                <span class="counter">112 / 280</span>
+                <span class="hint-aside">&nbsp;</span>
+              </div>
+              <button class="cta ready b">PROMPTU GÖNDER</button>
+            </div>
+
+            <div class="notes">
+              <span class="n1">Rakibin promptunu göremezsin, o da seninkini göremez.</span>
+              <span class="n2">Promptun sonuç ekranında gösterilebilir.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 7, TABLET TYPING, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">TABLET · 720</span>
+      <span class="s">TYPING STATE</span>
+      <span class="n">tek kolon, üst bar kompakt, görsel ortalı, prompt blok altta</span>
+    </header>
+    <div class="frame frame-tablet">
+      <div class="chrome"><i></i><i></i><i></i><span>iPad mini · portrait</span></div>
+      <div class="screen">
+        <div class="t-wrap">
+          <div class="t-topbar">
+            <div class="ident">
+              <div class="avatar a">A</div>
+              <div class="nameblk">
+                <span class="you a">SEN, PLAYER A</span>
+                <span class="opp">Rakip: <b>kadir</b></span>
+              </div>
+            </div>
+            <div class="timer md">
+              <svg width="84" height="84">
+                <circle class="ring-bg" cx="42" cy="42" r="37" stroke-width="5"/>
+                <circle class="ring-fg" cx="42" cy="42" r="37" stroke-width="5"
+                  stroke-dasharray="232.48" stroke-dashoffset="77.49" stroke-linecap="butt"/>
+              </svg>
+              <div class="num">42</div>
+            </div>
+          </div>
+
+          <div class="t-target target">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+            <div class="fade"></div>
+            <div class="corner tl"></div><div class="corner tr"></div>
+            <div class="corner bl"></div><div class="corner br"></div>
+          </div>
+          <div class="t-cap caption">Görseli en iyi tarif eden <b>kazanır</b>. Süre bitince prompt otomatik kilitlenir.</div>
+
+          <div class="hint-row" style="align-self:center">
+            <span class="mini-label">İpucu</span>
+            <div class="chips">
+              <span class="chip">ana obje</span>
+              <span class="chip">ortam</span>
+              <span class="chip">ışık</span>
+              <span class="chip">renkler</span>
+              <span class="chip">stil</span>
+            </div>
+          </div>
+
+          <div class="prompt-block t-prompt">
+            <span class="lbl">PROMPT'UN</span>
+            <div class="ta focused" style="min-height:160px">Göl kenarında bir adam, arka planda kar kaplı sıradağlar. Pus var, ışık yumuşak. Soğuk mavi gri tonlar.</div>
+            <div class="row-meta">
+              <span class="counter">142 / 280</span>
+              <span class="hint-aside">&nbsp;</span>
+            </div>
+            <button class="cta ready a">PROMPTU GÖNDER</button>
+            <div class="notes">
+              <span class="n1">Rakibin promptunu göremezsin.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 8, MOBILE EMPTY, slot A
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">MOBILE · 375</span>
+      <span class="s">EMPTY STATE</span>
+      <span class="n">sticky üst bar (oyuncu + timer), görsel, ipucu, prompt, sticky alt CTA</span>
+    </header>
+    <div class="row">
+    <div class="frame frame-mobile">
+      <div class="chrome"><i></i><i></i><i></i><span>iPhone 13 · portrait</span></div>
+      <div class="screen">
+        <div class="m-wrap">
+          <div class="m-sticky-top">
+            <div class="ident">
+              <div class="avatar a">A</div>
+              <div class="nameblk">
+                <span class="you a">SEN, A</span>
+                <span class="opp">Rakip: <b>kadir</b></span>
+              </div>
+            </div>
+            <div class="timer sm">
+              <svg width="56" height="56">
+                <circle class="ring-bg" cx="28" cy="28" r="23" stroke-width="4"/>
+                <circle class="ring-fg" cx="28" cy="28" r="23" stroke-width="4"
+                  stroke-dasharray="144.51" stroke-dashoffset="5.78" stroke-linecap="butt"/>
+              </svg>
+              <div class="num">58</div>
+            </div>
+          </div>
+          <div class="m-body">
+            <span class="mini-label" style="font-size:10px">Hedef görsel</span>
+            <div class="m-target target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+            <div class="caption" style="font-size:14px;text-align:center">Görseli 60 saniyede tarif et.</div>
+
+            <div class="hint-row">
+              <span class="mini-label" style="font-size:10px">İpucu</span>
+              <div class="chips">
+                <span class="chip">ana obje</span>
+                <span class="chip">ortam</span>
+                <span class="chip">ışık</span>
+                <span class="chip">renkler</span>
+                <span class="chip">stil</span>
+              </div>
+            </div>
+
+            <div class="prompt-block m-prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta placeholder" style="min-height:120px;font-size:15px;padding:14px 16px">Görselde ne var, ortam nasıl, ışık ve stil nasıl? Kısaca tarif et.</div>
+              <div class="m-counter-row"><span class="counter">0 / 280</span></div>
+            </div>
+          </div>
+          <div class="m-sticky-bot">
+            <button class="cta empty" disabled>ÖNCE PROMPT YAZ</button>
+            <span class="micro">Rakibin promptunu göremezsin.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 9, MOBILE TYPING with KEYBOARD OPEN
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">MOBILE · 375</span>
+      <span class="s">TYPING + KLAVYE AÇIK</span>
+      <span class="n">textarea max 28vh ile sıkıştı, sticky CTA klavyenin üstünde erişilebilir</span>
+    </header>
+    <div class="row">
+    <div class="frame frame-mobile kbd">
+      <div class="chrome"><i></i><i></i><i></i><span>iPhone 13 · klavye açık</span></div>
+      <div class="screen">
+        <div class="m-wrap">
+          <div class="m-sticky-top">
+            <div class="ident">
+              <div class="avatar a">A</div>
+              <div class="nameblk">
+                <span class="you a">SEN, A</span>
+                <span class="opp">Rakip: <b>kadir</b></span>
+              </div>
+            </div>
+            <div class="timer sm">
+              <svg width="56" height="56">
+                <circle class="ring-bg" cx="28" cy="28" r="23" stroke-width="4"/>
+                <circle class="ring-fg" cx="28" cy="28" r="23" stroke-width="4"
+                  stroke-dasharray="144.51" stroke-dashoffset="48.17" stroke-linecap="butt"/>
+              </svg>
+              <div class="num">42</div>
+            </div>
+          </div>
+          <div class="m-body" style="padding-bottom:14px">
+            <div class="m-target target" style="max-width:200px;align-self:center">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+
+            <div class="prompt-block m-prompt-block kbd">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta focused" style="min-height:120px;max-height:140px;font-size:15px;padding:12px 14px">Göl kenarında bir adam, arka planda kar kaplı dağlar. Pus, soğuk ton, sinematik.</div>
+              <div class="m-counter-row"><span class="counter">88 / 280</span></div>
+            </div>
+          </div>
+          <div class="m-sticky-bot">
+            <button class="cta ready a">PROMPTU GÖNDER</button>
+          </div>
+        </div>
+      </div>
+      <div class="kbd-hint">KLAVYE ALANI · YAKLAŞIK 280 PX</div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       FRAME 10, MOBILE SUBMITTED
+  ───────────────────────────────────────────────────────────────────── -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">MOBILE · 375</span>
+      <span class="s">SUBMITTED STATE</span>
+      <span class="n">alt CTA yerine locked card, oyuncu ne olacağını biliyor</span>
+    </header>
+    <div class="row">
+    <div class="frame frame-mobile">
+      <div class="chrome"><i></i><i></i><i></i><span>iPhone 13 · portrait</span></div>
+      <div class="screen">
+        <div class="m-wrap">
+          <div class="m-sticky-top">
+            <div class="ident">
+              <div class="avatar a">A</div>
+              <div class="nameblk">
+                <span class="you a">SEN, A</span>
+                <span class="opp">Rakip: <b>kadir</b></span>
+              </div>
+            </div>
+            <div class="timer sm">
+              <svg width="56" height="56">
+                <circle class="ring-bg" cx="28" cy="28" r="23" stroke-width="4"/>
+                <circle class="ring-fg" cx="28" cy="28" r="23" stroke-width="4"
+                  stroke-dasharray="144.51" stroke-dashoffset="85.26" stroke-linecap="butt"/>
+              </svg>
+              <div class="num">23</div>
+            </div>
+          </div>
+          <div class="m-body">
+            <span class="mini-label" style="font-size:10px">Hedef görsel</span>
+            <div class="m-target target">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef görsel">
+              <div class="fade"></div>
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+
+            <div class="prompt-block m-prompt-block">
+              <span class="lbl">PROMPT'UN</span>
+              <div class="ta locked" style="min-height:96px;font-size:15px;padding:14px 16px">Göl kenarında bir adam, kar kaplı sıradağlar arka planda. Pus, yumuşak sabah ışığı, soğuk mavi gri ton, sinematik.</div>
+              <div class="m-counter-row"><span class="counter">142 / 280</span></div>
+            </div>
+          </div>
+          <div class="m-sticky-bot">
+            <div class="locked" style="margin-top:0">
+              <div class="title">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                PROMPT KİLİTLENDİ
+              </div>
+              <div class="body">AI birazdan görseli üretecek.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <p class="footer">Mockup tek dosya, tarayıcıda direkt aç. Onay sonrası PromptingView.tsx + dict.ts portuna geçilir.</p>
+</div>
+</body>
+</html>

@@ -125,7 +125,14 @@ export function VoteView() {
       <StageFonts />
       <StageKeyframes />
       <main
-        style={{ minHeight: '100dvh', background: C.ink, color: C.text, fontFamily: FONT.body }}
+        style={{
+          minHeight: '100dvh',
+          background: C.ink,
+          color: C.text,
+          fontFamily: FONT.body,
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
         className="flex flex-col"
       >
         <div className="w-full max-w-md mx-auto px-5 pt-5 pb-6 flex-1 flex flex-col gap-4">

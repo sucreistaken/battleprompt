@@ -8,8 +8,18 @@ import { PromptingView } from './PromptingView';
 import { AudienceView } from './AudienceView';
 import { VoteView } from './VoteView';
 import { ResultView } from './ResultView';
+import { LangToggle } from './LangToggle';
 
 export function MobileShell() {
+  return (
+    <>
+      <LangToggle />
+      <MobileShellInner />
+    </>
+  );
+}
+
+function MobileShellInner() {
   const { state, mySlot } = useGameState();
   const { t } = useI18n();
   useStageTheme(state?.stageTheme);

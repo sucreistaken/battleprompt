@@ -1,11 +1,15 @@
-# ⚔️ Prompt Clash
+<p align="center">
+  <img src="public/logo.svg" alt="Prompt Clash" width="420">
+</p>
+
+# Prompt Clash
 
 **Telefonunla katıl, prompt yaz, AI'a çizdir, kazanan sen ol.**
 
 Etkinlikler için tasarlanmış, QR ile katılımlı **1v1 AI görsel üretme yarışması**. İki oyuncu aynı temayı alır, en iyi prompt'u yazmaya çalışır, AI görselleri üretir ve kazanan ya AI puanıyla ya da izleyici oylamasıyla belli olur. Hepsi büyük ekranda canlı akar.
 
 <p align="center">
-  <img src="theme-preview/stage-2-vs-dark.png" alt="Prompt Clash — ALICE vs BOB" width="100%">
+  <img src="theme-preview/stage-2-vs-dark.png" alt="Prompt Clash, ALICE vs BOB" width="100%">
 </p>
 
 ---

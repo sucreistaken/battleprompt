@@ -26,8 +26,13 @@ const EASE_BACK: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
  */
 export function StageResult() {
   const { state, livePrompts } = useGameState();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   if (!state) return null;
+
+  const truePromptText =
+    (lang === 'tr' ? state.targetPromptTr : state.targetPrompt) ||
+    state.targetPrompt ||
+    state.targetPromptTr;
 
   const aiMode = true; // Kazanan her zaman AI ile belirlenir (kullanıcı oylaması kaldırıldı).
   const matchId = state.matchId ? state.matchId.slice(-4).toUpperCase() : '';
@@ -114,7 +119,7 @@ export function StageResult() {
       </div>
 
       {/* GERÇEK PROMPT reveal - payoff anı. Sadece RESULT'ta dolu gelir. */}
-      {state.targetPrompt && (
+      {truePromptText && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,7 +163,7 @@ export function StageResult() {
               overflow: 'hidden',
             }}
           >
-            {state.targetPrompt}
+            {truePromptText}
           </span>
         </motion.div>
       )}

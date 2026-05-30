@@ -32,6 +32,7 @@ export interface StateSnapshot {
   roundCategoryLabel: string | null;
   roundDifficultyLabel: string | null;
   targetPrompt: string | null;
+  targetPromptTr: string | null;
   winnerMode: WinnerMode;
   showLivePrompts: boolean;
   stageLanguage: 'tr' | 'en';

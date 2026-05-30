@@ -1,0 +1,384 @@
+﻿<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash, izleyici AI Ã¼retim ekranÄ±, v6 arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --ink:#22202b; --ink2:#2d2b38;
+    --line:#3f3d4b; --line2:#5b5870;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --a:#7c4dff;
+    --b:#aed24a;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0d0d12;color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{padding:48px 24px 96px}
+  .page{max-width:1240px;margin:0 auto}
+  .page h1{font-family:var(--pixel);font-size:24px;color:var(--bone);letter-spacing:.02em}
+  .page h1 span{color:var(--a)}
+  .page .lede{margin-top:14px;font-size:14px;line-height:1.6;color:var(--text2);max-width:780px}
+
+  .case{margin-top:64px}
+  .cap{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .cap .k{font-family:var(--pixel);font-size:13px;color:var(--bone);letter-spacing:.04em}
+  .cap .s{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    padding:3px 8px;background:var(--ink2);border:1px solid var(--line);color:var(--text2)}
+  .cap .n{font-size:13px;color:var(--text3)}
+
+  .frame{background:var(--ink);border:1px solid #2a2933;border-radius:14px;overflow:hidden;position:relative}
+  .frame .chrome{height:30px;background:#181821;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid #25242e}
+  .frame .chrome i{width:8px;height:8px;border-radius:50%;background:#2f2e3a;display:inline-block}
+  .frame .chrome span{margin-left:12px;font-family:var(--mono);font-size:10px;color:var(--text4);letter-spacing:.1em}
+  .frame .screen{position:relative}
+
+  .frame-desktop{width:1180px;margin:0 auto;max-width:100%}
+  .frame-desktop .screen{height:820px}
+  .frame-mobile{width:375px;margin:0 auto}
+  .frame-mobile .screen{height:812px}
+
+  /* â”€â”€â”€ desktop wrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .d-wrap{position:absolute;inset:0;padding:24px 56px 28px;display:flex;flex-direction:column;align-items:center}
+
+  /* top bar */
+  .topbar{width:100%;display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:var(--pixel);font-size:13px;color:var(--bone);letter-spacing:.08em}
+  .live{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--text2)}
+  .live .dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* headline â€” kompakt, tek satÄ±r feel */
+  .headline{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+  .headline .h{font-family:var(--pixel);font-size:24px;color:var(--bone);letter-spacing:.04em;line-height:1}
+  .headline .sub{font-size:13px;color:var(--text2);line-height:1.4}
+  .headline .badge{font-family:var(--mono);font-size:10px;letter-spacing:.20em;text-transform:uppercase;color:var(--text3);
+    padding:4px 10px;border:1px solid var(--line)}
+  .headline .badge b{color:var(--bone);font-weight:600}
+
+  /* 3-column arena â€” A | HEDEF | B */
+  .arena{margin-top:30px;width:100%;display:grid;grid-template-columns:1fr auto 1fr;gap:36px;
+    align-items:start;justify-content:center;max-width:1060px}
+
+  /* center column â€” hedef */
+  .hedef-col{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:12px}
+  .hedef-lbl{font-family:var(--pixel);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--a);
+    display:inline-flex;align-items:center;gap:10px}
+  .hedef-lbl::before,.hedef-lbl::after{content:'';display:inline-block;width:18px;height:1px;background:var(--a);opacity:.5}
+  .hedef-img{position:relative;width:280px;height:280px;background:#0f0e14;
+    border:1.5px solid rgba(124,77,255,.55);overflow:hidden}
+  .hedef-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .hedef-img .corner{position:absolute;width:16px;height:16px}
+  .hedef-img .corner.tl{top:6px;left:6px;border-top:2px solid var(--a);border-left:2px solid var(--a)}
+  .hedef-img .corner.tr{top:6px;right:6px;border-top:2px solid var(--a);border-right:2px solid var(--a)}
+  .hedef-img .corner.bl{bottom:6px;left:6px;border-bottom:2px solid var(--a);border-left:2px solid var(--a)}
+  .hedef-img .corner.br{bottom:6px;right:6px;border-bottom:2px solid var(--a);border-right:2px solid var(--a)}
+
+  /* A / B player cards */
+  .pcard{display:flex;flex-direction:column;gap:12px;min-width:0;max-width:300px;justify-self:end}
+  .pcard.b{justify-self:start}
+  .pcard .nick{font-family:var(--pixel);font-size:13px;letter-spacing:.06em;
+    display:inline-flex;align-items:center;gap:8px}
+  .pcard.a .nick .slot{color:var(--a)}
+  .pcard.b .nick .slot{color:var(--b)}
+  .pcard .nick .sep{color:var(--text4);font-size:11px}
+  .pcard .nick .name{color:var(--bone);letter-spacing:.04em}
+
+  .pcard .img{position:relative;width:100%;aspect-ratio:1/1;background:#15141b;overflow:hidden;
+    border:1.5px solid var(--line);transition:border-color 320ms ease}
+  .pcard.a .img{border-color:rgba(124,77,255,.32)}
+  .pcard.a.ready .img{border-color:var(--a)}
+  .pcard.b .img{border-color:rgba(174,210,74,.28)}
+  .pcard.b.ready .img{border-color:var(--b)}
+  .pcard .img img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .pcard .status{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--text3)}
+  .pcard.a.ready .status{color:var(--a)}
+  .pcard.b.ready .status{color:var(--b)}
+
+  /* prompt â€” 3 satÄ±r, mask fade */
+  .pcard .prompt{font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--text2);
+    padding:10px 12px;background:rgba(255,255,255,.025);border-left:2px solid var(--line);
+    max-height:calc(1.5em * 3 + 20px);overflow:hidden;
+    mask-image:linear-gradient(to bottom,#000 78%,transparent 100%);
+    -webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent 100%);
+    word-break:break-word}
+  .pcard.a .prompt{border-left-color:var(--a);background:rgba(124,77,255,.05)}
+  .pcard.b .prompt{border-left-color:var(--b);background:rgba(174,210,74,.05)}
+  .pcard .prompt.typing{font-style:italic;color:var(--text4);opacity:.7}
+
+  .spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .spinner > div{width:48px;height:48px;border:2px solid var(--line);border-top-color:var(--a);border-right-color:var(--a);
+    border-radius:50%;animation:spin 1.6s linear infinite}
+  .pcard.b .spinner > div{border-top-color:var(--b);border-right-color:var(--b)}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  /* â”€â”€â”€ mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .m-wrap{position:absolute;inset:0;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center}
+  .m-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .m-top .left{display:flex;flex-direction:column;gap:6px;flex:1}
+  .m-top .wordmark{font-size:11px}
+  .m-top .live{font-size:9px}
+  .m-top .live .dot{width:5px;height:5px}
+
+  .m-hedef-corner{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .m-hedef-corner .lbl{font-family:var(--pixel);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+  .m-hedef-corner .img{position:relative;width:72px;height:72px;background:#0f0e14;
+    border:1.5px solid rgba(124,77,255,.55);overflow:hidden}
+  .m-hedef-corner .img img{width:100%;height:100%;object-fit:cover;display:block}
+  .m-hedef-corner .img .corner{position:absolute;width:8px;height:8px}
+  .m-hedef-corner .img .corner.tl{top:3px;left:3px;border-top:1.5px solid var(--a);border-left:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.tr{top:3px;right:3px;border-top:1.5px solid var(--a);border-right:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.bl{bottom:3px;left:3px;border-bottom:1.5px solid var(--a);border-left:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.br{bottom:3px;right:3px;border-bottom:1.5px solid var(--a);border-right:1.5px solid var(--a)}
+
+  .m-head{margin-top:14px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+  .m-head .h{font-family:var(--pixel);font-size:16px;color:var(--bone);letter-spacing:.04em;line-height:1.1}
+  .m-head .sub{font-size:11px;color:var(--text2);line-height:1.35}
+  .m-head .badge{font-family:var(--mono);font-size:9px;letter-spacing:.20em;text-transform:uppercase;color:var(--text3);
+    padding:3px 8px;border:1px solid var(--line)}
+  .m-head .badge b{color:var(--bone);font-weight:600}
+
+  .m-arena{margin-top:18px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  .m-arena .pcard{gap:8px;max-width:none}
+  .m-arena .pcard .nick{font-size:11px}
+  .m-arena .pcard .nick .slot{font-size:12px}
+  .m-arena .pcard .status{font-size:9px;letter-spacing:.18em}
+  .m-arena .pcard .prompt{font-size:10px;line-height:1.4;padding:7px 9px;
+    max-height:calc(1.4em * 2 + 14px)}
+  .m-arena .pcard .spinner > div{width:30px;height:30px;border-width:2px}
+
+  .hr{height:1px;background:#1f1e27;margin:64px 0}
+  .footer{margin-top:48px;font-family:var(--mono);font-size:12px;color:var(--text4);text-align:center;letter-spacing:.08em}
+
+  @media (prefers-reduced-motion: reduce) {
+    .live .dot, .spinner > div { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>PROMPT CLASH Â· Ä°ZLEYÄ°CÄ° ÃœRETÄ°M EKRANI <span>v6 â€” 3 KOLON ARENA</span></h1>
+  <p class="lede">
+    Sally yeniden tasarladÄ±. Tek satÄ±r karÅŸÄ±laÅŸtÄ±rma ekseni â€” A Â· HEDEF Â· B yatay arena, audience tek bakÄ±ÅŸta Ã¼Ã§ gÃ¶rseli karÅŸÄ±laÅŸtÄ±rÄ±yor.
+    Hedef ortada bÃ¼yÃ¼k (280px), oyuncu kartlarÄ± yanlarda image + status + prompt 3 satÄ±r mask fade. Glow yok, emoji yok.
+    Mobile'da hedef saÄŸ Ã¼st kÃ¶ÅŸede mini (72px) sabit referans, ana alanda A Â· B yan yana grid.
+  </p>
+
+  <!-- â”€â”€â”€ FRAME 1, DESKTOP GENERATING, ikisi de Ã§iziyor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP Â· 1180</span>
+      <span class="s">GENERATING Â· ikisi de Ã§iziyor</span>
+      <span class="n">A Â· HEDEF Â· B aynÄ± satÄ±rda, hedef 280, kart border solgun</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost Â· /  Â·  AUDIENCE</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="topbar">
+            <span class="wordmark">PROMPT CLASH</span>
+            <span class="live"><span class="dot"></span>CANLI</span>
+          </div>
+
+          <div class="headline">
+            <div class="h">AI GÃ–RSELLERÄ° HAZIRLIYOR</div>
+            <div class="sub">Birazdan hedefe en yakÄ±n olan seÃ§ilecek.</div>
+          </div>
+
+          <div class="arena">
+            <div class="pcard a">
+              <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+              <div class="img"><div class="spinner"><div></div></div></div>
+              <span class="status">Ã‡iziyor</span>
+              <div class="prompt">a lone noir detective silhouetted against the neon glow of a wet city street at night, standing under a flickering streetlamp with rain streaking down</div>
+            </div>
+
+            <div class="hedef-col">
+              <span class="hedef-lbl">HEDEF</span>
+              <div class="hedef-img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+
+            <div class="pcard b">
+              <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+              <div class="img"><div class="spinner"><div></div></div></div>
+              <span class="status">Ã‡iziyor</span>
+              <div class="prompt">cinematic rainy night, lone detective in trench coat under yellow streetlamp, moody neon reflections on wet pavement of deserted alley</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â”€â”€â”€ FRAME 2, DESKTOP GENERATING, A hazÄ±r B Ã§iziyor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP Â· 1180</span>
+      <span class="s">GENERATING Â· A hazÄ±r, B Ã§iziyor</span>
+      <span class="n">A border canlÄ± + image, B spinner â€” badge 1/2 gÃ¶rÃ¼nÃ¼r</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost Â· /  Â·  AUDIENCE</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="topbar">
+            <span class="wordmark">PROMPT CLASH</span>
+            <span class="live"><span class="dot"></span>CANLI</span>
+          </div>
+
+          <div class="headline">
+            <div class="h">AI GÃ–RSELLERÄ° HAZIRLIYOR</div>
+            <div class="sub">Birazdan hedefe en yakÄ±n olan seÃ§ilecek.</div>
+            <div class="badge"><b>1</b> / 2 GÃ–RSEL HAZIR</div>
+          </div>
+
+          <div class="arena">
+            <div class="pcard a ready">
+              <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+              <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=700&h=700&fit=crop" alt="A"></div>
+              <span class="status">HazÄ±r</span>
+              <div class="prompt">a lone noir detective silhouetted against the neon glow of a wet city street at night, standing under a flickering streetlamp with rain streaking down</div>
+            </div>
+
+            <div class="hedef-col">
+              <span class="hedef-lbl">HEDEF</span>
+              <div class="hedef-img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+
+            <div class="pcard b">
+              <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+              <div class="img"><div class="spinner"><div></div></div></div>
+              <span class="status">Ã‡iziyor</span>
+              <div class="prompt">cinematic rainy night, lone detective in trench coat under yellow streetlamp, moody neon reflections on wet pavement of deserted alley</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â”€â”€â”€ FRAME 3, DESKTOP SCORING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP Â· 1180</span>
+      <span class="s">SCORING Â· AI karar veriyor</span>
+      <span class="n">baÅŸlÄ±k deÄŸiÅŸti, ikisi de hazÄ±r, status yok, prompt gÃ¶rÃ¼nÃ¼r</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost Â· /  Â·  AUDIENCE</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="topbar">
+            <span class="wordmark">PROMPT CLASH</span>
+            <span class="live"><span class="dot"></span>CANLI</span>
+          </div>
+
+          <div class="headline">
+            <div class="h">AI KARAR VERÄ°YOR</div>
+            <div class="sub">Hangi gÃ¶rsel hedefe daha yakÄ±n?</div>
+          </div>
+
+          <div class="arena">
+            <div class="pcard a ready">
+              <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+              <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=700&h=700&fit=crop" alt="A"></div>
+              <div class="prompt">a lone noir detective silhouetted against the neon glow of a wet city street at night, standing under a flickering streetlamp with rain streaking down</div>
+            </div>
+
+            <div class="hedef-col">
+              <span class="hedef-lbl">HEDEF</span>
+              <div class="hedef-img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+
+            <div class="pcard b ready">
+              <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+              <div class="img"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=700&h=700&fit=crop" alt="B"></div>
+              <div class="prompt">cinematic rainy night, lone detective in trench coat under yellow streetlamp, moody neon reflections on wet pavement of deserted alley</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- â”€â”€â”€ FRAME 4, MOBILE GENERATING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">MOBILE Â· 375</span>
+      <span class="s">GENERATING Â· hedef saÄŸ Ã¼st kÃ¶ÅŸede</span>
+      <span class="n">A Â· B yan yana grid, hedef 72px corner referans</span>
+    </header>
+    <div class="row" style="display:flex;justify-content:center">
+    <div class="frame frame-mobile">
+      <div class="chrome"><i></i><i></i><i></i><span>iPhone 13 Â· portrait</span></div>
+      <div class="screen">
+        <div class="m-wrap">
+          <div class="m-top">
+            <div class="left">
+              <span class="wordmark">PROMPT CLASH</span>
+              <span class="live"><span class="dot"></span>CANLI</span>
+            </div>
+            <div class="m-hedef-corner">
+              <span class="lbl">HEDEF</span>
+              <div class="img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="m-head">
+            <div class="h">AI GÃ–RSELLERÄ° HAZIRLIYOR</div>
+            <div class="sub">Birazdan hedefe en yakÄ±n seÃ§ilecek.</div>
+            <div class="badge"><b>1</b> / 2 GÃ–RSEL HAZIR</div>
+          </div>
+
+          <div class="m-arena">
+            <div class="pcard a ready">
+              <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+              <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400&h=400&fit=crop" alt="A"></div>
+              <span class="status">HazÄ±r</span>
+              <div class="prompt">noir detective under neon streetlamp, rainy night, wet pavement reflections</div>
+            </div>
+            <div class="pcard b">
+              <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+              <div class="img"><div class="spinner"><div></div></div></div>
+              <span class="status">Ã‡iziyor</span>
+              <div class="prompt">cinematic rainy night, lone figure in trench coat under yellow streetlamp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <p class="footer">v6 â€” 3 kolon arena, hedef ortada (desktop) / saÄŸ Ã¼st (mobile). Onay sonrasÄ± AudienceView.tsx portu.</p>
+</div>
+</body>
+</html>

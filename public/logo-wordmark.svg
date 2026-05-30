@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 128" role="img" aria-label="PROMPT CLASH">
+  <title>PROMPT CLASH</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@700&display=swap');
+      .wordmark {
+        font-family: 'Silkscreen', monospace;
+        font-weight: 700;
+        font-size: 96px;
+        letter-spacing: 0.04em;
+        fill: currentColor;
+      }
+    ]]></style>
+  </defs>
+  <text x="256" y="92" text-anchor="middle" class="wordmark">PROMPT CLASH</text>
+</svg>

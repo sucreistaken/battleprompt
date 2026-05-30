@@ -197,54 +197,42 @@ export function StageScaler({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // clientWidth/Height track the real layout viewport (and exclude scrollbars),
-    // so min() always fits — unlike window.innerWidth/Height which drift under DPR quirks.
-    //
-    // Distinguish real window resize from browser zoom: under zoom the CSS viewport
-    // shrinks/grows but devicePixelRatio moves inversely, so physical pixels
-    // (clientWidth * dpr) stay ~constant. Under a real resize the physical area
-    // changes. We only refit on real resizes — browser zoom passes through, so the
-    // user can Ctrl+/- to inspect detail without us cancelling it.
-    let lastDPR = window.devicePixelRatio || 1;
-    let lastPhysW = document.documentElement.clientWidth * lastDPR;
-    let lastPhysH = document.documentElement.clientHeight * lastDPR;
-
-    const fit = (force = false) => {
-      const vw = document.documentElement.clientWidth;
-      const vh = document.documentElement.clientHeight;
-      const dpr = window.devicePixelRatio || 1;
-      const physW = vw * dpr;
-      const physH = vh * dpr;
-      const isZoom = !force && dpr !== lastDPR && Math.abs(physW - lastPhysW) < 4 && Math.abs(physH - lastPhysH) < 4;
-      if (!isZoom) {
-        setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
-        setReady(true);
-      }
-      lastDPR = dpr;
-      lastPhysW = physW;
-      lastPhysH = physH;
+    // Always refit on any viewport change — window resize AND browser zoom
+    // (Ctrl+/-). visualViewport gives the post-zoom CSS viewport directly, so
+    // we don't have to disambiguate DPR vs. real resize ourselves. This matches
+    // the natural user expectation that the board grows/shrinks with the window
+    // at every scale level.
+    const fit = () => {
+      const vv = window.visualViewport;
+      const vw = vv?.width ?? document.documentElement.clientWidth;
+      const vh = vv?.height ?? document.documentElement.clientHeight;
+      setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
+      setReady(true);
     };
-    fit(true);
+    fit();
     // One more pass after layout/fonts settle.
-    const raf = requestAnimationFrame(() => fit(true));
+    const raf = requestAnimationFrame(fit);
 
-    const onResize = () => fit();
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', fit);
     const vv = window.visualViewport;
-    vv?.addEventListener('resize', onResize);
-    vv?.addEventListener('scroll', onResize);
+    vv?.addEventListener('resize', fit);
+    vv?.addEventListener('scroll', fit);
+    // Orientation flips (mobile/tablet) sometimes fire after resize with a
+    // stale viewport — listen explicitly so the rotation lands fitted.
+    window.addEventListener('orientationchange', fit);
 
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined' && frameRef.current) {
-      ro = new ResizeObserver(onResize);
+      ro = new ResizeObserver(fit);
       ro.observe(frameRef.current);
     }
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-      vv?.removeEventListener('resize', onResize);
-      vv?.removeEventListener('scroll', onResize);
+      window.removeEventListener('resize', fit);
+      vv?.removeEventListener('resize', fit);
+      vv?.removeEventListener('scroll', fit);
+      window.removeEventListener('orientationchange', fit);
       ro?.disconnect();
     };
   }, []);

@@ -1,12 +1,13 @@
-'use client';
+import type { Metadata } from 'next';
+import AdminPageClient from './AdminPageClient';
 
-import { I18nProvider } from '@/components/client/i18nContext';
-import { AdminPanel } from '@/components/admin/AdminPanel';
+export const metadata: Metadata = {
+  title: 'Operatör paneli',
+  description: 'Prompt Clash operatör paneli.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: '/admin' },
+};
 
 export default function AdminPage() {
-  return (
-    <I18nProvider>
-      <AdminPanel />
-    </I18nProvider>
-  );
+  return <AdminPageClient />;
 }

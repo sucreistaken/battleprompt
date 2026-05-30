@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react';
 import { dictionaries, pickLang, type Lang, type DictKey } from '@/i18n/dict';
 
 interface Ctx {
@@ -11,6 +11,19 @@ interface Ctx {
 
 const I18nCtx = createContext<Ctx | null>(null);
 
+const STORAGE_KEY = 'pc_lang';
+
+function readStoredLang(): Lang | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === 'tr' || raw === 'en') return raw;
+  } catch {
+    // localStorage unavailable (private mode, etc.) — fall back to detection.
+  }
+  return null;
+}
+
 export function I18nProvider({
   children,
   forceLang
@@ -18,15 +31,30 @@ export function I18nProvider({
   children: React.ReactNode;
   forceLang?: Lang;
 }) {
-  const [lang, setLang] = useState<Lang>(forceLang || 'tr');
+  const [lang, setLangState] = useState<Lang>(forceLang || 'tr');
 
   useEffect(() => {
     if (forceLang) {
-      setLang(forceLang);
-    } else {
-      setLang(pickLang());
+      setLangState(forceLang);
+      return;
     }
+    const stored = readStoredLang();
+    setLangState(stored ?? pickLang());
   }, [forceLang]);
+
+  const setLang = useCallback(
+    (l: Lang) => {
+      setLangState(l);
+      if (forceLang) return;
+      if (typeof window === 'undefined') return;
+      try {
+        window.localStorage.setItem(STORAGE_KEY, l);
+      } catch {
+        // ignore — selection is still applied in-memory for this session.
+      }
+    },
+    [forceLang]
+  );
 
   const value = useMemo<Ctx>(
     () => ({
@@ -34,7 +62,7 @@ export function I18nProvider({
       setLang,
       t: (k: DictKey) => dictionaries[lang][k] ?? String(k)
     }),
-    [lang]
+    [lang, setLang]
   );
 
   return <I18nCtx.Provider value={value}>{children}</I18nCtx.Provider>;

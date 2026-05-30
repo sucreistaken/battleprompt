@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" shape-rendering="crispEdges" role="img" aria-label="Prompt Clash axolotl mascot">
+  <title>Prompt Clash</title>
+  <desc>Pixel art axolotl mascot, mor body, lime gills</desc>
+
+  <!-- Gills (top), lime accent #aed24a -->
+  <g fill="#aed24a">
+    <!-- left gill cluster -->
+    <rect x="64"  y="64"  width="32" height="32"/>
+    <rect x="96"  y="32"  width="32" height="80"/>
+    <rect x="128" y="64"  width="32" height="32"/>
+    <!-- middle gill cluster, taller -->
+    <rect x="208" y="16"  width="32" height="96"/>
+    <rect x="240" y="0"   width="32" height="112"/>
+    <rect x="272" y="16"  width="32" height="96"/>
+    <!-- right gill cluster -->
+    <rect x="352" y="64"  width="32" height="32"/>
+    <rect x="384" y="32"  width="32" height="80"/>
+    <rect x="416" y="64"  width="32" height="32"/>
+  </g>
+
+  <!-- Body silhouette (mor) -->
+  <g fill="#7c4dff">
+    <!-- crown ring of head -->
+    <rect x="96"  y="112" width="320" height="32"/>
+    <rect x="64"  y="144" width="384" height="32"/>
+    <!-- main body block -->
+    <rect x="32"  y="176" width="448" height="32"/>
+    <rect x="32"  y="208" width="448" height="32"/>
+    <rect x="32"  y="240" width="448" height="32"/>
+    <rect x="32"  y="272" width="448" height="32"/>
+    <rect x="32"  y="304" width="448" height="32"/>
+    <rect x="32"  y="336" width="448" height="32"/>
+    <!-- bottom round -->
+    <rect x="64"  y="368" width="384" height="32"/>
+    <rect x="96"  y="400" width="64"  height="32"/>
+    <rect x="208" y="400" width="96"  height="32"/>
+    <rect x="352" y="400" width="64"  height="32"/>
+    <!-- feet -->
+    <rect x="96"  y="432" width="64"  height="48"/>
+    <rect x="352" y="432" width="64"  height="48"/>
+  </g>
+
+  <!-- Belly (bone soft) -->
+  <g fill="#f5f5f8">
+    <rect x="208" y="240" width="96"  height="32"/>
+    <rect x="176" y="272" width="160" height="32"/>
+    <rect x="144" y="304" width="224" height="32"/>
+    <rect x="144" y="336" width="224" height="32"/>
+    <rect x="176" y="368" width="160" height="32"/>
+  </g>
+
+  <!-- Eyes (white) -->
+  <g fill="#ffffff">
+    <rect x="96"  y="208" width="64"  height="64"/>
+    <rect x="352" y="208" width="64"  height="64"/>
+  </g>
+
+  <!-- Pupils (dark) -->
+  <g fill="#14121a">
+    <rect x="128" y="224" width="32"  height="48"/>
+    <rect x="352" y="224" width="32"  height="48"/>
+  </g>
+
+  <!-- Eye sparkles (bone dots, top-left of pupil) -->
+  <g fill="#ffffff">
+    <rect x="128" y="224" width="16"  height="16"/>
+    <rect x="352" y="224" width="16"  height="16"/>
+  </g>
+
+  <!-- Mouth blush (small mor dot) -->
+  <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+</svg>

@@ -46,6 +46,7 @@ export function buildMock(phase: Phase): {
     roundCategoryLabel: 'BİLİM-KURGU',
     roundDifficultyLabel: 'EFSANE',
     targetPrompt: 'a neon megacity skyline at dusk, flying cars between glass towers',
+    targetPromptTr: 'alacakaranlıkta neon kaplı bir megakent silueti, cam kuleler arasından süzülen uçan arabalar',
     winnerMode: 'AUDIENCE_VOTE',
     showLivePrompts: true,
     stageLanguage: 'tr',

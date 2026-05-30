@@ -1,189 +1,1080 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useGameState } from './useGameState';
 import { useI18n } from './i18nContext';
-import { C, FONT, StageFonts, StageKeyframes, Lbl, Avatar, StageImage, ReferenceFrame } from '@/components/stage/atmosphere';
+import { C, FONT, StageFonts, StageKeyframes } from '@/components/stage/atmosphere';
+import type { Slot } from '@/types/game';
+import type { DictKey } from '@/i18n/dict';
 
 /**
- * RESULT — winner reveal (dark/pixel, matches the stage). Big pixel headline
- * (KAZANAN / BERABERE), winner card ringed in their colour + score/votes, loser
- * dimmed. AI reasoning panel shown when the match was decided by AI score.
+ * RESULT — audience-first 3-kolon arena (v2 mockup): kazanan büyük | hedef ortada
+ * | kaybeden soluk. Altta gerçek prompt + iki oyuncunun prompt'u side-by-side.
+ * 3 saniyede maça hakim ol: hedef + kazanan + kaybeden tek bakışta.
  */
 export function ResultView() {
   const { state, mySlot } = useGameState();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   if (!state) return null;
 
+  const truePromptText =
+    (lang === 'tr' ? state.targetPromptTr : state.targetPrompt) ||
+    state.targetPrompt ||
+    state.targetPromptTr;
+
   const isTie = state.winner === 'TIE';
-  const winnerSlot = state.winner === 'A' ? 'A' : state.winner === 'B' ? 'B' : null;
+  const winnerSlot: Slot | null = state.winner === 'A' ? 'A' : state.winner === 'B' ? 'B' : null;
+  const loserSlot: Slot | null = winnerSlot ? (winnerSlot === 'A' ? 'B' : 'A') : null;
   const winner = winnerSlot ? state.players[winnerSlot] : null;
+  const loser = loserSlot ? state.players[loserSlot] : null;
   const aiMode = state.winnerMode === 'AI_SCORE';
 
-  const card = (slot: 'A' | 'B') => {
-    const p = state.players[slot];
-    const color = C.player(slot);
-    const isWinner = !isTie && winnerSlot === slot;
-    const isLoser = !isTie && !!winnerSlot && winnerSlot !== slot;
-    const metric = aiMode ? p?.aiScore ?? null : state.votes ? state.votes[slot] : null;
-
-    return (
-      <div
-        key={slot}
-        style={{
-          background: C.ink2,
-          border: `2px solid ${isWinner ? color : C.line}`,
-          borderRadius: 14,
-          overflow: 'hidden',
-          opacity: isLoser ? 0.5 : 1,
-          filter: isLoser ? 'grayscale(0.45)' : 'none',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '11px 14px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Avatar letter={slot} size={34} player={slot} />
-            <span style={{ fontFamily: FONT.body, fontWeight: 700, fontSize: 15, color: C.bone }}>
-              {p?.nickname ?? `Player ${slot}`}
-            </span>
-          </div>
-          {isWinner && <span style={{ fontSize: 18 }}>👑</span>}
-        </div>
-
-        <StageImage src={p?.imageUrl ?? null} alt={p?.nickname ?? slot} accent={color} loadingLabel={t('loadingText')} dim={isLoser} objectFit="contain" />
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '11px 14px',
-            borderTop: `1px solid ${C.line}`,
-          }}
-        >
-          <Lbl size={10}>{aiMode ? t('aiPoints') : t('votesShort')}</Lbl>
-          <span
-            style={{
-              fontFamily: FONT.pixel,
-              fontVariantNumeric: 'tabular-nums',
-              fontSize: 22,
-              color: isWinner ? color : C.text2,
-            }}
-          >
-            {metric ?? '—'}
-          </span>
-        </div>
-      </div>
-    );
-  };
+  const winnerColor = winnerSlot ? C.player(winnerSlot) : C.accent;
+  const winnerMetric = aiMode ? winner?.aiScore ?? null : state.votes ? state.votes[winnerSlot ?? 'A'] : null;
+  const loserMetric = aiMode ? loser?.aiScore ?? null : state.votes && loserSlot ? state.votes[loserSlot] : null;
 
   return (
     <>
       <StageFonts />
       <StageKeyframes />
+      <style>{`
+        @keyframes acLiveDot { 0%, 100% { opacity: 1 } 50% { opacity: .4 } }
+        @media (prefers-reduced-motion: reduce) { .ac-live-dot { animation: none !important; } }
+      `}</style>
       <main
-        style={{ minHeight: '100dvh', background: C.ink, color: C.text, fontFamily: FONT.body }}
+        style={{
+          minHeight: '100dvh',
+          background: C.ink,
+          color: C.text,
+          fontFamily: FONT.body,
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
         className="flex flex-col"
       >
-        <div className="w-full max-w-md mx-auto px-5 pt-6 pb-6 flex-1 flex flex-col gap-4">
-          <section className="flex flex-col items-center gap-2 text-center">
-            <Lbl size={11} color="accent">
-              {aiMode ? t('aiScore') : t('audienceVote')}
-            </Lbl>
-            <span
-              style={{
-                fontFamily: FONT.pixel,
-                fontSize: 46,
-                lineHeight: 1,
-                color: isTie ? C.bone : C.accent,
-              }}
-            >
-              {isTie ? t('tie') : t('winner')}
-            </span>
-            {!isTie && winner && (
-              <span style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 22, color: C.bone }}>
-                {winner.nickname}
-              </span>
-            )}
-          </section>
-
-          {state.referenceImageUrl && (
-            <section className="flex flex-col items-center gap-1.5">
-              <ReferenceFrame
-                src={state.referenceImageUrl}
-                alt={t('referenceImage')}
-                size={132}
-                loadingLabel={t('loadingText')}
-              />
-              <Lbl size={10}>{t('referenceImage')}</Lbl>
-            </section>
-          )}
-
-          {state.targetPrompt && (
-            <section
-              style={{
-                background: C.ink2,
-                border: `1px solid ${C.accent}`,
-                borderLeft: `3px solid ${C.accent}`,
-                borderRadius: 12,
-                padding: 14,
-              }}
-            >
-              <Lbl size={10} color="accent">
-                {t('truePromptLabel')}
-              </Lbl>
-              <p style={{ fontFamily: FONT.mono, fontSize: 13, lineHeight: 1.5, color: C.text, marginTop: 8 }}>
-                {state.targetPrompt}
-              </p>
-            </section>
-          )}
-
-          <section className="flex-1 flex flex-col gap-3">
-            {card('A')}
-            {card('B')}
-
-            {aiMode && state.aiReasoning && (
-              <div style={{ background: C.ink2, border: `1px solid ${C.line}`, borderRadius: 12, padding: 14 }}>
-                <Lbl size={10}>{t('aiEvaluation')}</Lbl>
-                <p style={{ fontFamily: FONT.body, fontSize: 13, lineHeight: 1.6, color: C.text2, marginTop: 8 }}>
-                  {state.aiReasoning}
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Players get an explicit re-entry CTA (returning to the join surface
-              re-queues them for the next match); the audience just waits. */}
-          {mySlot ? (
-            <button
-              type="button"
-              onClick={() => window.location.assign('/')}
-              style={{
-                width: '100%',
-                height: 56,
-                borderRadius: 14,
-                border: 'none',
-                background: C.player(mySlot),
-                color: C.playerInk(mySlot),
-                fontFamily: FONT.pixel,
-                fontSize: 15,
-                letterSpacing: '0.06em',
-                cursor: 'pointer',
-              }}
-            >
-              {t('playAgain').toUpperCase()}
-            </button>
+        {/* DESKTOP — 3-kolon arena */}
+        <div
+          className="hidden lg:flex flex-col items-center"
+          style={{
+            width: '100%',
+            maxWidth: 1180,
+            margin: '0 auto',
+            padding: '28px 56px 32px',
+            minHeight: '100dvh',
+          }}
+        >
+          <TopBar t={t} />
+          <ResultHero
+            t={t}
+            isTie={isTie}
+            winnerNick={winner?.nickname ?? ''}
+            winnerColor={winnerColor}
+            aiMode={aiMode}
+          />
+          {isTie ? (
+            <TieDesktop t={t} state={state} aiMode={aiMode} />
           ) : (
-            <p style={{ textAlign: 'center', fontSize: 12, color: C.text4 }}>{t('backToIdle')}</p>
+            <WinnerArenaDesktop
+              t={t}
+              winnerSlot={winnerSlot}
+              loserSlot={loserSlot}
+              winner={winner}
+              loser={loser}
+              referenceUrl={state.referenceImageUrl}
+              winnerMetric={winnerMetric}
+              loserMetric={loserMetric}
+              aiMode={aiMode}
+            />
           )}
+          {truePromptText && <TrueBlock t={t} text={truePromptText} />}
+          {!isTie && winner && loser && (
+            <PromptRow
+              t={t}
+              winnerSlot={winnerSlot}
+              loserSlot={loserSlot}
+              winnerNick={winner.nickname}
+              loserNick={loser.nickname}
+              winnerPrompt={winner.prompt ?? ''}
+              loserPrompt={loser.prompt ?? ''}
+            />
+          )}
+          {aiMode && state.aiReasoning && <AiReasoning t={t} text={state.aiReasoning} />}
+          <Cta t={t} mySlot={mySlot} winnerColor={winnerColor} />
+        </div>
+
+        {/* MOBILE — kazanan büyük + hedef sağ üst + kaybeden mini */}
+        <div
+          className="flex lg:hidden flex-col items-center"
+          style={{
+            width: '100%',
+            padding: '14px 14px 18px',
+            minHeight: '100dvh',
+          }}
+        >
+          <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+              <TopBar t={t} compact />
+            </div>
+            <HedefCornerMobile src={state.referenceImageUrl} alt={t('referenceImage')} label={t('audienceHedefShort')} />
+          </div>
+          <ResultHero
+            t={t}
+            isTie={isTie}
+            winnerNick={winner?.nickname ?? ''}
+            winnerColor={winnerColor}
+            aiMode={aiMode}
+            compact
+          />
+          {isTie ? (
+            <TieMobile t={t} state={state} aiMode={aiMode} />
+          ) : (
+            winner && winnerSlot && (
+              <WinnerCardMobile
+                t={t}
+                slot={winnerSlot}
+                nick={winner.nickname}
+                imageUrl={winner.imageUrl ?? null}
+                prompt={winner.prompt ?? ''}
+                metric={winnerMetric}
+                aiMode={aiMode}
+              />
+            )
+          )}
+          {truePromptText && <TrueBlock t={t} text={truePromptText} compact />}
+          {!isTie && loser && loserSlot && (
+            <LoserRowMobile
+              slot={loserSlot}
+              nick={loser.nickname}
+              imageUrl={loser.imageUrl ?? null}
+              prompt={loser.prompt ?? ''}
+              metric={loserMetric}
+            />
+          )}
+          {aiMode && state.aiReasoning && <AiReasoning t={t} text={state.aiReasoning} compact />}
+          <Cta t={t} mySlot={mySlot} winnerColor={winnerColor} />
         </div>
       </main>
     </>
+  );
+}
+
+// ─── reusable parts ────────────────────────────────────────────────────
+
+function TopBar({ t, compact = false }: { t: (k: DictKey) => string; compact?: boolean }) {
+  return (
+    <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span
+        style={{
+          fontFamily: FONT.pixel,
+          fontSize: compact ? 11 : 13,
+          color: C.bone,
+          letterSpacing: '0.08em',
+        }}
+      >
+        {t('brandWordmark').toUpperCase()}
+      </span>
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          fontFamily: FONT.mono,
+          fontSize: compact ? 9 : 10,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.text2,
+        }}
+      >
+        <span
+          className="ac-live-dot"
+          style={{
+            width: compact ? 5 : 6,
+            height: compact ? 5 : 6,
+            borderRadius: '50%',
+            background: C.live,
+            animation: 'acLiveDot 1.6s ease-in-out infinite',
+            display: 'inline-block',
+          }}
+        />
+        {t('live')}
+      </span>
+    </div>
+  );
+}
+
+function ResultHero({
+  t,
+  isTie,
+  winnerNick,
+  winnerColor,
+  aiMode,
+  compact = false,
+}: {
+  t: (k: DictKey) => string;
+  isTie: boolean;
+  winnerNick: string;
+  winnerColor: string;
+  aiMode: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        marginTop: compact ? 12 : 16,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: compact ? 4 : 6,
+        textAlign: 'center',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: FONT.pixel,
+          fontSize: compact ? 9 : 10,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.accent,
+        }}
+      >
+        {aiMode ? t('audienceWinnerHeroLabel') : t('winner')}
+      </span>
+      {isTie ? (
+        <div
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: compact ? 20 : 24,
+            color: C.bone,
+            letterSpacing: '0.04em',
+            lineHeight: 1,
+          }}
+        >
+          {t('tie')}
+        </div>
+      ) : (
+        <div
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: compact ? 20 : 24,
+            letterSpacing: '0.04em',
+            lineHeight: 1,
+            color: winnerColor,
+            maxWidth: '90vw',
+            wordBreak: 'break-word',
+          }}
+        >
+          {winnerNick.toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ResultPlayer {
+  nickname: string;
+  imageUrl: string | null;
+  prompt: string | null;
+  aiScore: number | null;
+}
+
+function WinnerArenaDesktop({
+  t,
+  winnerSlot,
+  loserSlot,
+  winner,
+  loser,
+  referenceUrl,
+  winnerMetric,
+  loserMetric,
+  aiMode,
+}: {
+  t: (k: DictKey) => string;
+  winnerSlot: Slot | null;
+  loserSlot: Slot | null;
+  winner: ResultPlayer | null;
+  loser: ResultPlayer | null;
+  referenceUrl: string | null;
+  winnerMetric: number | null;
+  loserMetric: number | null;
+  aiMode: boolean;
+}) {
+  return (
+    <div
+      style={{
+        marginTop: 22,
+        width: '100%',
+        maxWidth: 1060,
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        gap: 36,
+        alignItems: 'start',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ width: '100%', maxWidth: 280 }}>
+          {winner && winnerSlot && (
+            <ArenaCardDesktop
+              slot={winnerSlot}
+              nick={winner.nickname}
+              imageUrl={winner.imageUrl}
+              metric={winnerMetric}
+              isWinner
+              aiMode={aiMode}
+              t={t}
+            />
+          )}
+        </div>
+      </div>
+      <div style={{ paddingTop: 18 }}>
+        <HedefBlockDesktop src={referenceUrl} alt={t('referenceImage')} label={t('audienceHedefShort')} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ width: '100%', maxWidth: 280 }}>
+          {loser && loserSlot && (
+            <ArenaCardDesktop
+              slot={loserSlot}
+              nick={loser.nickname}
+              imageUrl={loser.imageUrl}
+              metric={loserMetric}
+              isWinner={false}
+              aiMode={aiMode}
+              t={t}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ArenaCardDesktop({
+  slot,
+  nick,
+  imageUrl,
+  metric,
+  isWinner,
+  aiMode,
+  t,
+}: {
+  slot: Slot;
+  nick: string;
+  imageUrl: string | null;
+  metric: number | null;
+  isWinner: boolean;
+  aiMode: boolean;
+  t: (k: DictKey) => string;
+}) {
+  const slotColor = C.player(slot);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        minWidth: 0,
+        opacity: isWinner ? 1 : 0.55,
+        filter: isWinner ? 'none' : 'grayscale(0.4)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: 13,
+            letterSpacing: '0.06em',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          <span style={{ color: slotColor, fontSize: 14 }}>{slot}</span>
+          <span style={{ color: C.text4, fontSize: 11 }}>·</span>
+          <span
+            style={{
+              color: C.bone,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {nick.toUpperCase()}
+          </span>
+        </span>
+        <span
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 9,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            padding: '3px 7px',
+            border: `1px solid ${isWinner ? slotColor : C.line}`,
+            color: isWinner ? slotColor : C.text3,
+            flexShrink: 0,
+          }}
+        >
+          {isWinner ? t('audienceWinnerBadge') : t('audienceLoserBadge')}
+        </span>
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1 / 1',
+          background: '#15141b',
+          overflow: 'hidden',
+          border: `1.5px solid ${isWinner ? slotColor : C.line}`,
+        }}
+      >
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={nick}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : null}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 10px',
+          background: isWinner ? `color-mix(in srgb, ${slotColor} 6%, transparent)` : 'rgba(255,255,255,0.02)',
+          border: `1px solid ${isWinner ? `color-mix(in srgb, ${slotColor} 40%, transparent)` : C.line}`,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 9.5,
+            letterSpacing: '0.20em',
+            textTransform: 'uppercase',
+            color: C.text3,
+          }}
+        >
+          {aiMode ? t('aiPoints') : t('votesShort')}
+        </span>
+        <span
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: 18,
+            fontVariantNumeric: 'tabular-nums',
+            color: isWinner ? slotColor : C.text2,
+          }}
+        >
+          {metric ?? '—'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function HedefBlockDesktop({ src, alt, label }: { src: string | null; alt: string; label: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+      <span
+        style={{
+          fontFamily: FONT.pixel,
+          fontSize: 11,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.accent,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        <span style={{ display: 'inline-block', width: 18, height: 1, background: C.accent, opacity: 0.5 }} />
+        {label}
+        <span style={{ display: 'inline-block', width: 18, height: 1, background: C.accent, opacity: 0.5 }} />
+      </span>
+      <div
+        style={{
+          position: 'relative',
+          width: 240,
+          height: 240,
+          background: '#0f0e14',
+          border: `1.5px solid color-mix(in srgb, ${C.accent} 55%, transparent)`,
+          overflow: 'hidden',
+        }}
+      >
+        {src && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+        {(['tl', 'tr', 'bl', 'br'] as const).map((pos) => {
+          const s: CSSProperties = { position: 'absolute', width: 14, height: 14 };
+          if (pos === 'tl') Object.assign(s, { top: 5, left: 5, borderTop: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` });
+          if (pos === 'tr') Object.assign(s, { top: 5, right: 5, borderTop: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` });
+          if (pos === 'bl') Object.assign(s, { bottom: 5, left: 5, borderBottom: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` });
+          if (pos === 'br') Object.assign(s, { bottom: 5, right: 5, borderBottom: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` });
+          return <div key={pos} style={s} />;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HedefCornerMobile({ src, alt, label }: { src: string | null; alt: string; label: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+      <span
+        style={{
+          fontFamily: FONT.pixel,
+          fontSize: 8,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.accent,
+        }}
+      >
+        {label}
+      </span>
+      <div
+        style={{
+          position: 'relative',
+          width: 72,
+          height: 72,
+          background: '#0f0e14',
+          border: `1.5px solid color-mix(in srgb, ${C.accent} 55%, transparent)`,
+          overflow: 'hidden',
+        }}
+      >
+        {src && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+        {(['tl', 'tr', 'bl', 'br'] as const).map((pos) => {
+          const s: CSSProperties = { position: 'absolute', width: 8, height: 8 };
+          if (pos === 'tl') Object.assign(s, { top: 3, left: 3, borderTop: `1.5px solid ${C.accent}`, borderLeft: `1.5px solid ${C.accent}` });
+          if (pos === 'tr') Object.assign(s, { top: 3, right: 3, borderTop: `1.5px solid ${C.accent}`, borderRight: `1.5px solid ${C.accent}` });
+          if (pos === 'bl') Object.assign(s, { bottom: 3, left: 3, borderBottom: `1.5px solid ${C.accent}`, borderLeft: `1.5px solid ${C.accent}` });
+          if (pos === 'br') Object.assign(s, { bottom: 3, right: 3, borderBottom: `1.5px solid ${C.accent}`, borderRight: `1.5px solid ${C.accent}` });
+          return <div key={pos} style={s} />;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WinnerCardMobile({
+  t,
+  slot,
+  nick,
+  imageUrl,
+  prompt,
+  metric,
+  aiMode,
+}: {
+  t: (k: DictKey) => string;
+  slot: Slot;
+  nick: string;
+  imageUrl: string | null;
+  prompt: string;
+  metric: number | null;
+  aiMode: boolean;
+}) {
+  const slotColor = C.player(slot);
+  return (
+    <div style={{ marginTop: 14, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: 12,
+            letterSpacing: '0.06em',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          <span style={{ color: slotColor, fontSize: 13 }}>{slot}</span>
+          <span style={{ color: C.text4, fontSize: 10 }}>·</span>
+          <span
+            style={{
+              color: C.bone,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {nick.toUpperCase()}
+          </span>
+        </span>
+        <span
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 8.5,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            padding: '3px 7px',
+            border: `1px solid ${slotColor}`,
+            color: slotColor,
+            flexShrink: 0,
+          }}
+        >
+          {t('audienceWinnerBadge')}
+        </span>
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: 200,
+          background: '#0e0d14',
+          overflow: 'hidden',
+          border: `1.5px solid ${slotColor}`,
+        }}
+      >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={nick} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 11px',
+          background: `color-mix(in srgb, ${slotColor} 6%, transparent)`,
+          border: `1px solid color-mix(in srgb, ${slotColor} 40%, transparent)`,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 9,
+            letterSpacing: '0.20em',
+            textTransform: 'uppercase',
+            color: C.text3,
+          }}
+        >
+          {aiMode ? t('aiPoints') : t('votesShort')}
+        </span>
+        <span
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: 16,
+            fontVariantNumeric: 'tabular-nums',
+            color: slotColor,
+          }}
+        >
+          {metric ?? '—'}
+        </span>
+      </div>
+      <div
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: 10.5,
+          lineHeight: 1.45,
+          color: C.text,
+          padding: '8px 10px',
+          background: `color-mix(in srgb, ${slotColor} 5%, transparent)`,
+          borderLeft: `2px solid ${slotColor}`,
+          maxHeight: `calc(${1.45}em * 2 + 16px)`,
+          overflow: 'hidden',
+          WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+          wordBreak: 'break-word',
+        }}
+      >
+        {prompt || t('typing')}
+      </div>
+    </div>
+  );
+}
+
+function LoserRowMobile({
+  slot,
+  nick,
+  imageUrl,
+  prompt,
+  metric,
+}: {
+  slot: Slot;
+  nick: string;
+  imageUrl: string | null;
+  prompt: string;
+  metric: number | null;
+}) {
+  const slotColor = C.player(slot);
+  return (
+    <div
+      style={{
+        marginTop: 10,
+        width: '100%',
+        display: 'flex',
+        gap: 10,
+        padding: '9px 11px',
+        background: 'rgba(255,255,255,0.02)',
+        border: `1px solid ${C.line}`,
+        borderRadius: 8,
+        opacity: 0.55,
+        filter: 'grayscale(0.4)',
+        alignItems: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          flexShrink: 0,
+          background: '#0e0d14',
+          overflow: 'hidden',
+          border: `1px solid ${C.line}`,
+        }}
+      >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={nick} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <span
+            style={{
+              fontFamily: FONT.pixel,
+              fontSize: 10.5,
+              letterSpacing: '0.06em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              minWidth: 0,
+            }}
+          >
+            <span style={{ color: slotColor }}>{slot}</span>
+            <span style={{ color: C.text4, fontSize: 9 }}>·</span>
+            <span
+              style={{
+                color: C.text2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
+              {nick.toUpperCase()}
+            </span>
+          </span>
+          <span
+            style={{
+              fontFamily: FONT.pixel,
+              fontSize: 12,
+              color: C.text3,
+              fontVariantNumeric: 'tabular-nums',
+              flexShrink: 0,
+            }}
+          >
+            {metric ?? '—'}
+          </span>
+        </div>
+        <div
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 9.5,
+            color: C.text3,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {prompt || '—'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TrueBlock({ t, text, compact = false }: { t: (k: DictKey) => string; text: string; compact?: boolean }) {
+  return (
+    <div
+      style={{
+        marginTop: compact ? 10 : 18,
+        width: '100%',
+        maxWidth: compact ? undefined : 1060,
+        background: `color-mix(in srgb, ${C.accent} 5%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${C.accent} 30%, transparent)`,
+        borderLeft: `3px solid ${C.accent}`,
+        borderRadius: 10,
+        padding: compact ? '9px 11px' : '11px 16px',
+        display: 'flex',
+        flexDirection: compact ? 'column' : 'row',
+        alignItems: compact ? 'flex-start' : 'baseline',
+        gap: compact ? 4 : 14,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: FONT.pixel,
+          fontSize: compact ? 8.5 : 10,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.accent,
+          flexShrink: 0,
+        }}
+      >
+        {t('truePromptLabel').toUpperCase()}
+      </span>
+      <span
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: compact ? 10.5 : 12.5,
+          lineHeight: 1.5,
+          color: C.text,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: compact ? 3 : 2,
+          WebkitBoxOrient: 'vertical',
+          flex: compact ? undefined : 1,
+        }}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
+function PromptRow({
+  t,
+  winnerSlot,
+  loserSlot,
+  winnerNick,
+  loserNick,
+  winnerPrompt,
+  loserPrompt,
+}: {
+  t: (k: DictKey) => string;
+  winnerSlot: Slot | null;
+  loserSlot: Slot | null;
+  winnerNick: string;
+  loserNick: string;
+  winnerPrompt: string;
+  loserPrompt: string;
+}) {
+  const winnerColor = winnerSlot ? C.player(winnerSlot) : C.line;
+  const loserColor = loserSlot ? C.player(loserSlot) : C.line;
+  const promptLabel = (name: string) => t('audiencePromptByTpl').replace('{name}', name.toUpperCase());
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        width: '100%',
+        maxWidth: 1060,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 24,
+      }}
+    >
+      <PromptBox label={promptLabel(winnerNick)} text={winnerPrompt} color={winnerColor} dimmed={false} />
+      <PromptBox label={promptLabel(loserNick)} text={loserPrompt} color={loserColor} dimmed />
+    </div>
+  );
+}
+
+function PromptBox({ label, text, color, dimmed }: { label: string; text: string; color: string; dimmed: boolean }) {
+  return (
+    <div
+      style={{
+        padding: '11px 14px',
+        background: `color-mix(in srgb, ${color} 5%, transparent)`,
+        borderLeft: `2px solid ${color}`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        opacity: dimmed ? 0.55 : 1,
+        filter: dimmed ? 'grayscale(0.4)' : 'none',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: 9.5,
+          letterSpacing: '0.20em',
+          textTransform: 'uppercase',
+          color: C.text3,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: 11.5,
+          lineHeight: 1.5,
+          color: C.text,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {text || '—'}
+      </span>
+    </div>
+  );
+}
+
+function AiReasoning({ t, text, compact = false }: { t: (k: DictKey) => string; text: string; compact?: boolean }) {
+  return (
+    <div
+      style={{
+        marginTop: compact ? 10 : 14,
+        width: '100%',
+        maxWidth: compact ? undefined : 1060,
+        background: C.ink2,
+        border: `1px solid ${C.line}`,
+        borderRadius: 10,
+        padding: compact ? '10px 12px' : '12px 16px',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: compact ? 9 : 10,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.text3,
+        }}
+      >
+        {t('aiEvaluation').toUpperCase()}
+      </span>
+      <p
+        style={{
+          fontFamily: FONT.body,
+          fontSize: compact ? 12 : 13,
+          lineHeight: 1.55,
+          color: C.text2,
+          marginTop: 6,
+        }}
+      >
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function Cta({ t, mySlot, winnerColor }: { t: (k: DictKey) => string; mySlot: Slot | null; winnerColor: string }) {
+  if (mySlot) {
+    return (
+      <button
+        type="button"
+        onClick={() => window.location.assign('/')}
+        style={{
+          marginTop: 'auto',
+          width: '100%',
+          maxWidth: 360,
+          height: 48,
+          border: `1px solid ${C.player(mySlot)}`,
+          background: `color-mix(in srgb, ${C.player(mySlot)} 12%, transparent)`,
+          color: C.bone,
+          fontFamily: FONT.pixel,
+          fontSize: 13,
+          letterSpacing: '0.08em',
+          cursor: 'pointer',
+        }}
+      >
+        {t('playAgain').toUpperCase()}
+      </button>
+    );
+  }
+  return (
+    <div
+      style={{
+        marginTop: 'auto',
+        paddingTop: 14,
+        fontFamily: FONT.mono,
+        fontSize: 11,
+        letterSpacing: '0.22em',
+        textTransform: 'uppercase',
+        color: C.text4,
+        textAlign: 'center',
+      }}
+    >
+      — {t('audienceNextMatchSoon')} —
+    </div>
+  );
+}
+
+// ─── TIE fallback ──────────────────────────────────────────────────────
+
+function TieDesktop({ t, state, aiMode }: { t: (k: DictKey) => string; state: NonNullable<ReturnType<typeof useGameState>['state']>; aiMode: boolean }) {
+  // TIE durumunda her iki oyuncu da eşit ağırlıkta — hiyerarşi yok, hedef ortada.
+  return (
+    <div
+      style={{
+        marginTop: 22,
+        width: '100%',
+        maxWidth: 1060,
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        gap: 36,
+        alignItems: 'start',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ width: '100%', maxWidth: 280 }}>
+          <ArenaCardDesktop
+            slot="A"
+            nick={state.players.A?.nickname ?? 'Player A'}
+            imageUrl={state.players.A?.imageUrl ?? null}
+            metric={aiMode ? state.players.A?.aiScore ?? null : state.votes?.A ?? null}
+            isWinner
+            aiMode={aiMode}
+            t={t}
+          />
+        </div>
+      </div>
+      <div style={{ paddingTop: 18 }}>
+        <HedefBlockDesktop src={state.referenceImageUrl} alt={t('referenceImage')} label={t('audienceHedefShort')} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ width: '100%', maxWidth: 280 }}>
+          <ArenaCardDesktop
+            slot="B"
+            nick={state.players.B?.nickname ?? 'Player B'}
+            imageUrl={state.players.B?.imageUrl ?? null}
+            metric={aiMode ? state.players.B?.aiScore ?? null : state.votes?.B ?? null}
+            isWinner
+            aiMode={aiMode}
+            t={t}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TieMobile({ t, state, aiMode }: { t: (k: DictKey) => string; state: NonNullable<ReturnType<typeof useGameState>['state']>; aiMode: boolean }) {
+  return (
+    <div style={{ marginTop: 14, width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <WinnerCardMobile
+        t={t}
+        slot="A"
+        nick={state.players.A?.nickname ?? 'Player A'}
+        imageUrl={state.players.A?.imageUrl ?? null}
+        prompt={state.players.A?.prompt ?? ''}
+        metric={aiMode ? state.players.A?.aiScore ?? null : state.votes?.A ?? null}
+        aiMode={aiMode}
+      />
+      <WinnerCardMobile
+        t={t}
+        slot="B"
+        nick={state.players.B?.nickname ?? 'Player B'}
+        imageUrl={state.players.B?.imageUrl ?? null}
+        prompt={state.players.B?.prompt ?? ''}
+        metric={aiMode ? state.players.B?.aiScore ?? null : state.votes?.B ?? null}
+        aiMode={aiMode}
+      />
+    </div>
   );
 }

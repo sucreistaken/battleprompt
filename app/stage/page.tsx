@@ -1,21 +1,18 @@
-'use client';
+import type { Metadata } from 'next';
+import StagePageClient from './StagePageClient';
 
-import { GameStateProvider, useGameState } from '@/components/client/useGameState';
-import { I18nProvider } from '@/components/client/i18nContext';
-import { StageShell } from '@/components/stage/StageShell';
+export const metadata: Metadata = {
+  title: 'Sahne, projeksiyon yayını',
+  description:
+    'Etkinlik sahnesi için canlı yayın. QR ile katılım, hedef görsel, oyuncu kapışmaları, AI üretim ve kazanan açıklaması.',
+  alternates: { canonical: '/stage' },
+  openGraph: {
+    title: 'Sahne, projeksiyon yayını · Prompt Clash',
+    description: 'Etkinlikte projeksiyona yansıyan canlı kapışma sahnesi.',
+    url: '/stage',
+  },
+};
 
-export default function Page() {
-  return (
-    <GameStateProvider role="stage">
-      <I18nBridge>
-        <StageShell />
-      </I18nBridge>
-    </GameStateProvider>
-  );
-}
-
-function I18nBridge({ children }: { children: React.ReactNode }) {
-  const { state } = useGameState();
-  const lang = state?.stageLanguage || 'tr';
-  return <I18nProvider forceLang={lang}>{children}</I18nProvider>;
+export default function StagePage() {
+  return <StagePageClient />;
 }

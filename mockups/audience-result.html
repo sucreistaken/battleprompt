@@ -1,0 +1,461 @@
+﻿<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prompt Clash, izleyici sonuÃ§ ekranÄ±, v2 arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --ink:#22202b; --ink2:#2d2b38;
+    --line:#3f3d4b; --line2:#5b5870;
+    --text:#f7f4ec; --text2:#c0bdca; --text3:#8c8898; --text4:#605d6c;
+    --bone:#ffffff; --live:#ff5c5c;
+    --a:#7c4dff;
+    --b:#aed24a;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0d0d12;color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{padding:48px 24px 96px}
+  .page{max-width:1240px;margin:0 auto}
+  .page h1{font-family:var(--pixel);font-size:24px;color:var(--bone);letter-spacing:.02em}
+  .page h1 span{color:var(--a)}
+  .page .lede{margin-top:14px;font-size:14px;line-height:1.6;color:var(--text2);max-width:780px}
+
+  .case{margin-top:64px}
+  .cap{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .cap .k{font-family:var(--pixel);font-size:13px;color:var(--bone);letter-spacing:.04em}
+  .cap .s{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    padding:3px 8px;background:var(--ink2);border:1px solid var(--line);color:var(--text2)}
+  .cap .n{font-size:13px;color:var(--text3)}
+
+  .frame{background:var(--ink);border:1px solid #2a2933;border-radius:14px;overflow:hidden;position:relative}
+  .frame .chrome{height:30px;background:#181821;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid #25242e}
+  .frame .chrome i{width:8px;height:8px;border-radius:50%;background:#2f2e3a;display:inline-block}
+  .frame .chrome span{margin-left:12px;font-family:var(--mono);font-size:10px;color:var(--text4);letter-spacing:.1em}
+  .frame .screen{position:relative}
+
+  .frame-desktop{width:1180px;margin:0 auto;max-width:100%}
+  .frame-desktop .screen{height:820px}
+  .frame-mobile{width:375px;margin:0 auto}
+  .frame-mobile .screen{height:812px}
+
+  /* â”€â”€â”€ desktop wrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .d-wrap{position:absolute;inset:0;padding:24px 56px 28px;display:flex;flex-direction:column;align-items:center}
+
+  /* top bar */
+  .topbar{width:100%;display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:var(--pixel);font-size:13px;color:var(--bone);letter-spacing:.08em}
+  .live{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--text2)}
+  .live .dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* hero â€” KAZANAN â–¸ nick */
+  .hero{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  .hero .lbl{font-family:var(--pixel);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+  .hero .h{font-family:var(--pixel);font-size:24px;color:var(--bone);letter-spacing:.04em;line-height:1;
+    display:inline-flex;align-items:center;gap:14px}
+  .hero .h .winner-name{color:var(--a)}
+  .hero.b .h .winner-name{color:var(--b)}
+  .hero .h .sep{color:var(--text4)}
+
+  /* 3-column arena â€” KAZANAN | HEDEF | KAYBEDEN */
+  .arena{margin-top:22px;width:100%;display:grid;grid-template-columns:1fr auto 1fr;gap:36px;
+    align-items:start;justify-content:center;max-width:1060px}
+
+  /* center column â€” hedef */
+  .hedef-col{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:18px}
+  .hedef-lbl{font-family:var(--pixel);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--a);
+    display:inline-flex;align-items:center;gap:10px}
+  .hedef-lbl::before,.hedef-lbl::after{content:'';display:inline-block;width:18px;height:1px;background:var(--a);opacity:.5}
+  .hedef-img{position:relative;width:240px;height:240px;background:#0f0e14;
+    border:1.5px solid rgba(124,77,255,.55);overflow:hidden}
+  .hedef-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .hedef-img .corner{position:absolute;width:14px;height:14px}
+  .hedef-img .corner.tl{top:5px;left:5px;border-top:2px solid var(--a);border-left:2px solid var(--a)}
+  .hedef-img .corner.tr{top:5px;right:5px;border-top:2px solid var(--a);border-right:2px solid var(--a)}
+  .hedef-img .corner.bl{bottom:5px;left:5px;border-bottom:2px solid var(--a);border-left:2px solid var(--a)}
+  .hedef-img .corner.br{bottom:5px;right:5px;border-bottom:2px solid var(--a);border-right:2px solid var(--a)}
+
+  /* player cards (kazanan + kaybeden) */
+  .pcard{display:flex;flex-direction:column;gap:10px;min-width:0;max-width:280px;width:100%}
+  .pcard.kazanan{justify-self:end}
+  .pcard.kaybeden{justify-self:start;opacity:.55;filter:grayscale(.4)}
+
+  .pcard .topline{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .pcard .nick{font-family:var(--pixel);font-size:13px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:8px}
+  .pcard.a .nick .slot{color:var(--a)}
+  .pcard.b .nick .slot{color:var(--b)}
+  .pcard .nick .sep{color:var(--text4);font-size:11px}
+  .pcard .nick .name{color:var(--bone);letter-spacing:.04em}
+  .pcard .badge{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+    padding:3px 7px;border:1px solid var(--line);color:var(--text3)}
+  .pcard.kazanan.a .badge{color:var(--a);border-color:var(--a)}
+  .pcard.kazanan.b .badge{color:var(--b);border-color:var(--b)}
+
+  .pcard .img{position:relative;width:100%;aspect-ratio:1/1;background:#15141b;overflow:hidden;
+    border:1.5px solid var(--line)}
+  .pcard.kazanan.a .img{border-color:var(--a)}
+  .pcard.kazanan.b .img{border-color:var(--b)}
+  .pcard .img img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .pcard .score{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;
+    background:rgba(255,255,255,.02);border:1px solid var(--line)}
+  .pcard.kazanan.a .score{border-color:rgba(124,77,255,.4);background:rgba(124,77,255,.06)}
+  .pcard.kazanan.b .score{border-color:rgba(174,210,74,.4);background:rgba(174,210,74,.06)}
+  .pcard .score .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.20em;text-transform:uppercase;color:var(--text3)}
+  .pcard .score .val{font-family:var(--pixel);font-size:18px;color:var(--text2);font-variant-numeric:tabular-nums}
+  .pcard.kazanan.a .score .val{color:var(--a)}
+  .pcard.kazanan.b .score .val{color:var(--b)}
+
+  /* gerÃ§ek prompt + iki kart prompt'u â€” alt row */
+  .true-block{margin-top:18px;width:100%;max-width:1060px;background:rgba(124,77,255,.05);
+    border:1px solid rgba(124,77,255,.3);border-left:3px solid var(--a);border-radius:10px;
+    padding:11px 16px;display:flex;align-items:baseline;gap:14px}
+  .true-block .lbl{font-family:var(--pixel);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--a);flex-shrink:0}
+  .true-block .txt{font-family:var(--mono);font-size:12.5px;line-height:1.5;color:var(--text);
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1}
+
+  .prompt-row{margin-top:12px;width:100%;max-width:1060px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .prompt-row .pbox{padding:11px 14px;background:rgba(255,255,255,.025);border-left:2px solid var(--line);
+    display:flex;flex-direction:column;gap:6px}
+  .prompt-row .pbox.a{border-left-color:var(--a);background:rgba(124,77,255,.05)}
+  .prompt-row .pbox.b{border-left-color:var(--b);background:rgba(174,210,74,.05)}
+  .prompt-row .pbox.kaybeden{opacity:.55;filter:grayscale(.4)}
+  .prompt-row .pbox .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.20em;text-transform:uppercase;color:var(--text3)}
+  .prompt-row .pbox .txt{font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--text);
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+  .cta{margin-top:auto;padding-top:14px;display:flex;justify-content:center;width:100%}
+  .cta .wait{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--text4)}
+
+  /* â”€â”€â”€ mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  .m-wrap{position:absolute;inset:0;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center}
+  .m-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .m-top .left{display:flex;flex-direction:column;gap:6px;flex:1}
+  .m-top .wordmark{font-size:11px}
+  .m-top .live{font-size:9px}
+  .m-top .live .dot{width:5px;height:5px}
+
+  .m-hedef-corner{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .m-hedef-corner .lbl{font-family:var(--pixel);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+  .m-hedef-corner .img{position:relative;width:72px;height:72px;background:#0f0e14;
+    border:1.5px solid rgba(124,77,255,.55);overflow:hidden}
+  .m-hedef-corner .img img{width:100%;height:100%;object-fit:cover;display:block}
+  .m-hedef-corner .img .corner{position:absolute;width:8px;height:8px}
+  .m-hedef-corner .img .corner.tl{top:3px;left:3px;border-top:1.5px solid var(--a);border-left:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.tr{top:3px;right:3px;border-top:1.5px solid var(--a);border-right:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.bl{bottom:3px;left:3px;border-bottom:1.5px solid var(--a);border-left:1.5px solid var(--a)}
+  .m-hedef-corner .img .corner.br{bottom:3px;right:3px;border-bottom:1.5px solid var(--a);border-right:1.5px solid var(--a)}
+
+  .m-hero{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+  .m-hero .lbl{font-family:var(--pixel);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+  .m-hero .h{font-family:var(--pixel);font-size:20px;color:var(--bone);letter-spacing:.04em;line-height:1;
+    display:inline-flex;align-items:center;gap:10px}
+  .m-hero .h .winner-name{color:var(--a)}
+  .m-hero.b .h .winner-name{color:var(--b)}
+  .m-hero .h .sep{color:var(--text4)}
+
+  .m-winner{margin-top:14px;width:100%;display:flex;flex-direction:column;gap:8px}
+  .m-winner .topline{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .m-winner .nick{font-family:var(--pixel);font-size:12px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:7px}
+  .m-winner.a .nick .slot{color:var(--a)}
+  .m-winner.b .nick .slot{color:var(--b)}
+  .m-winner .nick .sep{color:var(--text4);font-size:10px}
+  .m-winner .nick .name{color:var(--bone);letter-spacing:.04em}
+  .m-winner .badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;
+    padding:3px 7px;border:1px solid var(--line);color:var(--a)}
+  .m-winner.b .badge{color:var(--b);border-color:var(--b)}
+  .m-winner.a .badge{border-color:var(--a)}
+
+  .m-winner .img{position:relative;width:100%;height:200px;background:#0e0d14;overflow:hidden;
+    border:1.5px solid var(--a)}
+  .m-winner.b .img{border-color:var(--b)}
+  .m-winner .img img{width:100%;height:100%;object-fit:cover;display:block}
+  .m-winner .score{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;
+    background:rgba(124,77,255,.06);border:1px solid rgba(124,77,255,.4)}
+  .m-winner.b .score{background:rgba(174,210,74,.06);border-color:rgba(174,210,74,.4)}
+  .m-winner .score .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.20em;text-transform:uppercase;color:var(--text3)}
+  .m-winner .score .val{font-family:var(--pixel);font-size:16px;color:var(--a);font-variant-numeric:tabular-nums}
+  .m-winner.b .score .val{color:var(--b)}
+  .m-winner .prompt{font-family:var(--mono);font-size:10.5px;line-height:1.45;color:var(--text);
+    padding:8px 10px;background:rgba(124,77,255,.05);border-left:2px solid var(--a);
+    max-height:calc(1.45em * 2 + 16px);overflow:hidden;
+    mask-image:linear-gradient(to bottom,#000 78%,transparent 100%);
+    -webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent 100%)}
+  .m-winner.b .prompt{background:rgba(174,210,74,.05);border-left-color:var(--b)}
+
+  .m-true{margin-top:10px;width:100%;background:rgba(124,77,255,.05);
+    border:1px solid rgba(124,77,255,.3);border-left:3px solid var(--a);border-radius:8px;
+    padding:9px 11px;display:flex;flex-direction:column;gap:4px}
+  .m-true .lbl{font-family:var(--pixel);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+  .m-true .txt{font-family:var(--mono);font-size:10.5px;line-height:1.45;color:var(--text);
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+  .m-loser{margin-top:10px;width:100%;display:flex;gap:10px;padding:9px 11px;
+    background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:8px;
+    opacity:.55;filter:grayscale(.4);align-items:center}
+  .m-loser .thumb{width:48px;height:48px;flex-shrink:0;background:#0e0d14;overflow:hidden;
+    border:1px solid var(--line)}
+  .m-loser .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .m-loser .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .m-loser .body .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .m-loser .nick{font-family:var(--pixel);font-size:10.5px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:6px}
+  .m-loser.a .nick .slot{color:var(--a)}
+  .m-loser.b .nick .slot{color:var(--b)}
+  .m-loser .nick .name{color:var(--text2)}
+  .m-loser .nick .sep{color:var(--text4);font-size:9px}
+  .m-loser .body .val{font-family:var(--pixel);font-size:12px;color:var(--text3);font-variant-numeric:tabular-nums}
+  .m-loser .body .prompt{font-family:var(--mono);font-size:9.5px;color:var(--text3);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .m-cta{margin-top:auto;padding-top:10px;display:flex;justify-content:center;width:100%}
+  .m-cta .wait{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--text4)}
+
+  .hr{height:1px;background:#1f1e27;margin:64px 0}
+  .footer{margin-top:48px;font-family:var(--mono);font-size:12px;color:var(--text4);text-align:center;letter-spacing:.08em}
+
+  @media (prefers-reduced-motion: reduce) {
+    .live .dot { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>PROMPT CLASH Â· Ä°ZLEYÄ°CÄ° SONUÃ‡ EKRANI <span>v2 â€” 3 KOLON ARENA</span></h1>
+  <p class="lede">
+    Sally yeniden tasarladÄ± â€” generating ile aynÄ± omurga. KAZANAN Â· HEDEF Â· KAYBEDEN tek satÄ±r yatay arena.
+    Audience 3 gÃ¶rseli yan yana gÃ¶rÃ¼yor, hangisinin hedefe yakÄ±n olduÄŸu anÄ±nda belli oluyor.
+    Ãœstte kÃ¼Ã§Ã¼k KAZANAN â–¸ nick hero, ortada hedef (240px), iki yanda oyuncu kartlarÄ± (kazanan slot rengi border + AI Puan,
+    kaybeden soluk + grayscale). AltÄ±nda GERÃ‡EK PROMPT bar + iki oyuncunun prompt'u side-by-side karÅŸÄ±laÅŸtÄ±rmalÄ±.
+    Glow yok, emoji yok. Mobile'da hedef saÄŸ Ã¼st kÃ¶ÅŸede mini, kazanan kart bÃ¼yÃ¼k, kaybeden mini row, true prompt arada.
+  </p>
+
+  <!-- â”€â”€â”€ FRAME 1, DESKTOP A KAZANDI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP Â· 1180</span>
+      <span class="s">A KAZANDI Â· AI SCORE</span>
+      <span class="n">KAZANAN â–¸ KADÄ°R hero, sol A kart canlÄ±, orta hedef, saÄŸ B soluk</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost Â· /  Â·  AUDIENCE</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="topbar">
+            <span class="wordmark">PROMPT CLASH</span>
+            <span class="live"><span class="dot"></span>CANLI</span>
+          </div>
+
+          <div class="hero">
+            <span class="lbl">AI SCORE Â· KAZANAN</span>
+            <div class="h"><span class="winner-name">KADÄ°R</span></div>
+          </div>
+
+          <div class="arena">
+            <div class="pcard kazanan a">
+              <div class="topline">
+                <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+                <span class="badge">KAZANAN</span>
+              </div>
+              <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=600&h=600&fit=crop" alt="A"></div>
+              <div class="score"><span class="lbl">AI Puan</span><span class="val">8.7</span></div>
+            </div>
+
+            <div class="hedef-col">
+              <span class="hedef-lbl">HEDEF</span>
+              <div class="hedef-img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=500&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+
+            <div class="pcard kaybeden b">
+              <div class="topline">
+                <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+                <span class="badge">KAYBEDEN</span>
+              </div>
+              <div class="img"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=600&h=600&fit=crop" alt="B"></div>
+              <div class="score"><span class="lbl">AI Puan</span><span class="val">7.2</span></div>
+            </div>
+          </div>
+
+          <div class="true-block">
+            <span class="lbl">GERÃ‡EK PROMPT</span>
+            <span class="txt">A lone noir detective, silhouetted against the neon glow of a wet city street at night, stands under a flickering streetlamp with rain streaking down his trench coat and fedora.</span>
+          </div>
+
+          <div class="prompt-row">
+            <div class="pbox a">
+              <span class="lbl">KADÄ°R'in promptu</span>
+              <span class="txt">a lone noir detective silhouetted against the neon glow of a wet city street at night, standing under a flickering streetlamp</span>
+            </div>
+            <div class="pbox b kaybeden">
+              <span class="lbl">KADIR'in promptu</span>
+              <span class="txt">cinematic rainy night, lone detective in trench coat under yellow streetlamp, moody neon reflections on wet pavement</span>
+            </div>
+          </div>
+
+          <div class="cta">
+            <span class="wait">â€” Sonraki maÃ§ birazdan â€”</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â”€â”€â”€ FRAME 2, DESKTOP B KAZANDI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">DESKTOP Â· 1180</span>
+      <span class="s">B KAZANDI Â· AI SCORE</span>
+      <span class="n">simetri â€” B saÄŸda kazanan deÄŸil, ne tarafa konsa o kazanÄ±r mantÄ±ÄŸÄ±: kazanan SOLDA, hedef ortada</span>
+    </header>
+    <div class="frame frame-desktop">
+      <div class="chrome"><i></i><i></i><i></i><span>localhost Â· /  Â·  AUDIENCE</span></div>
+      <div class="screen">
+        <div class="d-wrap">
+          <div class="topbar">
+            <span class="wordmark">PROMPT CLASH</span>
+            <span class="live"><span class="dot"></span>CANLI</span>
+          </div>
+
+          <div class="hero b">
+            <span class="lbl">AI SCORE Â· KAZANAN</span>
+            <div class="h"><span class="winner-name">KADIR</span></div>
+          </div>
+
+          <div class="arena">
+            <div class="pcard kazanan b">
+              <div class="topline">
+                <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+                <span class="badge">KAZANAN</span>
+              </div>
+              <div class="img"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=600&h=600&fit=crop" alt="B"></div>
+              <div class="score"><span class="lbl">AI Puan</span><span class="val">9.1</span></div>
+            </div>
+
+            <div class="hedef-col">
+              <span class="hedef-lbl">HEDEF</span>
+              <div class="hedef-img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=500&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+
+            <div class="pcard kaybeden a">
+              <div class="topline">
+                <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+                <span class="badge">KAYBEDEN</span>
+              </div>
+              <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=600&h=600&fit=crop" alt="A"></div>
+              <div class="score"><span class="lbl">AI Puan</span><span class="val">7.4</span></div>
+            </div>
+          </div>
+
+          <div class="true-block">
+            <span class="lbl">GERÃ‡EK PROMPT</span>
+            <span class="txt">A lone noir detective, silhouetted against the neon glow of a wet city street at night, stands under a flickering streetlamp with rain streaking down his trench coat and fedora.</span>
+          </div>
+
+          <div class="prompt-row">
+            <div class="pbox b">
+              <span class="lbl">KADIR'in promptu</span>
+              <span class="txt">cinematic rainy night, lone detective in trench coat standing under a glowing yellow streetlamp with moody neon reflections on wet asphalt</span>
+            </div>
+            <div class="pbox a kaybeden">
+              <span class="lbl">KADÄ°R'in promptu</span>
+              <span class="txt">a lone noir detective silhouetted against the neon glow of a wet city street at night under a flickering streetlamp</span>
+            </div>
+          </div>
+
+          <div class="cta">
+            <span class="wait">â€” Sonraki maÃ§ birazdan â€”</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- â”€â”€â”€ FRAME 3, MOBILE A KAZANDI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <section class="case">
+    <header class="cap">
+      <span class="k">MOBILE Â· 375</span>
+      <span class="s">A KAZANDI Â· MOBILE</span>
+      <span class="n">hedef saÄŸ Ã¼st, kazanan bÃ¼yÃ¼k, gerÃ§ek prompt arada, kaybeden mini row alt</span>
+    </header>
+    <div class="row" style="display:flex;justify-content:center">
+    <div class="frame frame-mobile">
+      <div class="chrome"><i></i><i></i><i></i><span>iPhone 13 Â· portrait</span></div>
+      <div class="screen">
+        <div class="m-wrap">
+          <div class="m-top">
+            <div class="left">
+              <span class="wordmark">PROMPT CLASH</span>
+              <span class="live"><span class="dot"></span>CANLI</span>
+            </div>
+            <div class="m-hedef-corner">
+              <span class="lbl">HEDEF</span>
+              <div class="img">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" alt="hedef">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="m-hero">
+            <span class="lbl">AI SCORE Â· KAZANAN</span>
+            <div class="h"><span class="winner-name">KADÄ°R</span></div>
+          </div>
+
+          <div class="m-winner a">
+            <div class="topline">
+              <span class="nick"><span class="slot">A</span><span class="sep">Â·</span><span class="name">KADÄ°R</span></span>
+              <span class="badge">KAZANAN</span>
+            </div>
+            <div class="img"><img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=600&h=600&fit=crop" alt="A"></div>
+            <div class="score"><span class="lbl">AI Puan</span><span class="val">8.7</span></div>
+            <div class="prompt">a lone noir detective silhouetted against the neon glow of a wet city street at night, standing under a flickering streetlamp</div>
+          </div>
+
+          <div class="m-true">
+            <span class="lbl">GERÃ‡EK PROMPT</span>
+            <span class="txt">A lone noir detective silhouetted against neon glow of a wet city street at night under a flickering streetlamp.</span>
+          </div>
+
+          <div class="m-loser b">
+            <div class="thumb"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=200&h=200&fit=crop" alt="B"></div>
+            <div class="body">
+              <div class="row">
+                <span class="nick"><span class="slot">B</span><span class="sep">Â·</span><span class="name">KADIR</span></span>
+                <span class="val">7.2</span>
+              </div>
+              <span class="prompt">cinematic rainy night, lone figure in trench coat under yellow streetlamp</span>
+            </div>
+          </div>
+
+          <div class="m-cta">
+            <span class="wait">â€” Sonraki maÃ§ birazdan â€”</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <p class="footer">v2 â€” 3 kolon arena (kazanan Â· hedef Â· kaybeden), gerÃ§ek prompt bar + iki kart prompt row. Onay sonrasÄ± ResultView.tsx portu.</p>
+</div>
+</body>
+</html>
