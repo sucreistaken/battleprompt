@@ -9,3 +9,23 @@ README.md
 *.log
 .vscode
 .idea
+
+# Runtime / dev-only artifacts
+cache/
+public/uploads/*
+!public/uploads/.gitkeep
+mockups/
+docs/
+_bmad/
+_bmad-output/
+
+# Local screenshots & loose images at repo root
+/*.png
+
+# BMad / Claude per-machine state
+.claude/
+
+# Tooling
+.playwright-mcp/
+tsconfig.tsbuildinfo
+coverage/

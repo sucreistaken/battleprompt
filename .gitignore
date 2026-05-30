@@ -24,3 +24,6 @@ tsconfig.tsbuildinfo
 # Runtime-generated local uploads (keep folder marker only)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Local Gemini expansion cache (regenerates as games are played)
+/cache/

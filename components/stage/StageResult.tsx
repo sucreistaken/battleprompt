@@ -126,7 +126,7 @@ export function StageResult() {
           transition={{ duration: 0.4, ease: EASE_BACK, delay: 1.0 }}
           style={{
             position: 'absolute',
-            top: 366,
+            top: 408,
             left: 60,
             right: 60,
             height: 82,
@@ -172,8 +172,8 @@ export function StageResult() {
       <div
         style={{
           position: 'absolute',
-          top: 470,
-          bottom: aiMode && state.aiReasoning ? 150 : 70,
+          top: 510,
+          bottom: aiMode && state.aiReasoning ? 130 : 60,
           left: 60,
           right: 60,
           display: 'grid',
