@@ -5,7 +5,7 @@
 # serving until the new image is built, so downtime is just the recreate swap.
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/home/d1stang3r/prompt-clash}"
+APP_DIR="${APP_DIR:-/opt/prompt-clash}"
 ENV_FILE="$APP_DIR/.env.production"
 
 cd "$APP_DIR"

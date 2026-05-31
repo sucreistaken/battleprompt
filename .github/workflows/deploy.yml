@@ -39,4 +39,4 @@ jobs:
           script_stop: true
           command_timeout: 20m
           script: |
-            APP_DIR=/home/d1stang3r/prompt-clash bash /home/d1stang3r/prompt-clash/deploy/deploy.sh
+            APP_DIR=/opt/prompt-clash bash /opt/prompt-clash/deploy/deploy.sh
