@@ -1,0 +1,42 @@
+name: deploy
+
+# Push to main -> typecheck gate -> SSH into the VM -> pull, build, swap container.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Never run two production deploys at once; let the running one finish.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  deploy:
+    name: Deploy to VM
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_SSH_PORT || 22 }}
+          script_stop: true
+          command_timeout: 20m
+          script: |
+            APP_DIR=/home/d1stang3r/prompt-clash bash /home/d1stang3r/prompt-clash/deploy/deploy.sh

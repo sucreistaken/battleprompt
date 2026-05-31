@@ -1,0 +1,27 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: prompt-clash-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    image: prompt-clash:latest
+    container_name: prompt-clash
+    restart: unless-stopped
+    env_file: .env.production
+    depends_on:
+      - mongo
+    # Bound to localhost only — nginx terminates TLS and reverse-proxies in.
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./uploads:/app/public/uploads
+
+volumes:
+  mongo-data:
