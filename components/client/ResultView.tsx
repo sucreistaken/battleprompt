@@ -628,7 +628,8 @@ function WinnerCardMobile({
         style={{
           position: 'relative',
           width: '100%',
-          height: 200,
+          aspectRatio: '4 / 5',
+          maxHeight: '60dvh',
           background: '#0e0d14',
           overflow: 'hidden',
           border: `1.5px solid ${slotColor}`,
@@ -636,7 +637,7 @@ function WinnerCardMobile({
       >
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={nick} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <img src={imageUrl} alt={nick} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
         )}
       </div>
       <div

@@ -58,11 +58,6 @@ export function LandingClient() {
           {/* Mobile DOM order: copy → mascot → flow.
               Desktop ≥960px: grid-template-areas swaps mascot to right column. */}
           <div className="pc-landing-copy" style={copyStyle}>
-            <span style={tagStyle}>
-              <span aria-hidden="true" style={tagDotStyle} />
-              {t('landingTag')}
-            </span>
-
             <h1 className="pc-landing-h1" style={h1Style}>
               {t('landingH1Part1')}
               <br />
@@ -242,31 +237,6 @@ const copyStyle: CSSProperties = {
   gap: 12,
   minWidth: 0,
   order: 1,
-};
-
-const tagStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  alignSelf: 'flex-start',
-  padding: '5px 11px',
-  borderRadius: 999,
-  background: 'rgba(124,77,255,0.10)',
-  border: '1px solid rgba(124,77,255,0.34)',
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 10.5,
-  fontWeight: 600,
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase',
-  color: 'var(--pc-text)',
-  gap: 8,
-};
-
-const tagDotStyle: CSSProperties = {
-  width: 6,
-  height: 6,
-  background: 'var(--pc-accent)',
-  flex: 'none',
-  boxShadow: '0 0 8px rgba(124,77,255,0.5)',
 };
 
 const h1Style: CSSProperties = {

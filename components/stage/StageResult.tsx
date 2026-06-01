@@ -126,10 +126,10 @@ export function StageResult() {
           transition={{ duration: 0.4, ease: EASE_BACK, delay: 1.0 }}
           style={{
             position: 'absolute',
-            top: 408,
+            top: 416,
             left: 60,
             right: 60,
-            height: 82,
+            height: 64,
             display: 'flex',
             alignItems: 'center',
             gap: 22,
@@ -172,7 +172,7 @@ export function StageResult() {
       <div
         style={{
           position: 'absolute',
-          top: 510,
+          top: 494,
           bottom: aiMode && state.aiReasoning ? 130 : 60,
           left: 60,
           right: 60,
@@ -273,31 +273,31 @@ function ResultCard({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '14px 22px',
+          padding: '10px 18px',
           background: color,
           color: ink,
           opacity: dim ? 0.55 : 1,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Avatar letter={letter} size={36} player={letter} />
-          <span style={{ fontFamily: FONT.body, fontSize: 22, fontWeight: 700, color: ink }}>{name}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Avatar letter={letter} size={30} player={letter} />
+          <span style={{ fontFamily: FONT.body, fontSize: 20, fontWeight: 700, color: ink }}>{name}</span>
         </div>
-        {winner && <span style={{ fontFamily: FONT.pixel, fontSize: 18, letterSpacing: '0.08em' }}>★ {t('winner')}</span>}
+        {winner && <span style={{ fontFamily: FONT.pixel, fontSize: 14, letterSpacing: '0.08em' }}>★ {t('winner')}</span>}
       </div>
 
-      <StageImage src={player?.imageUrl ?? null} alt={name} accent={color} loadingLabel={t('loadingText')} dim={dim} fill objectFit="contain" />
+      <StageImage src={player?.imageUrl ?? null} alt={name} accent={color} loadingLabel={t('loadingText')} dim={dim} fill objectFit="cover" />
 
       {/* Prompt */}
-      <div style={{ padding: '14px 22px', background: C.ink3, borderTop: `1px solid ${C.line}`, display: 'flex', flexDirection: 'column', gap: 6, opacity: dim ? 0.72 : 1 }}>
+      <div style={{ padding: '10px 18px', background: C.ink3, borderTop: `1px solid ${C.line}`, display: 'flex', flexDirection: 'column', gap: 4, opacity: dim ? 0.72 : 1, flexShrink: 0 }}>
         <Lbl size={10} color="text3">
           {t('promptLabel')}
         </Lbl>
         <div
           style={{
             fontFamily: FONT.mono,
-            fontSize: 15,
-            lineHeight: 1.45,
+            fontSize: 14,
+            lineHeight: 1.4,
             color: winner ? C.text : C.text2,
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -310,18 +310,18 @@ function ResultCard({
       </div>
 
       {/* Score band */}
-      <div style={{ padding: '20px 24px 22px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 4, borderTop: `1px solid ${C.line}` }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Lbl size={11}>{metricLabel}</Lbl>
-          <PixelText size={76} color={winner || neutral ? color : C.text2}>
+      <div style={{ padding: '12px 18px 14px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 4, borderTop: `1px solid ${C.line}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Lbl size={10}>{metricLabel}</Lbl>
+          <PixelText size={48} color={winner || neutral ? color : C.text2}>
             {metric}
           </PixelText>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <Lbl size={11}>{t('shareLabel')}</Lbl>
-          <div style={{ fontFamily: FONT.pixel, fontSize: 48, color: winner || neutral ? color : C.text3, lineHeight: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+          <Lbl size={10}>{t('shareLabel')}</Lbl>
+          <div style={{ fontFamily: FONT.pixel, fontSize: 32, color: winner || neutral ? color : C.text3, lineHeight: 1 }}>
             {percent}
-            <span style={{ fontSize: 22, color: C.text3 }}>%</span>
+            <span style={{ fontSize: 16, color: C.text3 }}>%</span>
           </div>
         </div>
       </div>

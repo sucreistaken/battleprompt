@@ -25,9 +25,9 @@ export function AppHeader({ right, brandLink = true }: Props) {
       <MascotMark size={28} ariaLabel="Prompt Clash" />
       <span
         style={{
-          fontFamily: "'Inter Tight', system-ui, sans-serif",
-          fontSize: 13,
-          letterSpacing: '0.06em',
+          fontFamily: "'Silkscreen', monospace",
+          fontSize: 14,
+          letterSpacing: '0.04em',
           color: 'var(--pc-bone)'
         }}
       >

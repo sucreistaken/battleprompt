@@ -1,29 +1,36 @@
 'use client';
 
-// ControlPanelClient v2 — ported from mockups/room-control.html + room-control-mobile.html.
-// Logic preserved: roomId/roomCode/roomName/audienceEnabled props from server,
-// closeRoom POST + redirect, QR modal toggle.
+// ControlPanelClient v3 — host bekleme ekranı UX yeniden yapılandırması.
 //
-// Visual changes vs v1:
-// - Removed dual "oda paneli/Header h1" — now uses single head with "HOST" pill,
-//   "Odan hazır." h1 and sub copy.
-// - Inline room-strip (label + big pixel code + copy icon + QR button) replaces
-//   the old Header's code-less wordmark.
-// - InviteLinksCard kept for the link list (compact list, no panel chrome).
-// - Standalone "Sahneyi yeni sekmede aç" primary CTA between invites and zones.
-// - 3-zone → 2-zone grid: live (wide) + controls (narrow). History link below.
-// - Live zone replaces ⏳ emoji with axolotl mascot + lime live-state pill +
-//   player/audience counters.
-// - Disabled controls dashed border; danger control kept; hint mono caps.
+// v2 (sprint v3) → v3 (2026-06-01) farkları:
+// - Tek davet kartı: oda kodu ekranda sadece BİR kez büyük; ana aksiyon
+//   "Oyuncu linkini kopyala", ikincil "QR Göster". Üstteki ayrı kod-strip
+//   ve InviteLinksCard kalabalığı kaldırıldı.
+// - İzleyici linki / sahne linki / yeni sekmede aç → <details> accordion
+//   ("Diğer paylaşım seçenekleri"). İlk bakışta uzun URL'ler yok.
+// - Lobby durumu ekranın merkezine taşındı: maskot + tek başlık + iki
+//   oyuncu slotu + küçük izleyici satırı.
+// - Ana CTA tek bir "Maçı başlat" oldu. 2 oyuncu gelene kadar disabled
+//   ve "Başlamak için 2 oyuncu gerekli" yardımcı metniyle.
+// - "Sahneyi yeni sekmede aç" ana CTA seviyesinden indi (accordion'a).
+// - "Oyuncu olarak katıl" ghost/secondary aksiyon olarak ufaldı.
+// - Pause / Süre uzat / Render yenile gibi canlı kontroller başlangıçta
+//   gösterilmiyor; yalnızca matchStarted true olduğunda compact bar olarak
+//   açılır (Epic 2 wiring'ine hazır).
+// - "Odayı kapat" ekranın en altına düşük görünürlüklü link olarak indi.
+//
+// Not: playerCount / audienceCount şu an local state, default 0. Epic 2
+// içinde socket state hook'una bağlanacak (yapı hazır, kanca açık).
 
-import { useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { I18nProvider, useI18n } from '@/components/client/i18nContext';
+import { useDeviceId } from '@/components/client/useDeviceId';
+import { useRoomState } from '@/hooks/useRoomState';
 import { AppHeader } from '@/components/common/AppHeader';
 import { BgAtmosphere } from '@/components/common/BgAtmosphere';
 import { RolePill } from '@/components/common/RolePill';
 import { MascotFrame } from '@/components/common/MascotFrame';
-import { InviteLinksCard } from '@/components/room/InviteLinksCard';
 import { QrModal } from '@/components/room/QrModal';
 
 type Props = {
@@ -33,6 +40,8 @@ type Props = {
   audienceEnabled: boolean;
   origin: string;
 };
+
+type PlayerSlot = { nickname: string } | null;
 
 export function ControlPanelClient(props: Props) {
   return (
@@ -49,19 +58,67 @@ function PanelBody({ roomId, roomCode, roomName, audienceEnabled, origin }: Prop
   const [closing, setClosing] = useState(false);
   const [closeErr, setCloseErr] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedPlayer, setCopiedPlayer] = useState(false);
+
+  // Lobi/maç durumu canlı socket snapshot'undan türetilir. `useRoomState` hem
+  // cold-load (REST GET /api/rooms/:id/state) hem websocket 'state' event'ini
+  // dinler — host olarak bağlanıyoruz ki kontrol paneli oyuncu giriş/çıkışını
+  // anlık görsün ("Bekleniyor" → nickname).
+  const deviceId = useDeviceId();
+  const { snapshot } = useRoomState({
+    roomId,
+    role: 'host',
+    deviceId: deviceId ?? undefined,
+  });
+
+  const players: [PlayerSlot, PlayerSlot] = useMemo(() => {
+    const A = snapshot?.players?.A;
+    const B = snapshot?.players?.B;
+    return [
+      A?.nickname ? { nickname: A.nickname } : null,
+      B?.nickname ? { nickname: B.nickname } : null,
+    ];
+  }, [snapshot?.players?.A, snapshot?.players?.B]);
+
+  const audienceCount = 0; // TODO: snapshot'a eklendiğinde bağla (broadcasts.js).
+
+  const matchStarted = useMemo(() => {
+    const phase = snapshot?.phase;
+    if (!phase) return false;
+    return phase !== 'IDLE' && phase !== 'PLAYER_1_JOINED' && phase !== 'LOBBY';
+  }, [snapshot?.phase]);
 
   const playerInvite = `${origin}/join/${roomCode}`;
   const audienceInvite = `${origin}/watch/${roomCode}`;
+  const stageUrl = `${origin}/rooms/${roomId}/stage`;
 
-  async function copyCode() {
-    if (!roomCode) return;
+  const playerCount = useMemo(
+    () => (players[0] ? 1 : 0) + (players[1] ? 1 : 0),
+    [players],
+  );
+  const canStart = playerCount >= 2;
+
+  async function copyToClipboard(text: string, setter: (v: boolean) => void) {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(roomCode);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 1400);
+      await navigator.clipboard.writeText(text);
+      setter(true);
+      setTimeout(() => setter(false), 1500);
     } catch {
       /* ignore */
     }
+  }
+
+  function copyCode() {
+    void copyToClipboard(roomCode, setCopiedCode);
+  }
+  function copyPlayerLink() {
+    void copyToClipboard(playerInvite, setCopiedPlayer);
+  }
+
+  function startMatch() {
+    if (!canStart) return;
+    // Epic 2: emit socket event. Şimdilik no-op.
   }
 
   async function closeRoom() {
@@ -89,148 +146,202 @@ function PanelBody({ roomId, roomCode, roomName, audienceEnabled, origin }: Prop
     }
   }
 
-  // Host kendi odasında oyuncu olarak da yarışabilsin. /join/{code} oyuncu
-  // join akışına gider; yeni sekmede açılır ki control panel kaybolmasın.
   function joinAsPlayer() {
     if (typeof window !== 'undefined') {
       window.open(`/join/${roomCode}`, '_blank', 'noopener');
     }
   }
 
+  // Bekleyiş kopyası (0 → "2 oyuncu gerekli", 1 → "bir oyuncu daha", 2 → "hazır").
+  const lobbyBodyKey =
+    playerCount === 0
+      ? 'roomLobbyBody0'
+      : playerCount === 1
+        ? 'roomLobbyBody1'
+        : 'roomLobbyBody2';
+
   return (
-    <div style={{ minHeight: '100dvh', position: 'relative', overflowX: 'hidden' }}>
+    <div style={pageStyle}>
       <BgAtmosphere variant="default" />
 
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          maxWidth: 1100,
-          margin: '0 auto',
-          padding: '16px 20px 40px',
-        }}
-      >
+      <div style={containerStyle} className="pc-host-container">
         <AppHeader right={<RolePill kind="host" label={t('roomRoleHost')} />} />
 
-        {/* HEAD */}
+        {/* HEAD — sade başlık */}
         <section style={headStyle}>
           <h1 style={h1Style}>
-            {t('roomReadyH1')} <span style={{ color: '#aed24a' }}>{t('roomReadyAc')}</span>
+            {t('roomReadyH1')}{' '}
+            <span style={{ color: 'var(--pc-lime, #aed24a)' }}>{t('roomReadyAc')}</span>
             {roomName ? <span style={roomNameInlineStyle}> · {roomName}</span> : null}
           </h1>
-          <p style={subStyle}>{t('roomReadySub')}</p>
+          <p style={subStyle}>{t('roomReadySubV2')}</p>
+        </section>
 
-          {/* Room strip — label + pixel code + copy + QR */}
-          <div style={roomStripStyle}>
-            <span style={roomStripLblStyle}>
+        {/* TEK DAVET KARTI */}
+        <section style={inviteCardStyle} className="pc-invite-card">
+          <div style={inviteCardLblStyle}>
+            <span aria-hidden="true" style={lblLineStyle} />
+            {t('roomCodeLabel')}
+          </div>
+
+          <div style={codeRowStyle}>
+            <span style={codeStyle}>{roomCode}</span>
+            <button
+              type="button"
+              onClick={copyCode}
+              aria-label={t('ariaCopyCode')}
+              title={copiedCode ? t('roomCopied') : t('roomCopy')}
+              className={copiedCode ? 'pc-copy-icon pc-copy-icon--ok' : 'pc-copy-icon'}
+              style={copyIconStyle}
+            >
+              {copiedCode ? <CheckGlyph /> : <CopyGlyph />}
+            </button>
+          </div>
+
+          <div style={inviteActionsStyle} className="pc-invite-share-row">
+            <button
+              type="button"
+              onClick={copyPlayerLink}
+              className={copiedPlayer ? 'pc-cta-primary pc-cta-primary--ok' : 'pc-cta-primary'}
+              style={ctaPrimaryStyle}
+            >
+              {copiedPlayer ? <CheckGlyph /> : <LinkGlyph />}
+              {copiedPlayer ? t('roomCopyPlayerLinkDone') : t('roomCopyPlayerLink')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              className="pc-cta-ghost"
+              style={ctaGhostStyle}
+            >
+              <QrGlyph />
+              {t('roomShowQr')}
+            </button>
+          </div>
+
+          {/* Host'un kendi cihazında açtığı testler — paylaşımdan ayrı semantik
+              grup. Etiketle anlamı netleştir: bu butonlar başka cihazlara link
+              göndermek için değil, "ben burada test ediyorum" akışı için. */}
+          <div style={hostOpenGroupStyle}>
+            <div style={hostOpenLabelStyle}>
               <span aria-hidden="true" style={lblLineStyle} />
-              {t('roomCodeLabel')}
-            </span>
-            <span style={roomStripCodeStyle}>{roomCode}</span>
-            <div style={roomStripActionsStyle}>
+              {t('roomHostOpenLabel')}
+            </div>
+            <div style={hostOpenRowStyle} className="pc-host-open-row">
               <button
                 type="button"
-                onClick={copyCode}
-                aria-label={t('ariaCopyCode')}
-                title={t('ariaCopyCode')}
-                style={iconBtnStyle}
-                className={copiedCode ? 'pc-copy pc-copy--ok' : 'pc-copy'}
+                onClick={joinAsPlayer}
+                className="pc-cta-ghost"
+                style={ctaGhostCompactStyle}
+                title={t('roomJoinAsPlayerHint')}
               >
-                <CopyGlyph />
+                <JoinSelfGlyph />
+                {t('roomJoinAsPlayer')}
               </button>
               <button
                 type="button"
-                onClick={() => setQrOpen(true)}
-                style={qrBtnStyle}
-                className="pc-qr-btn"
+                onClick={openStage}
+                className="pc-cta-ghost"
+                style={ctaGhostCompactStyle}
               >
-                <QrGlyph />
-                {t('roomQrShort')}
+                <OpenExtGlyph />
+                {t('roomOpenStageShort')}
               </button>
             </div>
+          </div>
+
+          <details style={detailsStyle} className="pc-advanced">
+            <summary style={summaryStyle} className="pc-advanced-summary">
+              <span style={summaryChevronStyle} aria-hidden="true">
+                <ChevronGlyph />
+              </span>
+              {t('roomShareMore')}
+            </summary>
+            <div style={advancedRowsStyle}>
+              {audienceEnabled ? (
+                <ShareRow
+                  label={t('roomShareAudienceLabel')}
+                  copyValue={audienceInvite}
+                />
+              ) : null}
+              <ShareRow label={t('roomShareStageLabel')} copyValue={stageUrl} />
+            </div>
+          </details>
+        </section>
+
+        {/* LOBBY STATUS */}
+        <section style={lobbyStyle} className="pc-lobby">
+          <MascotFrame size={96} mascotSize={76} variant="default" />
+          <h2 style={lobbyTtlStyle}>{t('roomLobbyTtl')}</h2>
+          <p style={lobbyBodyStyle}>{t(lobbyBodyKey)}</p>
+
+          <div style={slotsRowStyle} aria-label={t('ariaSlots')}>
+            <Slot index={1} player={players[0]} />
+            <span style={vsStyle} aria-hidden="true">
+              VS
+            </span>
+            <Slot index={2} player={players[1]} />
+          </div>
+
+          <div style={audienceLineStyle}>
+            <span style={audienceDotStyle} aria-hidden="true" />
+            <span>
+              <b style={audienceCountValStyle}>{audienceCount}</b>{' '}
+              {t('roomAudienceCountSuffix')}
+            </span>
           </div>
         </section>
 
-        {/* INVITE LIST — existing component preserved (its visual is acceptable; new outer chrome makes it feel coherent) */}
-        <div style={sectionLabStyle}>
-          <span aria-hidden="true" style={lblLineStyle} />
-          {t('roomInvitesLabel')}
-        </div>
-        <InviteLinksCard
-          roomCode={roomCode}
-          roomId={roomId}
-          origin={origin}
-          onShowQr={() => setQrOpen(true)}
-        />
-
-        {/* PRIMARY ACTIONS — stage open + opsiyonel "ben de oynayım" */}
-        <div className="pc-primary-actions" style={primaryActionsStyle}>
-          <button type="button" onClick={openStage} style={stageCtaStyle} className="pc-stage-cta">
-            <OpenExtGlyph />
-            {t('roomStageCta')}
-          </button>
+        {/* ANA CTA — Maçı başlat */}
+        <div style={ctaWrapStyle}>
           <button
             type="button"
-            onClick={joinAsPlayer}
-            style={joinAsPlayerCtaStyle}
-            className="pc-join-self"
-            title={t('roomJoinAsPlayerHint')}
+            onClick={startMatch}
+            disabled={!canStart}
+            aria-disabled={!canStart}
+            className={canStart ? 'pc-start pc-start--ready' : 'pc-start pc-start--off'}
+            style={canStart ? startCtaReadyStyle : startCtaOffStyle}
           >
-            <JoinSelfGlyph />
-            {t('roomJoinAsPlayer')}
+            <PlayGlyph />
+            {t('roomCtrlStart')}
           </button>
+          {!canStart ? (
+            <p style={startHintStyle}>{t('roomStartDisabledHint')}</p>
+          ) : null}
         </div>
 
-        {/* 2-ZONE: LIVE + CONTROLS */}
-        <div className="pc-zones" style={zonesStyle}>
-          <div>
+        {/* LIVE CONTROLS — yalnız match başladıysa */}
+        {matchStarted ? (
+          <section style={liveControlsStyle}>
             <div style={sectionLabStyle}>
               <span aria-hidden="true" style={lblLineStyle} />
-              {t('roomZoneLive')}
+              {t('roomLiveControlsTtl')}
             </div>
-            <LiveZone />
-          </div>
+            <div style={liveControlsBarStyle}>
+              <CompactCtrl label={t('roomCtrlPause')} />
+              <CompactCtrl label={t('roomCtrlExtend')} hint={t('roomCtrlHintExtend')} />
+              <CompactCtrl label={t('roomCtrlRetryGen')} />
+            </div>
+          </section>
+        ) : null}
 
-          <div>
-            <div style={sectionLabStyle}>
-              <span aria-hidden="true" style={lblLineStyle} />
-              {t('roomZoneControls')}
-            </div>
-            <div style={ctrlsStyle}>
-              <CtrlBtn label={t('roomCtrlStart')} hint={t('roomCtrlHintStart')} disabled />
-              <CtrlBtn label={t('roomCtrlPause')} hint={t('roomCtrlHintMatch')} disabled />
-              <CtrlBtn label={t('roomCtrlExtend')} hint={t('roomCtrlHintExtend')} disabled />
-              <CtrlBtn label={t('roomCtrlRetryGen')} hint={t('roomCtrlHintRetry')} disabled />
-              <CtrlBtn
-                label={closing ? t('roomClosing') : t('roomCtrlClose')}
-                hint={t('roomCtrlHintClose')}
-                danger
-                onClick={closeRoom}
-                disabled={closing}
-              />
-            </div>
-            {closeErr && (
-              <div role="alert" style={errBoxStyle}>
-                {closeErr}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* HISTORY LINK */}
-        <button type="button" style={historyLinkStyle} className="pc-history">
-          {t('roomHistoryLink')}{' '}
-          <b
-            style={{
-              color: 'var(--pc-accent)',
-              fontFamily: "'Inter Tight', system-ui, sans-serif",
-              fontWeight: 400,
-              letterSpacing: '0.04em',
-            }}
+        {/* FOOTER · close room low-vis */}
+        <div style={footerActionsStyle}>
+          <button
+            type="button"
+            onClick={closeRoom}
+            disabled={closing}
+            className="pc-close-link"
+            style={closeLinkStyle}
           >
-            · 0
-          </b>
-        </button>
+            {closing ? t('roomClosing') : t('roomCtrlClose')}
+          </button>
+          {closeErr ? (
+            <div role="alert" style={errBoxStyle}>
+              {closeErr}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <QrModal
@@ -242,129 +353,117 @@ function PanelBody({ roomId, roomCode, roomName, audienceEnabled, origin }: Prop
       />
 
       <style>{`
-        .pc-copy { transition: border-color .14s, color .14s, background .14s, transform 80ms ease-out; }
-        .pc-copy:hover { border-color: var(--pc-accent); color: var(--pc-bone); background: rgba(124,77,255,.10); }
-        .pc-copy:active { transform: translateY(1px); }
-        .pc-copy--ok { border-color: #aed24a; color: #aed24a; background: rgba(174,210,74,.10); }
-        .pc-qr-btn { transition: border-color .14s, color .14s, transform 80ms ease-out; }
-        .pc-qr-btn:hover { border-color: var(--pc-bone); color: var(--pc-bone); }
-        .pc-qr-btn:active { transform: translateY(1px); }
-        .pc-stage-cta { transition: transform .1s, box-shadow .16s; }
-        .pc-stage-cta:hover { box-shadow: 0 14px 34px rgba(124,77,255,.42), inset 0 -2px 0 rgba(0,0,0,.18); }
-        .pc-stage-cta:active { transform: translateY(1px); }
-        .pc-join-self { transition: border-color .14s, color .14s, background .14s, transform 80ms ease-out; }
-        .pc-join-self:hover { border-color: var(--pc-accent); background: rgba(124,77,255,.10); }
-        .pc-join-self:active { transform: translateY(1px); }
-        @media (min-width: 720px) {
-          .pc-primary-actions { grid-template-columns: 1.4fr 1fr !important; }
-        }
-        .pc-history { transition: color .14s, border-color .14s, background .14s, transform 80ms ease-out; }
-        .pc-history:hover { color: var(--pc-text); border-color: var(--pc-line); background: var(--pc-ink2); }
-        .pc-history:active { transform: translateY(1px); }
+        .pc-host-container { padding-bottom: max(48px, env(safe-area-inset-bottom, 0px) + 24px); }
 
-        @media (min-width: 900px) {
-          .pc-zones { grid-template-columns: 1.2fr .8fr !important; gap: 24px !important; }
+        .pc-copy-icon { transition: border-color .14s, color .14s, background .14s, transform 80ms ease-out; }
+        .pc-copy-icon:hover { border-color: var(--pc-accent); color: var(--pc-bone); background: rgba(124,77,255,.10); }
+        .pc-copy-icon:active { transform: translateY(1px); }
+        .pc-copy-icon--ok { border-color: #aed24a; color: #aed24a; background: rgba(174,210,74,.10); }
+
+        .pc-cta-primary { transition: transform .1s, box-shadow .16s, background .14s; }
+        .pc-cta-primary:hover { box-shadow: 0 14px 34px rgba(124,77,255,.42), inset 0 -2px 0 rgba(0,0,0,.18); }
+        .pc-cta-primary:active { transform: translateY(1px); }
+        .pc-cta-primary--ok { background: #aed24a !important; color: #18221a !important; box-shadow: 0 10px 26px rgba(174,210,74,.30), inset 0 -2px 0 rgba(0,0,0,.18); }
+
+        .pc-cta-ghost { transition: border-color .14s, color .14s, background .14s, transform 80ms ease-out; }
+        .pc-cta-ghost:hover { border-color: var(--pc-bone); color: var(--pc-bone); background: rgba(124,77,255,.06); }
+        .pc-cta-ghost:active { transform: translateY(1px); }
+
+        .pc-advanced-summary { transition: color .14s, background .14s; }
+        .pc-advanced-summary:hover { color: var(--pc-bone); background: rgba(255,255,255,.02); }
+        .pc-advanced > summary::-webkit-details-marker { display: none; }
+        .pc-advanced > summary { list-style: none; }
+        .pc-advanced[open] .pc-summary-chevron { transform: rotate(90deg); }
+
+        .pc-share-row { transition: border-color .14s, background .14s; }
+        .pc-share-row:hover { border-color: var(--pc-line2); }
+        .pc-share-btn { transition: border-color .14s, color .14s, background .14s, transform 80ms ease-out; }
+        .pc-share-btn:hover { border-color: var(--pc-accent); color: var(--pc-bone); background: rgba(124,77,255,.08); }
+        .pc-share-btn:active { transform: translateY(1px); }
+        .pc-share-btn--ok { border-color: #aed24a !important; color: #aed24a !important; background: rgba(174,210,74,.10) !important; }
+
+        .pc-start--ready { animation: pcStartPulse 2.4s ease-in-out infinite; }
+        .pc-start--ready:hover { box-shadow: 0 18px 40px rgba(174,210,74,.40), inset 0 -2px 0 rgba(0,0,0,.18); }
+        .pc-start--ready:active { transform: translateY(1px); }
+        @keyframes pcStartPulse {
+          0%, 100% { box-shadow: 0 12px 28px rgba(174,210,74,.28), inset 0 -2px 0 rgba(0,0,0,.18); }
+          50% { box-shadow: 0 18px 40px rgba(174,210,74,.46), inset 0 -2px 0 rgba(0,0,0,.18); }
+        }
+
+        .pc-close-link { transition: color .14s, border-color .14s; }
+        .pc-close-link:hover { color: var(--pc-live, #ff5c5c); border-color: rgba(255,92,92,.35); }
+
+        @media (max-width: 380px) {
+          .pc-host-container { padding-left: 14px !important; padding-right: 14px !important; }
+        }
+        @media (min-width: 560px) {
+          .pc-invite-share-row { grid-template-columns: 1.6fr 1fr !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pc-start--ready { animation: none !important; }
         }
       `}</style>
     </div>
   );
 }
 
-// ─── Live zone (mascot + state pill + counters) ──────────────────────────────
+// ─── Slot (player 1 / player 2 placeholder) ──────────────────────────────────
 
-function LiveZone() {
+function Slot({ index, player }: { index: 1 | 2; player: PlayerSlot }) {
   const { t } = useI18n();
+  const filled = !!player;
   return (
-    <div style={liveStyle}>
-      <MascotFrame size={104} mascotSize={84} variant="default" />
-      <div style={liveStateStyle}>
-        <span aria-hidden="true" style={liveStateDotStyle} />
-        {t('roomLiveStateWait')}
-      </div>
-      <div style={liveHintStyle}>{t('roomLivePlaceholder')}</div>
-      <div style={liveCountsStyle} aria-label={t('ariaCounters')}>
-        <span style={liveCountStyle}>
-          {t('roomLivePlayerLabel')} <b style={liveCountValStyle}>0/2</b>
-        </span>
-        <span style={liveCountStyle}>
-          {t('roomLiveAudienceLabel')} <b style={liveCountValStyle}>0</b>
-        </span>
-      </div>
+    <div style={filled ? slotFilledStyle : slotEmptyStyle} aria-label={`${t('roomSlotPlayer')} ${index}`}>
+      <span style={slotIdxStyle}>{`${t('roomSlotPlayer')} ${index}`}</span>
+      <span style={filled ? slotNickStyle : slotPendingStyle}>
+        {filled ? player!.nickname : t('roomSlotPending')}
+      </span>
     </div>
   );
 }
 
-// ─── Control button ───────────────────────────────────────────────────────────
+// ─── Accordion rows ──────────────────────────────────────────────────────────
 
-function CtrlBtn({
-  label,
-  hint,
-  disabled,
-  danger,
-  onClick,
-}: {
-  label: string;
-  hint?: string;
-  disabled?: boolean;
-  danger?: boolean;
-  onClick?: () => void;
-}) {
-  const baseStyle: CSSProperties = {
-    padding: '13px 14px',
-    borderRadius: 10,
-    background: 'var(--pc-ink2)',
-    border: '1.5px solid var(--pc-line)',
-    color: 'var(--pc-text)',
-    textAlign: 'left',
-    cursor: 'pointer',
-    fontFamily: "'Inter Tight', system-ui, sans-serif",
-    fontSize: 14,
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    transition: 'border-color .14s, background .14s, color .14s',
-  };
-  const finalStyle: CSSProperties = disabled
-    ? {
-        ...baseStyle,
-        color: 'var(--pc-text4)',
-        background: 'transparent',
-        cursor: 'not-allowed',
-        borderColor: 'var(--pc-ink3)',
-        borderStyle: 'dashed',
-      }
-    : danger
-      ? {
-          ...baseStyle,
-          borderColor: 'rgba(255,92,92,0.35)',
-          color: 'var(--pc-live)',
-          background: 'rgba(255,92,92,0.04)',
-        }
-      : baseStyle;
+function ShareRow({ label, copyValue }: { label: string; copyValue: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    if (!copyValue) return;
+    try {
+      await navigator.clipboard.writeText(copyValue);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  }
   return (
-    <button type="button" onClick={onClick} disabled={disabled} style={finalStyle}>
+    <div style={shareRowStyle} className="pc-share-row">
+      <span style={shareRowLabelStyle}>{label}</span>
+      <button
+        type="button"
+        onClick={copy}
+        className={copied ? 'pc-share-btn pc-share-btn--ok' : 'pc-share-btn'}
+        style={shareBtnStyle}
+      >
+        {copied ? t('roomCopied') : t('roomCopy')}
+      </button>
+    </div>
+  );
+}
+
+// ─── Compact ctrl (match-running) ────────────────────────────────────────────
+
+function CompactCtrl({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <button type="button" style={compactCtrlStyle}>
       <span>{label}</span>
-      {hint ? (
-        <span
-          style={{
-            fontFamily: "'Inter Tight', system-ui, sans-serif",
-            fontSize: 9.5,
-            fontWeight: 700,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: 'var(--pc-text4)',
-          }}
-        >
-          {hint}
-        </span>
-      ) : null}
+      {hint ? <span style={compactCtrlHintStyle}>{hint}</span> : null}
     </button>
   );
 }
 
-// ─── Glyphs ───────────────────────────────────────────────────────────────────
+// ─── Glyphs ──────────────────────────────────────────────────────────────────
 
 function CopyGlyph() {
   return (
@@ -375,28 +474,62 @@ function CopyGlyph() {
   );
 }
 
+function CheckGlyph() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 12.5l5 5L20 6" />
+    </svg>
+  );
+}
+
+function LinkGlyph() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 14a4 4 0 0 1 0-5.66l3-3a4 4 0 1 1 5.66 5.66l-1.5 1.5" />
+      <path d="M14 10a4 4 0 0 1 0 5.66l-3 3a4 4 0 1 1-5.66-5.66l1.5-1.5" />
+    </svg>
+  );
+}
+
 function QrGlyph() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="7" height="7" />
       <rect x="14" y="3" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
+      <path d="M14 14h3v3M14 20h3M20 14v7" />
+    </svg>
+  );
+}
+
+function ChevronGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" />
     </svg>
   );
 }
 
 function OpenExtGlyph() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M7 17l10-10" />
       <path d="M17 7H7M17 7v10" />
     </svg>
   );
 }
 
+function PlayGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 4l14 8-14 8z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function JoinSelfGlyph() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M19 8v6M22 11h-6" />
@@ -404,27 +537,44 @@ function JoinSelfGlyph() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
+const pageStyle: CSSProperties = {
+  minHeight: '100dvh',
+  position: 'relative',
+  overflowX: 'hidden',
+};
+
+const containerStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  maxWidth: 640,
+  margin: '0 auto',
+  padding: '12px 20px 48px',
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+// Head
 const headStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
-  padding: '18px 0 14px',
+  padding: '14px 0 18px',
 };
 
 const h1Style: CSSProperties = {
   fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 'clamp(22px, 5vw, 26px)',
+  fontSize: 'clamp(22px, 5.4vw, 28px)',
   fontWeight: 700,
   color: 'var(--pc-bone)',
   lineHeight: 1.2,
+  letterSpacing: '-0.005em',
   margin: 0,
 };
 
 const roomNameInlineStyle: CSSProperties = {
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: '0.7em',
+  fontSize: '0.62em',
   fontWeight: 500,
   color: 'var(--pc-text3)',
   letterSpacing: 0,
@@ -436,89 +586,7 @@ const subStyle: CSSProperties = {
   color: 'var(--pc-text2)',
   lineHeight: 1.5,
   margin: 0,
-  maxWidth: '54ch',
-};
-
-// Room strip
-const roomStripStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 14,
-  flexWrap: 'wrap',
-  marginTop: 6,
-  padding: '14px 16px',
-  background: 'var(--pc-ink2)',
-  border: '1.5px solid var(--pc-line)',
-  borderRadius: 10,
-};
-
-const roomStripLblStyle: CSSProperties = {
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 10.5,
-  fontWeight: 700,
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: 'var(--pc-text3)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  flex: 'none',
-};
-
-const lblLineStyle: CSSProperties = {
-  width: 14,
-  height: 1,
-  background: 'var(--pc-line2)',
-  flex: 'none',
-};
-
-const roomStripCodeStyle: CSSProperties = {
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 'clamp(28px, 6.5vw, 36px)',
-  color: 'var(--pc-bone)',
-  letterSpacing: '0.10em',
-  lineHeight: 1,
-  flex: 1,
-  minWidth: 0,
-};
-
-const roomStripActionsStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  flex: 'none',
-};
-
-const iconBtnStyle: CSSProperties = {
-  width: 42,
-  height: 42,
-  padding: 0,
-  background: 'transparent',
-  border: '1.5px solid var(--pc-line)',
-  borderRadius: 8,
-  color: 'var(--pc-text2)',
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const qrBtnStyle: CSSProperties = {
-  height: 42,
-  padding: '0 14px',
-  background: 'transparent',
-  border: '1.5px solid var(--pc-line)',
-  borderRadius: 8,
-  color: 'var(--pc-text2)',
-  cursor: 'pointer',
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 11,
-  fontWeight: 700,
-  letterSpacing: '0.16em',
-  textTransform: 'uppercase',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 7,
+  maxWidth: '46ch',
 };
 
 // Section label
@@ -529,52 +597,91 @@ const sectionLabStyle: CSSProperties = {
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: 'var(--pc-text3)',
-  padding: '0 2px',
   display: 'flex',
   alignItems: 'center',
   gap: 10,
-  margin: '18px 0 8px',
+  margin: '0 0 10px',
 };
 
-// Primary actions row — stage cta + opsiyonel "ben de oynayım" (host kendi
-// odasında oyuncu olarak da girebilir). ≥720px yan yana, daha darda alt alta.
-const primaryActionsStyle: CSSProperties = {
-  marginTop: 10,
+const lblLineStyle: CSSProperties = {
+  width: 14,
+  height: 1,
+  background: 'var(--pc-line2)',
+  flex: 'none',
+};
+
+// Invite card (single, hero)
+const inviteCardStyle: CSSProperties = {
+  background: 'var(--pc-ink2)',
+  border: '1.5px solid var(--pc-line)',
+  borderRadius: 14,
+  padding: '18px 18px 14px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 14,
+};
+
+const inviteCardLblStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 10.5,
+  fontWeight: 700,
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: 'var(--pc-text3)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+};
+
+const codeRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  flexWrap: 'wrap',
+};
+
+const codeStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 'clamp(34px, 9vw, 46px)',
+  color: 'var(--pc-bone)',
+  letterSpacing: '0.10em',
+  lineHeight: 1,
+  flex: 1,
+  minWidth: 0,
+  fontWeight: 500,
+};
+
+const copyIconStyle: CSSProperties = {
+  width: 44,
+  height: 44,
+  padding: 0,
+  background: 'transparent',
+  border: '1.5px solid var(--pc-line)',
+  borderRadius: 10,
+  color: 'var(--pc-text2)',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: 'none',
+};
+
+// Invite actions — primary + ghost
+const inviteActionsStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr',
   gap: 10,
 };
 
-// Stage CTA
-const stageCtaStyle: CSSProperties = {
+const ctaPrimaryStyle: CSSProperties = {
   width: '100%',
-  minHeight: 58,
-  borderRadius: 10,
+  minHeight: 52,
+  padding: '0 16px',
+  borderRadius: 12,
   border: 'none',
   cursor: 'pointer',
   background: 'var(--pc-accent)',
   color: '#fff',
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 15.5,
-  fontWeight: 800,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 10,
-  boxShadow: '0 10px 26px rgba(124,77,255,0.30), inset 0 -2px 0 rgba(0,0,0,0.18)',
-};
-
-// Secondary CTA — host'un kendi odasına oyuncu olarak girmesi için. Tonlama:
-// outlined accent (ana CTA dolgun mor; bu hafif). Lime kullanmıyorum çünkü
-// audience tonu lime, oyuncu girişi mor/accent.
-const joinAsPlayerCtaStyle: CSSProperties = {
-  width: '100%',
-  minHeight: 54,
-  borderRadius: 10,
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'var(--pc-bone)',
-  border: '1.5px solid rgba(124,77,255,0.55)',
   fontFamily: "'Inter Tight', system-ui, sans-serif",
   fontSize: 14.5,
   fontWeight: 700,
@@ -582,126 +689,406 @@ const joinAsPlayerCtaStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 10,
-  letterSpacing: '0.01em',
+  boxShadow: '0 10px 26px rgba(124,77,255,0.30), inset 0 -2px 0 rgba(0,0,0,0.18)',
 };
 
-// Zones (default 1 col; desktop 2 col via media query)
-const zonesStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr',
-  gap: 16,
-  marginTop: 22,
-};
-
-// Live zone
-const liveStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  textAlign: 'center',
-  minHeight: 280,
-  padding: '24px 18px',
-  gap: 12,
-  background: 'var(--pc-ink2)',
+const ctaGhostStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 52,
+  padding: '0 16px',
+  borderRadius: 12,
+  background: 'transparent',
+  color: 'var(--pc-text)',
   border: '1.5px solid var(--pc-line)',
-  borderRadius: 10,
-  position: 'relative',
-  overflow: 'hidden',
-};
-
-const liveStateStyle: CSSProperties = {
+  cursor: 'pointer',
   fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 14,
-  letterSpacing: '0.06em',
-  color: 'var(--pc-bone)',
+  fontSize: 13.5,
+  fontWeight: 700,
+  letterSpacing: '0.04em',
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+};
+
+// "Bu cihazda aç" host-test grubu — paylaşımdan visually ayrılsın diye
+// üstte ince ayraç + section label + ghost satırı.
+const hostOpenGroupStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  marginTop: 2,
+  paddingTop: 12,
+  borderTop: '1px dashed var(--pc-ink3)',
+};
+
+const hostOpenLabelStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: 'var(--pc-text3)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+};
+
+const hostOpenRowStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
   gap: 8,
 };
 
-const liveStateDotStyle: CSSProperties = {
-  width: 6,
-  height: 6,
-  background: '#aed24a',
-  boxShadow: '0 0 8px rgba(174,210,74,0.7)',
-  display: 'inline-block',
-};
-
-const liveHintStyle: CSSProperties = {
+const ctaGhostCompactStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 44,
+  padding: '0 12px',
+  borderRadius: 10,
+  background: 'transparent',
+  color: 'var(--pc-text)',
+  border: '1.5px solid var(--pc-line)',
+  cursor: 'pointer',
   fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 13,
-  color: 'var(--pc-text3)',
-  lineHeight: 1.5,
-  maxWidth: '36ch',
+  fontSize: 12.5,
+  fontWeight: 700,
+  letterSpacing: '0.03em',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
 };
 
-const liveCountsStyle: CSSProperties = {
+// Accordion
+const detailsStyle: CSSProperties = {
+  marginTop: 4,
+  borderTop: '1px dashed var(--pc-ink3)',
+  paddingTop: 4,
+};
+
+const summaryStyle: CSSProperties = {
+  cursor: 'pointer',
+  padding: '12px 4px',
   display: 'flex',
   alignItems: 'center',
-  gap: 14,
-  marginTop: 4,
+  gap: 8,
   fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 11,
+  fontSize: 12.5,
   fontWeight: 600,
+  letterSpacing: '0.04em',
+  color: 'var(--pc-text2)',
+  userSelect: 'none',
+  outline: 'none',
+};
+
+const summaryChevronStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 16,
+  height: 16,
+  color: 'var(--pc-text3)',
+  transition: 'transform .18s ease',
+};
+
+const advancedRowsStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+  padding: '6px 0 2px',
+};
+
+const shareRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 10,
+  padding: '10px 12px',
+  background: 'transparent',
+  border: '1px solid var(--pc-ink3)',
+  borderRadius: 10,
+};
+
+const shareRowLabelStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 13,
+  color: 'var(--pc-text)',
+  fontWeight: 500,
+};
+
+const shareBtnStyle: CSSProperties = {
+  padding: '7px 12px',
+  border: '1px solid var(--pc-line2)',
+  background: 'transparent',
+  color: 'var(--pc-text)',
+  borderRadius: 8,
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 10.5,
   letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  fontWeight: 700,
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  minHeight: 32,
+};
+
+// Lobby
+const lobbyStyle: CSSProperties = {
+  marginTop: 22,
+  background: 'var(--pc-ink2)',
+  border: '1.5px solid var(--pc-line)',
+  borderRadius: 14,
+  padding: '24px 18px 22px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 10,
+  textAlign: 'center',
+};
+
+const lobbyTtlStyle: CSSProperties = {
+  margin: 0,
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+  color: 'var(--pc-bone)',
+  letterSpacing: '0.01em',
+};
+
+const lobbyBodyStyle: CSSProperties = {
+  margin: 0,
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 13.5,
+  color: 'var(--pc-text3)',
+  lineHeight: 1.5,
+  maxWidth: '38ch',
+};
+
+const slotsRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'stretch',
+  justifyContent: 'center',
+  gap: 8,
+  marginTop: 10,
+  width: '100%',
+  maxWidth: 360,
+};
+
+const slotBaseStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  padding: '12px 10px',
+  borderRadius: 10,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 4,
+  textAlign: 'center',
+};
+
+const slotEmptyStyle: CSSProperties = {
+  ...slotBaseStyle,
+  background: 'transparent',
+  border: '1.5px dashed var(--pc-ink3)',
+};
+
+const slotFilledStyle: CSSProperties = {
+  ...slotBaseStyle,
+  background: 'rgba(124,77,255,0.10)',
+  border: '1.5px solid var(--pc-accent)',
+};
+
+const slotIdxStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 9.5,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
   textTransform: 'uppercase',
   color: 'var(--pc-text3)',
 };
 
-const liveCountStyle: CSSProperties = {
+const slotPendingStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 13,
+  color: 'var(--pc-text4)',
+  fontStyle: 'italic',
+};
+
+const slotNickStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 14,
+  color: 'var(--pc-bone)',
+  fontWeight: 700,
+  maxWidth: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+
+const vsStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 6,
-  padding: '5px 10px',
-  border: '1px solid var(--pc-ink3)',
-  borderRadius: 6,
-};
-
-const liveCountValStyle: CSSProperties = {
+  justifyContent: 'center',
+  alignSelf: 'center',
   fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 12,
-  color: 'var(--pc-bone)',
-  fontWeight: 400,
-  letterSpacing: '0.04em',
+  fontSize: 11,
+  fontWeight: 800,
+  letterSpacing: '0.22em',
+  color: 'var(--pc-text3)',
+  padding: '0 4px',
 };
 
-// Controls
-const ctrlsStyle: CSSProperties = {
+const audienceLineStyle: CSSProperties = {
+  marginTop: 6,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 7,
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: 'var(--pc-text3)',
+};
+
+const audienceDotStyle: CSSProperties = {
+  width: 5,
+  height: 5,
+  borderRadius: 999,
+  background: 'var(--pc-text4)',
+  display: 'inline-block',
+};
+
+const audienceCountValStyle: CSSProperties = {
+  color: 'var(--pc-bone)',
+  fontWeight: 700,
+};
+
+// CTA wrap
+const ctaWrapStyle: CSSProperties = {
+  marginTop: 22,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  alignItems: 'center',
+  gap: 10,
 };
 
-const errBoxStyle: CSSProperties = {
-  marginTop: 12,
-  padding: '10px 14px',
-  background: 'rgba(255,92,92,0.12)',
-  border: '1px solid rgba(255,92,92,0.4)',
-  borderRadius: 8,
-  color: '#ffb0b0',
-  fontSize: 13,
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-};
-
-// History link
-const historyLinkStyle: CSSProperties = {
-  marginTop: 16,
+const startCtaReadyStyle: CSSProperties = {
   width: '100%',
-  padding: '12px 14px',
-  textAlign: 'center',
+  minHeight: 62,
+  padding: '0 18px',
+  borderRadius: 14,
+  border: 'none',
+  cursor: 'pointer',
+  background: 'linear-gradient(180deg, #b8de4f, #9bc23a)',
+  color: '#0c1410',
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 17,
+  fontWeight: 800,
+  letterSpacing: '0.01em',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+  boxShadow: '0 12px 28px rgba(174,210,74,0.28), inset 0 -2px 0 rgba(0,0,0,0.18)',
+};
+
+const startCtaOffStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 62,
+  padding: '0 18px',
+  borderRadius: 14,
+  border: '1.5px dashed var(--pc-ink3)',
+  cursor: 'not-allowed',
+  background: 'transparent',
+  color: 'var(--pc-text4)',
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+};
+
+const startHintStyle: CSSProperties = {
+  margin: 0,
   fontFamily: "'Inter Tight', system-ui, sans-serif",
   fontSize: 10.5,
   fontWeight: 700,
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   color: 'var(--pc-text3)',
-  background: 'transparent',
-  border: '1px dashed var(--pc-ink3)',
-  borderRadius: 8,
+};
+
+// Live controls (match running)
+const liveControlsStyle: CSSProperties = {
+  marginTop: 24,
+};
+
+const liveControlsBarStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+  gap: 8,
+};
+
+const compactCtrlStyle: CSSProperties = {
+  padding: '12px 12px',
+  borderRadius: 10,
+  background: 'var(--pc-ink2)',
+  border: '1.5px solid var(--pc-line)',
+  color: 'var(--pc-text)',
+  textAlign: 'left',
   cursor: 'pointer',
-  display: 'inline-flex',
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 13,
+  fontWeight: 600,
+  display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
+};
+
+const compactCtrlHintStyle: CSSProperties = {
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: 'var(--pc-text4)',
+};
+
+// Footer
+const footerActionsStyle: CSSProperties = {
+  marginTop: 36,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
   gap: 10,
+};
+
+const closeLinkStyle: CSSProperties = {
+  padding: '8px 14px',
+  background: 'transparent',
+  border: '1px solid transparent',
+  borderRadius: 8,
+  color: 'var(--pc-text4)',
+  cursor: 'pointer',
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+};
+
+const errBoxStyle: CSSProperties = {
+  padding: '10px 14px',
+  background: 'rgba(255,92,92,0.10)',
+  border: '1px solid rgba(255,92,92,0.4)',
+  borderRadius: 8,
+  color: '#ffb0b0',
+  fontSize: 12.5,
+  fontFamily: "'Inter Tight', system-ui, sans-serif",
 };

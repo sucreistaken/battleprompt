@@ -80,6 +80,10 @@ export function GameStateProvider({
     });
 
     s.on('joined_as', ({ slot }: { slot: Slot }) => {
+      // Defensive: yalnız player handshake mySlot tutar. Server tarafı zaten
+      // role-gated reattach yapıyor ama bu listener client'ta da sızıntıyı
+      // ikinci kat olarak kapatır (audience/stage/admin asla player'a kayma).
+      if (role !== 'player') return;
       setMySlot(slot);
     });
 

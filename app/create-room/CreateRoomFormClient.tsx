@@ -302,20 +302,22 @@ function CreateRoomBody() {
         </form>
       </div>
 
+      {/* Hydration trap: <style>{text}</style> içinde ASCII tek/çift tırnak
+          SSR'de &#x27; / &quot; olarak entity-encode edilir, client raw
+          bırakır → mismatch. Türkçe yorum + double-quote'lu attribute
+          selector kaldırıldı; CSS spec'te [attr=ident] tırnaksız da
+          geçerli. */}
       <style>{`
         .pc-input { transition: border-color .16s, box-shadow .16s; }
         .pc-input:focus { border-color: var(--pc-accent) !important; box-shadow: 0 0 0 3px rgba(124,77,255,.18); outline: none; }
         .pc-cta { transition: transform .1s, box-shadow .16s, opacity .12s; }
         .pc-cta:hover:not(:disabled) { box-shadow: 0 14px 36px rgba(124,77,255,.44), inset 0 -2px 0 rgba(0,0,0,.18); }
         .pc-cta:active:not(:disabled) { transform: translateY(1px); }
-        /* Segment radio (kategori mode) — pasif state'te hover ipucu */
         .pc-seg-btn { transition: background .14s, color .14s, box-shadow .14s, transform 80ms ease-out; }
-        .pc-seg-btn:not([aria-checked="true"]):hover { background: rgba(124,77,255,.08); color: var(--pc-bone); }
+        .pc-seg-btn:not([aria-checked=true]):hover { background: rgba(124,77,255,.08); color: var(--pc-bone); }
         .pc-seg-btn:active { transform: translateY(1px); }
-        /* Advanced disclosure trigger */
         .pc-adv-trig { transition: color .14s, border-color .14s; }
         .pc-adv-trig:hover { color: var(--pc-bone); }
-        /* Advanced chevron rotation transition (▸ → ▾) */
         .pc-adv-chev { transition: transform 180ms ease-out, color .14s; }
       `}</style>
     </div>

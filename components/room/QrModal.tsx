@@ -62,7 +62,7 @@ export function QrModal({
           .pc-modal-close:hover { border-color: var(--pc-bone); color: var(--pc-bone); background: var(--pc-ink2); }
           .pc-modal-close:active { transform: translateY(1px); }
           .pc-modal-tab { transition: background .14s, color .14s, box-shadow .14s, transform 80ms ease-out; }
-          .pc-modal-tab:not([aria-selected="true"]):not(:disabled):hover { background: rgba(124,77,255,.08); color: var(--pc-bone); }
+          .pc-modal-tab:not([aria-selected=true]):not(:disabled):hover { background: rgba(124,77,255,.08); color: var(--pc-bone); }
           .pc-modal-tab:not(:disabled):active { transform: translateY(1px); }
         `}</style>
         <header
