@@ -73,6 +73,17 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" className={poppins.variable}>
+      <head>
+        {/* Epic 6 mockup font stack: Silkscreen (pixel), Inter Tight (body),
+            JetBrains Mono (mono). Components reference these literal family
+            names; the <link> preconnect + display=swap keeps FOUC minimal. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        />
+      </head>
       {/* No bg-surface here: the body inherits the dusk base from globals.css so
           the dark broadcast app never flashes white. Admin sets its own light
           bg-surface on its <main>. */}

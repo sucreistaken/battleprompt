@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Oda Kontrol · Prompt Clash</title>
+<meta name="description" content="Host kontrol ekranı — linkleri paylaş, sahneyi aç, maçı yönet." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root{
+    --pc-ink:#22202b; --pc-ink2:#2d2b38; --pc-ink3:#383545;
+    --pc-line:#4a4757; --pc-line2:#615d72;
+    --pc-text:#f7f4ec; --pc-text2:#c0bdca; --pc-text3:#a8a4b3; --pc-text4:#605d6c;
+    --pc-bone:#ffffff; --pc-live:#ff5c5c;
+    --pc-accent:#7c4dff; --pc-accent2:#5a35cc;
+    --pc-b:#aed24a; --pc-b2:#88aa2e;
+    --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--pc-ink)}
+  body{color:var(--pc-text);font-family:var(--body);min-height:100dvh;
+    position:relative;overflow-x:hidden;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  .bg-glow{position:fixed;z-index:0;pointer-events:none;width:780px;height:780px;
+    left:-220px;top:-220px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.13) 0%,rgba(124,77,255,.02) 42%,transparent 64%);
+    filter:blur(22px)}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(124,77,255,.022) 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse 90% 50% at 50% 14%,#000 14%,transparent 72%)}
+
+  .shell{position:relative;z-index:1;max-width:1100px;margin:0 auto;
+    padding:16px 20px 40px;
+    padding-top:max(16px,env(safe-area-inset-top,16px))}
+
+  /* === Topbar zenginleştirilmiş — kod ve oda durumu inline === */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:2px 0 14px;border-bottom:1px solid var(--pc-ink3);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand svg{display:block;width:32px;height:32px;flex:none;image-rendering:pixelated}
+  .wm{font-family:var(--pixel);font-size:13px;letter-spacing:.06em;color:var(--pc-bone);
+    white-space:nowrap}
+  .wm .a{color:var(--pc-accent)}
+  .topbar-right{display:flex;align-items:center;gap:10px;flex:none}
+  .role-pill{display:inline-flex;align-items:center;gap:7px;
+    padding:5px 10px;border-radius:999px;
+    background:rgba(124,77,255,.10);border:1px solid rgba(124,77,255,.34);
+    font-family:var(--pixel);font-size:10px;letter-spacing:.12em;color:var(--pc-accent)}
+  .role-pill .d{width:6px;height:6px;background:var(--pc-accent);flex:none;
+    box-shadow:0 0 8px rgba(124,77,255,.5)}
+  .lang{display:inline-flex;gap:0;padding:2px 3px;
+    background:color-mix(in srgb,var(--pc-ink) 75%,transparent);
+    border:1px solid var(--pc-line);border-radius:999px;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase}
+  .lang button{appearance:none;border:none;background:transparent;
+    padding:3px 8px;color:var(--pc-text3);font:inherit;cursor:pointer;min-height:26px}
+  .lang button.on{color:var(--pc-accent);font-weight:600}
+  .lang .sep{width:1px;background:var(--pc-line);opacity:.6;margin:3px 0}
+
+  /* === Head: "Odan hazır" + oda kodu büyük === */
+  .head{display:flex;flex-direction:column;gap:8px;padding:18px 0 14px}
+  .head .ttl{font-family:var(--body);font-size:clamp(22px,5vw,26px);font-weight:700;
+    color:var(--pc-bone);line-height:1.2;margin:0}
+  .head .ttl .ac{color:var(--pc-b)}
+  .head .sub{font-family:var(--body);font-size:14px;color:var(--pc-text2);
+    line-height:1.5;margin:0;max-width:54ch}
+  .room-strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-top:6px;padding:14px 16px;background:var(--pc-ink2);
+    border:1.5px solid var(--pc-line);border-radius:var(--r-md)}
+  .room-strip .lbl{font-family:var(--mono);font-size:10.5px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    display:flex;align-items:center;gap:10px;flex:none}
+  .room-strip .lbl::before{content:'';width:14px;height:1px;background:var(--pc-line2)}
+  .room-strip .code{font-family:var(--pixel);font-size:clamp(28px,6.5vw,36px);
+    color:var(--pc-bone);letter-spacing:.10em;line-height:1;flex:1;min-width:0}
+  .room-strip .actions{display:flex;align-items:center;gap:8px;flex:none}
+  .room-strip .copy{width:42px;height:42px;padding:0;
+    background:transparent;border:1.5px solid var(--pc-line);
+    border-radius:var(--r-sm);color:var(--pc-text2);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:border-color .14s,color .14s,background .14s}
+  .room-strip .copy:hover{border-color:var(--pc-accent);color:var(--pc-bone);
+    background:rgba(124,77,255,.10)}
+  .room-strip .qr-btn{height:42px;padding:0 14px;
+    background:transparent;border:1.5px solid var(--pc-line);
+    border-radius:var(--r-sm);color:var(--pc-text2);cursor:pointer;
+    font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;
+    transition:border-color .14s,color .14s}
+  .room-strip .qr-btn:hover{border-color:var(--pc-bone);color:var(--pc-bone)}
+
+  /* === Invite section — kompakt liste, hover ile ortaya çıkan kopya === */
+  .section-lab{font-family:var(--mono);font-size:10.5px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    padding:0 2px;display:flex;align-items:center;gap:10px;margin:18px 0 8px}
+  .section-lab::before{content:'';width:16px;height:1px;background:var(--pc-line2)}
+
+  .invites{display:flex;flex-direction:column;gap:6px}
+  .invite{display:flex;align-items:center;gap:12px;
+    padding:11px 14px;background:transparent;
+    border:1px solid var(--pc-ink3);border-radius:var(--r-md);
+    transition:border-color .14s,background .14s}
+  .invite:hover{border-color:var(--pc-line);background:var(--pc-ink2)}
+  .invite .dot{width:6px;height:6px;flex:none;border-radius:1px;
+    box-shadow:0 0 8px currentColor;opacity:.85}
+  .invite.player .dot{background:var(--pc-accent);color:var(--pc-accent)}
+  .invite.watch .dot{background:var(--pc-b);color:var(--pc-b)}
+  .invite.stage .dot{background:var(--pc-bone);color:var(--pc-bone)}
+  .invite .info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+  .invite .lab{font-family:var(--mono);font-size:10px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--pc-text3)}
+  .invite .url{font-family:var(--mono);font-size:12.5px;color:var(--pc-text);
+    line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .invite .btn{flex:none;height:34px;padding:0 12px;
+    background:transparent;border:1.5px solid var(--pc-line);
+    border-radius:var(--r-sm);color:var(--pc-text2);cursor:pointer;
+    font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .14s,color .14s,background .14s}
+  .invite .btn:hover{border-color:var(--pc-accent);color:var(--pc-bone);
+    background:rgba(124,77,255,.10)}
+  .invite .btn.copied{border-color:var(--pc-b);color:var(--pc-b);
+    background:rgba(174,210,74,.10)}
+  .invite .btn.primary{border-color:var(--pc-accent);color:var(--pc-bone);
+    background:rgba(124,77,255,.18)}
+
+  /* === Stage CTA — büyük tek başına buton === */
+  .stage-cta{margin-top:10px;width:100%;min-height:58px;
+    border-radius:var(--r-md);border:none;cursor:pointer;
+    background:var(--pc-accent);color:#fff;
+    font-family:var(--body);font-size:15.5px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 10px 26px rgba(124,77,255,.30),inset 0 -2px 0 rgba(0,0,0,.18);
+    transition:transform .1s,box-shadow .16s}
+  .stage-cta:hover{box-shadow:0 14px 34px rgba(124,77,255,.42),inset 0 -2px 0 rgba(0,0,0,.18)}
+  .stage-cta:active{transform:translateY(1px)}
+  .stage-cta svg{flex:none}
+
+  /* === 2-zone grid: live + controls === */
+  .zones{display:grid;grid-template-columns:1fr;gap:16px;margin-top:22px}
+  @media(min-width:900px){
+    .zones{grid-template-columns:1.2fr .8fr;gap:24px}
+  }
+
+  /* Live zone — mascot + bekleme durumu */
+  .live{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;min-height:280px;padding:24px 18px;gap:12px;
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);border-radius:var(--r-md);
+    position:relative;overflow:hidden}
+  .live-mascot{position:relative;width:104px;height:104px;
+    display:flex;align-items:center;justify-content:center}
+  .live-mascot .halo{position:absolute;inset:-18px;
+    background:radial-gradient(circle at center,
+      rgba(124,77,255,.22) 0%,rgba(124,77,255,.05) 40%,transparent 64%);
+    filter:blur(8px)}
+  .live-mascot svg{position:relative;z-index:1;width:84px;height:84px;
+    image-rendering:pixelated;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.4)) drop-shadow(0 0 10px rgba(124,77,255,.20));
+    animation:mascotFloat 5.2s ease-in-out infinite}
+  @keyframes mascotFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-5px)}
+  }
+  @media(prefers-reduced-motion:reduce){.live-mascot svg{animation:none}}
+  .live-state{font-family:var(--pixel);font-size:14px;letter-spacing:.06em;
+    color:var(--pc-bone)}
+  .live-state .dot{display:inline-block;width:6px;height:6px;background:var(--pc-b);
+    box-shadow:0 0 8px rgba(174,210,74,.7);margin-right:8px;vertical-align:middle}
+  .live-hint{font-family:var(--body);font-size:13px;color:var(--pc-text3);
+    line-height:1.5;max-width:36ch}
+  .live-counts{display:flex;align-items:center;gap:14px;margin-top:4px;
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--pc-text3)}
+  .live-counts .c{display:inline-flex;align-items:center;gap:6px;
+    padding:5px 10px;border:1px solid var(--pc-ink3);border-radius:6px}
+  .live-counts .c b{font-family:var(--pixel);font-size:12px;color:var(--pc-bone);
+    font-weight:400;letter-spacing:.04em}
+
+  /* Controls — sade buton listesi */
+  .ctrls{display:flex;flex-direction:column;gap:6px}
+  .ctrl{padding:13px 14px;border-radius:var(--r-md);
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);
+    color:var(--pc-text);text-align:left;cursor:pointer;
+    font-family:var(--body);font-size:14px;font-weight:600;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    transition:border-color .14s,background .14s,color .14s}
+  .ctrl:hover{border-color:var(--pc-line2)}
+  .ctrl .hint{font-family:var(--mono);font-size:9.5px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--pc-text4)}
+  .ctrl.disabled{color:var(--pc-text4);background:transparent;cursor:not-allowed;
+    border-color:var(--pc-ink3);border-style:dashed}
+  .ctrl.disabled:hover{border-color:var(--pc-ink3)}
+  .ctrl.primary{background:var(--pc-accent);border-color:var(--pc-accent);color:#fff;
+    box-shadow:inset 0 -2px 0 var(--pc-accent2)}
+  .ctrl.primary:hover{background:#8a5dff}
+  .ctrl.primary .hint{color:rgba(255,255,255,.7)}
+  .ctrl.danger{border-color:rgba(255,92,92,.35);color:var(--pc-live);
+    background:rgba(255,92,92,.04)}
+  .ctrl.danger:hover{background:rgba(255,92,92,.08);border-color:var(--pc-live)}
+
+  /* History link */
+  .history-link{margin-top:16px;width:100%;padding:12px 14px;text-align:center;
+    font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-text3);background:transparent;
+    border:1px dashed var(--pc-ink3);border-radius:var(--r-sm);cursor:pointer;
+    transition:color .14s,border-color .14s,background .14s;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px}
+  .history-link:hover{color:var(--pc-text);border-color:var(--pc-line);
+    background:var(--pc-ink2)}
+  .history-link b{color:var(--pc-accent);font-family:var(--pixel);font-size:11px;
+    font-weight:400;letter-spacing:.04em}
+
+  /* Focus */
+  button:focus-visible,a:focus-visible{outline:2px solid var(--pc-accent);outline-offset:2px}
+
+  /* === Tablet+ === */
+  @media(min-width:640px){
+    .shell{padding:22px 28px 48px}
+    .head{padding:24px 0 16px}
+    .room-strip{padding:16px 20px}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ax" viewBox="0 0 512 512" shape-rendering="crispEdges">
+    <g fill="#aed24a">
+      <rect x="64" y="64" width="32" height="32"/><rect x="96" y="32" width="32" height="80"/><rect x="128" y="64" width="32" height="32"/>
+      <rect x="208" y="16" width="32" height="96"/><rect x="240" y="0" width="32" height="112"/><rect x="272" y="16" width="32" height="96"/>
+      <rect x="352" y="64" width="32" height="32"/><rect x="384" y="32" width="32" height="80"/><rect x="416" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#7c4dff">
+      <rect x="96" y="112" width="320" height="32"/><rect x="64" y="144" width="384" height="32"/>
+      <rect x="32" y="176" width="448" height="32"/><rect x="32" y="208" width="448" height="32"/>
+      <rect x="32" y="240" width="448" height="32"/><rect x="32" y="272" width="448" height="32"/>
+      <rect x="32" y="304" width="448" height="32"/><rect x="32" y="336" width="448" height="32"/>
+      <rect x="64" y="368" width="384" height="32"/>
+      <rect x="96" y="400" width="64" height="32"/><rect x="208" y="400" width="96" height="32"/><rect x="352" y="400" width="64" height="32"/>
+      <rect x="96" y="432" width="64" height="48"/><rect x="352" y="432" width="64" height="48"/>
+    </g>
+    <g fill="#f5f5f8">
+      <rect x="208" y="240" width="96" height="32"/><rect x="176" y="272" width="160" height="32"/>
+      <rect x="144" y="304" width="224" height="32"/><rect x="144" y="336" width="224" height="32"/>
+      <rect x="176" y="368" width="160" height="32"/>
+    </g>
+    <g fill="#ffffff"><rect x="96" y="208" width="64" height="64"/><rect x="352" y="208" width="64" height="64"/></g>
+    <g fill="#14121a"><rect x="128" y="224" width="32" height="48"/><rect x="352" y="224" width="32" height="48"/></g>
+    <g fill="#ffffff"><rect x="128" y="224" width="16" height="16"/><rect x="352" y="224" width="16" height="16"/></g>
+    <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+  </symbol>
+</svg>
+
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+      <span class="wm">PROMPT <span class="a">CLASH</span></span>
+    </div>
+    <div class="topbar-right">
+      <span class="role-pill"><span class="d"></span>HOST</span>
+      <div class="lang" role="group" aria-label="Dil">
+        <button class="on" type="button" aria-pressed="true">TR</button>
+        <span class="sep"></span>
+        <button type="button" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HEAD: hero card eski, artık başlık + oda kodu inline strip -->
+  <section class="head">
+    <h1 class="ttl">Odan <span class="ac">hazır.</span></h1>
+    <p class="sub">Linkleri paylaş, sahneyi aç, oyuncular katılınca maç başlar.</p>
+
+    <div class="room-strip">
+      <span class="lbl">Oda kodu</span>
+      <span class="code">DX22DT</span>
+      <div class="actions">
+        <button class="copy" type="button" aria-label="Kodu kopyala" title="Kodu kopyala">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="qr-btn" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3z M19 14h2 M14 19h2 M19 19h2v2h-2z"/></svg>
+          QR göster
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVITE LIST -->
+  <div class="section-lab">Davet linkleri</div>
+  <div class="invites">
+    <div class="invite player">
+      <span class="dot" aria-hidden="true"></span>
+      <div class="info">
+        <span class="lab">Oyuncu linki</span>
+        <span class="url">localhost:3000/join/DX22DT</span>
+      </div>
+      <button class="btn copied" type="button">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Kopyalandı
+      </button>
+    </div>
+    <div class="invite watch">
+      <span class="dot" aria-hidden="true"></span>
+      <div class="info">
+        <span class="lab">İzleyici linki</span>
+        <span class="url">localhost:3000/watch/DX22DT</span>
+      </div>
+      <button class="btn" type="button">Kopyala</button>
+    </div>
+    <div class="invite stage">
+      <span class="dot" aria-hidden="true"></span>
+      <div class="info">
+        <span class="lab">Sahne linki · projeksiyon</span>
+        <span class="url">localhost:3000/rooms/clash_zv…/stage</span>
+      </div>
+      <button class="btn" type="button">Kopyala</button>
+    </div>
+  </div>
+
+  <!-- Tek tıkla sahneyi aç — primary action -->
+  <button class="stage-cta" type="button">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17l10-10"/><path d="M17 7H7M17 7v10"/></svg>
+    Sahneyi yeni sekmede aç
+  </button>
+
+  <!-- 2 ZONE: LIVE + CONTROLS -->
+  <div class="zones">
+
+    <div>
+      <div class="section-lab">Canlı durum</div>
+      <div class="live">
+        <div class="live-mascot">
+          <div class="halo" aria-hidden="true"></div>
+          <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+        </div>
+        <div class="live-state"><span class="dot"></span>Oyuncu bekleniyor</div>
+        <div class="live-hint">Bir oyuncu katıldığında maç burada akar: prompt yazımı, AI üretimi, sonuç.</div>
+        <div class="live-counts" aria-label="Sayaçlar">
+          <span class="c">Oyuncu <b>0/2</b></span>
+          <span class="c">İzleyici <b>0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-lab">Kontroller</div>
+      <div class="ctrls">
+        <button class="ctrl disabled" disabled>
+          <span>Maçı başlat</span>
+          <span class="hint">2 oyuncu lazım</span>
+        </button>
+        <button class="ctrl disabled" disabled>
+          <span>Duraklat</span>
+          <span class="hint">maç sırasında</span>
+        </button>
+        <button class="ctrl disabled" disabled>
+          <span>Süre uzat</span>
+          <span class="hint">+30 sn</span>
+        </button>
+        <button class="ctrl disabled" disabled>
+          <span>Render yenile</span>
+          <span class="hint">hata olunca</span>
+        </button>
+        <button class="ctrl danger" type="button">
+          <span>Odayı kapat</span>
+          <span class="hint">geri alınamaz</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HISTORY -->
+  <button class="history-link" type="button">
+    Oda geçmişi <b>· 4</b>
+  </button>
+
+</div>
+
+</body>
+</html>

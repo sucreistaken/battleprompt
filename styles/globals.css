@@ -28,8 +28,11 @@
   --color-success: #22c55e;
   --color-live: #ff3838;
 
-  --font-display: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
-  --font-body: var(--font-poppins, 'Poppins'), system-ui, sans-serif;
+  /* Body fontu Inter Tight (Epic 6 DNA, okunabilirlik). Silkscreen pixel
+     yalnızca seçili h1/brand showcase'lerinde explicit kullanılır — kullanıcı
+     2026-06-01 oturumunda "her metinde değil, sadece bazı yerlerde" istedi. */
+  --font-display: 'Inter Tight', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-body: 'Inter Tight', 'IBM Plex Sans', system-ui, sans-serif;
 
   --shadow-signature: 0 10px 30px rgba(84, 31, 196, 0.10);
   --shadow-card: 0 1px 2px rgba(84, 31, 196, 0.04), 0 12px 32px rgba(84, 31, 196, 0.08), 0 32px 64px rgba(84, 31, 196, 0.06);
@@ -90,6 +93,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Shared button micro-interaction — components/common/Buttons.tsx çıktısına
+   uygulanan global :active mikro-feedback. Inline style transform kullanmak
+   bütün arayüze yayılmasın diye class-scoped. */
+.pc-shared-btn:active:not(:disabled) { transform: translateY(1px); }
+.pc-shared-btn:hover:not(:disabled) { filter: brightness(1.05); }
 
 /* ─── q-design-system primitives ─── */
 

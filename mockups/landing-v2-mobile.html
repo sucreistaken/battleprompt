@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Prompt Clash — v2 landing (mobile)</title>
+<meta name="description" content="Mobil için sadeleştirilmiş landing-v2 mockup. Maskot küçük, ilk fold'da CTA görünür." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  /* === Tokens (landing-v2 ile aynı) === */
+  :root{
+    --pc-ink:#22202b; --pc-ink2:#2d2b38; --pc-ink3:#383545;
+    --pc-line:#4a4757; --pc-line2:#615d72;
+    --pc-text:#f7f4ec; --pc-text2:#c0bdca;
+    --pc-text3:#a8a4b3; --pc-text4:#605d6c;
+    --pc-bone:#ffffff; --pc-live:#ff5c5c;
+    --pc-accent:#7c4dff; --pc-accent2:#5a35cc;
+    --pc-b:#aed24a; --pc-b2:#88aa2e;
+    --r-sm:10px; --r-md:12px; --r-lg:14px; --r-xl:18px;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#15131c}
+  body{color:var(--pc-text);font-family:var(--body);min-height:100dvh;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* ====== Preview frame (sadece bu mockup için — gerçek prodda yok) ====== */
+  .preview-stage{min-height:100dvh;padding:32px 16px;
+    display:flex;flex-direction:column;align-items:center;gap:20px;
+    background:
+      radial-gradient(circle at 20% 10%,rgba(124,77,255,.08),transparent 50%),
+      radial-gradient(circle at 80% 90%,rgba(174,210,74,.05),transparent 45%),
+      #15131c}
+  .preview-head{font-family:var(--mono);font-size:11px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    text-align:center;line-height:1.6}
+  .preview-head .px{color:var(--pc-accent)}
+  .phone{width:390px;max-width:100%;height:780px;border-radius:42px;
+    background:var(--pc-ink);
+    box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0a12,
+               inset 0 0 0 1px rgba(255,255,255,.04);
+    overflow:hidden;position:relative}
+  .phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:122px;height:28px;background:#0c0a12;
+    border-radius:0 0 18px 18px;z-index:50;pointer-events:none}
+  .phone-scroll{position:absolute;inset:0;overflow:auto;
+    overscroll-behavior:contain}
+  .phone-scroll::-webkit-scrollbar{width:0}
+
+  /* fold çizgisi — 780/2 ≈ 390, telefon görünür alanı */
+  .fold-line{position:absolute;left:-44px;right:auto;
+    top:660px;height:1px;width:38px;
+    background:linear-gradient(90deg,transparent,var(--pc-accent),transparent);
+    z-index:60}
+  .fold-line::after{content:'fold';position:absolute;left:-26px;top:-7px;
+    font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-accent)}
+
+  /* ====== Mobil sayfa içeriği ====== */
+  .bg-glow{position:absolute;z-index:0;pointer-events:none;width:560px;height:560px;
+    left:-180px;top:-200px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.16) 0%,rgba(124,77,255,.02) 42%,transparent 64%);
+    filter:blur(28px)}
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(124,77,255,.022) 1px,transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse 90% 40% at 50% 14%,#000 12%,transparent 74%)}
+
+  .shell{position:relative;z-index:1;padding:14px 18px 32px;
+    padding-top:max(36px,env(safe-area-inset-top,36px))}
+
+  /* === Topbar — kompakt === */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:0 0 12px}
+  .brand{display:flex;align-items:center;gap:9px}
+  .brand svg{display:block;width:26px;height:26px}
+  .wm{font-family:var(--pixel);font-size:12px;letter-spacing:.06em;color:var(--pc-bone)}
+  .wm .a{color:var(--pc-accent)}
+  .lang{display:inline-flex;gap:0;padding:2px 3px;
+    background:color-mix(in srgb,var(--pc-ink) 75%,transparent);
+    border:1px solid var(--pc-line);border-radius:999px;
+    backdrop-filter:blur(8px);font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;user-select:none}
+  .lang button{appearance:none;border:none;background:transparent;
+    padding:3px 8px;color:var(--pc-text3);font:inherit;cursor:pointer;min-height:26px}
+  .lang button.on{color:var(--pc-accent);font-weight:600}
+  .lang .sep{width:1px;background:var(--pc-line);opacity:.6;margin:3px 0}
+
+  /* === Hero === */
+  .hero{display:flex;flex-direction:column;gap:14px;padding:6px 0 14px}
+
+  /* mascot stage — orta boy, ortalanmış, halo'lu */
+  .mascot-stage{position:relative;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;padding:6px 0 4px}
+  .mascot-halo{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+    width:220px;height:220px;pointer-events:none;z-index:0;
+    background:radial-gradient(circle at center,
+      rgba(124,77,255,.26) 0%,rgba(124,77,255,.08) 38%,transparent 64%);
+    filter:blur(6px);
+    animation:haloPulse 6s ease-in-out infinite}
+  @keyframes haloPulse{
+    0%,100%{opacity:.72;transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+  }
+  .mascot-svg{position:relative;z-index:1;width:128px;height:128px;
+    image-rendering:pixelated;
+    filter:drop-shadow(0 12px 20px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(124,77,255,.22));
+    animation:mascotFloat 5.2s ease-in-out infinite}
+  @keyframes mascotFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-8px)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .mascot-halo,.mascot-svg{animation:none}
+  }
+  .mascot-badge{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;
+    padding:5px 12px;border-radius:999px;
+    background:rgba(174,210,74,.10);border:1px solid rgba(174,210,74,.38);
+    font-family:var(--pixel);font-size:11px;letter-spacing:.10em;color:var(--pc-b);
+    text-shadow:0 0 12px rgba(174,210,74,.32)}
+  .mascot-badge .d{width:6px;height:6px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 7px rgba(174,210,74,.7)}
+
+  .h1{font-family:var(--pixel);font-size:48px;line-height:.96;
+    letter-spacing:.02em;color:var(--pc-bone);font-weight:400;margin:2px 0 0;
+    text-align:center}
+  .h1 .a{color:var(--pc-accent)}
+
+  .slogan{font-family:var(--body);font-size:18px;font-weight:700;
+    color:var(--pc-bone);line-height:1.25;letter-spacing:-.005em;margin:0;
+    text-align:center}
+  .slogan .ac{color:var(--pc-b)}
+
+  /* === CTA — panel'siz, sade hiyerarşi === */
+  .cta-block{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+
+  .cta-primary{position:relative;display:flex;align-items:center;gap:10px;
+    padding:14px 16px;border-radius:var(--r-md);
+    background:var(--pc-accent);color:#fff;border:none;
+    text-decoration:none;cursor:pointer;width:100%;min-height:60px;
+    box-shadow:0 10px 28px rgba(124,77,255,.32),inset 0 -2px 0 rgba(0,0,0,.18);
+    transition:transform .1s,box-shadow .16s}
+  .cta-primary:active{transform:translateY(1px)}
+  .cta-primary .title{font-family:var(--body);font-size:16px;font-weight:800;
+    line-height:1.1;display:block;text-align:left}
+  .cta-primary .sub{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.10em;
+    text-transform:uppercase;opacity:.82;line-height:1.2;display:block;margin-top:3px;text-align:left}
+  .cta-primary .arrow{margin-left:auto;font-family:var(--pixel);font-size:20px;line-height:1}
+
+  /* kod girişi — secondary, label'lı, tek field + embed arrow */
+  .code-form{display:flex;flex-direction:column;gap:7px}
+  .code-label{font-family:var(--mono);font-size:10px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    padding-left:2px;display:flex;align-items:center;gap:8px}
+  .code-label::before{content:'';width:14px;height:1px;background:var(--pc-line2)}
+  .code-field{position:relative;display:flex;align-items:stretch;
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);
+    border-radius:var(--r-md);overflow:hidden;
+    transition:border-color .16s,box-shadow .16s}
+  .code-field:focus-within{border-color:var(--pc-accent);
+    box-shadow:0 0 0 3px rgba(124,77,255,.18)}
+  .code-field input{flex:1;min-width:0;height:52px;
+    background:transparent;border:none;padding:0 16px;
+    font-family:var(--pixel);font-size:15px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--pc-bone);outline:none}
+  .code-field input::placeholder{color:var(--pc-text4);
+    letter-spacing:.18em;font-weight:400}
+  .code-field button{flex:none;width:54px;height:52px;
+    background:transparent;border:none;border-left:1px solid var(--pc-line);
+    color:var(--pc-text3);font-family:var(--pixel);font-size:20px;line-height:1;
+    cursor:pointer;transition:background .14s,color .14s;
+    display:inline-flex;align-items:center;justify-content:center}
+  .code-field:focus-within button{color:var(--pc-bone)}
+  .code-field button:hover{background:var(--pc-accent);color:#fff;border-left-color:var(--pc-accent)}
+  .code-field button:active{transform:translateY(1px)}
+
+  /* === Flow — yatay 3 step, kompakt === */
+  .flow-section{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .flow-lab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--pc-text3);display:flex;align-items:center;gap:8px}
+  .flow-lab::after{content:'';flex:1;height:1px;background:var(--pc-ink3)}
+  .flow-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .flow-step{display:flex;flex-direction:column;gap:6px;
+    padding:10px 10px 11px;background:var(--pc-ink2);
+    border:1px solid var(--pc-line);border-radius:var(--r-md);min-height:74px}
+  .flow-step .n{font-family:var(--pixel);font-size:12px;letter-spacing:.04em;
+    color:var(--pc-accent);line-height:1}
+  .flow-step:nth-child(2) .n{color:var(--pc-b)}
+  .flow-step:nth-child(3) .n{color:var(--pc-bone)}
+  .flow-step .txt{font-family:var(--body);font-size:12px;color:var(--pc-text);
+    font-weight:600;line-height:1.3}
+
+  /* === Event note — daha küçük === */
+  .event-note{margin:18px 0 0;padding:11px 12px;
+    background:var(--pc-ink2);
+    border:1px solid var(--pc-line);border-radius:var(--r-md);
+    display:flex;align-items:center;gap:10px}
+  .event-note .qr-ic{width:24px;height:24px;flex:none;
+    background:conic-gradient(from 0deg,var(--pc-bone) 0 25%,transparent 0 50%,var(--pc-bone) 0 75%,transparent 0);
+    border:2px solid var(--pc-bone);border-radius:3px;opacity:.55}
+  .event-note .txt{font-family:var(--body);font-size:12px;color:var(--pc-text2);
+    line-height:1.45;flex:1;min-width:0}
+  .event-note .txt b{color:var(--pc-bone);font-weight:600}
+  .event-note .lab{font-family:var(--pixel);font-size:9px;letter-spacing:.10em;
+    color:var(--pc-b);flex:none}
+
+  .foot{margin-top:16px;padding:12px 0 8px;border-top:1px solid var(--pc-ink3);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--pc-text4)}
+  .foot .ax{color:var(--pc-b);letter-spacing:.06em}
+
+  /* Focus */
+  button:focus-visible,a:focus-visible,input:focus-visible{
+    outline:2px solid var(--pc-accent);outline-offset:2px}
+
+  /* küçük ekranlarda telefon framesini yok say, içerik full genişlik aksın */
+  @media(max-width:440px){
+    .preview-stage{padding:0;background:var(--pc-ink)}
+    .preview-head{display:none}
+    .fold-line{display:none}
+    .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+    .phone::before{display:none}
+    .phone-scroll{position:relative;inset:auto;height:auto;overflow:visible}
+  }
+</style>
+</head>
+<body>
+
+<!-- Axolotl pixel mark (landing-v2 ile aynı symbol) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ax" viewBox="0 0 512 512" shape-rendering="crispEdges">
+    <g fill="#aed24a">
+      <rect x="64" y="64" width="32" height="32"/><rect x="96" y="32" width="32" height="80"/><rect x="128" y="64" width="32" height="32"/>
+      <rect x="208" y="16" width="32" height="96"/><rect x="240" y="0" width="32" height="112"/><rect x="272" y="16" width="32" height="96"/>
+      <rect x="352" y="64" width="32" height="32"/><rect x="384" y="32" width="32" height="80"/><rect x="416" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#7c4dff">
+      <rect x="96" y="112" width="320" height="32"/><rect x="64" y="144" width="384" height="32"/>
+      <rect x="32" y="176" width="448" height="32"/><rect x="32" y="208" width="448" height="32"/>
+      <rect x="32" y="240" width="448" height="32"/><rect x="32" y="272" width="448" height="32"/>
+      <rect x="32" y="304" width="448" height="32"/><rect x="32" y="336" width="448" height="32"/>
+      <rect x="64" y="368" width="384" height="32"/>
+      <rect x="96" y="400" width="64" height="32"/><rect x="208" y="400" width="96" height="32"/><rect x="352" y="400" width="64" height="32"/>
+      <rect x="96" y="432" width="64" height="48"/><rect x="352" y="432" width="64" height="48"/>
+    </g>
+    <g fill="#f5f5f8">
+      <rect x="208" y="240" width="96" height="32"/><rect x="176" y="272" width="160" height="32"/>
+      <rect x="144" y="304" width="224" height="32"/><rect x="144" y="336" width="224" height="32"/>
+      <rect x="176" y="368" width="160" height="32"/>
+    </g>
+    <g fill="#ffffff"><rect x="96" y="208" width="64" height="64"/><rect x="352" y="208" width="64" height="64"/></g>
+    <g fill="#14121a"><rect x="128" y="224" width="32" height="48"/><rect x="352" y="224" width="32" height="48"/></g>
+    <g fill="#ffffff"><rect x="128" y="224" width="16" height="16"/><rect x="352" y="224" width="16" height="16"/></g>
+    <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+  </symbol>
+</svg>
+
+<div class="preview-stage">
+  <div class="preview-head">
+    <span class="px">▣</span> landing v2 — <span class="px">mobile</span> · 390×780 simülasyon<br/>
+    <span style="opacity:.6;letter-spacing:.16em">first fold = brand + h1 + pitch + cta</span>
+  </div>
+
+  <div class="phone">
+    <div class="fold-line"></div>
+    <div class="phone-scroll">
+
+      <div class="bg-glow"></div>
+      <div class="bg-grid"></div>
+
+      <div class="shell">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+          <div class="brand">
+            <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+            <span class="wm">PROMPT <span class="a">CLASH</span></span>
+          </div>
+          <div class="lang" role="group" aria-label="Dil">
+            <button class="on" type="button" aria-pressed="true">TR</button>
+            <span class="sep"></span>
+            <button type="button" aria-pressed="false">EN</button>
+          </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="hero">
+
+          <!-- maskot — orta boy, ortalanmış -->
+          <div class="mascot-stage" aria-label="AI Hakem">
+            <div class="mascot-halo" aria-hidden="true"></div>
+            <svg class="mascot-svg" viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+            <span class="mascot-badge"><span class="d"></span>AI HAKEM</span>
+          </div>
+
+          <h1 class="h1">PROMPT<br/><span class="a">CLASH.</span></h1>
+          <p class="slogan">Yarış, <span class="ac">AI çizsin.</span></p>
+
+          <!-- CTA — primary alone + secondary kod alanı -->
+          <div class="cta-block">
+            <a class="cta-primary" href="/create-room">
+              <span>
+                <span class="title">Oda Aç</span>
+                <span class="sub">Sahibi sen ol, link paylaş</span>
+              </span>
+              <span class="arrow">→</span>
+            </a>
+
+            <form class="code-form" onsubmit="event.preventDefault()">
+              <label class="code-label" for="code">Kodla katıl</label>
+              <div class="code-field">
+                <input id="code" type="text" maxlength="6"
+                       placeholder="ABC123" aria-label="Oda kodu" autocomplete="off"
+                       inputmode="text" />
+                <button type="submit" aria-label="Odaya katıl">→</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- HOW IT WORKS — fold ALTI, kompakt 3-step -->
+        <section class="flow-section" aria-label="Nasıl oynanır">
+          <div class="flow-lab">Nasıl oynanır</div>
+          <div class="flow-strip">
+            <div class="flow-step">
+              <span class="n">01</span>
+              <span class="txt">Referansı gör</span>
+            </div>
+            <div class="flow-step">
+              <span class="n">02</span>
+              <span class="txt">Promptunu yaz</span>
+            </div>
+            <div class="flow-step">
+              <span class="n">03</span>
+              <span class="txt">Sonucu karşılaştır</span>
+            </div>
+          </div>
+        </section>
+
+        <footer class="foot">
+          <span>Prompt Clash · 2026</span>
+          <span class="ax">▣ AXOLOTL</span>
+        </footer>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

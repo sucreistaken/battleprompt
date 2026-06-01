@@ -1,6 +1,7 @@
 export type Phase =
   | 'IDLE'
   | 'PLAYER_1_JOINED'
+  | 'LOBBY'
   | 'VS_INTRO'
   | 'PROMPTING'
   | 'GENERATING'
@@ -21,6 +22,8 @@ export interface PlayerSnapshot {
   imageUrl: string | null;
   prompt: string | null;
   aiScore: number | null;
+  /** Story 2026-05-31: LOBBY ready-check flag. Both true → startMatch. */
+  ready?: boolean;
 }
 
 export interface StateSnapshot {
@@ -52,6 +55,16 @@ export interface StateSnapshot {
     resultDurationSec: number;
     vsIntroDurationSec: number;
   };
+  // Multi-room context — populated when a roomId is in scope on the socket
+  // handshake. Legacy single-room paths leave these undefined.
+  viewerRole?: Role;
+  roomId?: string;
+  roomCode?: string | null;
+  roomName?: string | null;
+  roomState?: string | null;
+  audienceVotingEnabled?: boolean;
+  audienceEnabled?: boolean;
+  aiScoreEnabled?: boolean;
 }
 
 export type Role = 'player' | 'audience' | 'stage' | 'admin';

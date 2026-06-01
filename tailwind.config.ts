@@ -45,9 +45,11 @@ const config: Config = {
         live: '#ff3838',
       },
       fontFamily: {
-        display: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
-        body: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+        // Body & default sans = Inter Tight (Epic 6 DNA, okunabilirlik).
+        // Silkscreen yalnızca explicit pixel başlık/brand kullanımlarına ait.
+        display: ["'Inter Tight'", "'IBM Plex Sans'", 'system-ui', 'sans-serif'],
+        body: ["'Inter Tight'", "'IBM Plex Sans'", 'system-ui', 'sans-serif'],
+        sans: ["'Inter Tight'", "'IBM Plex Sans'", 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'display-2xl': ['72px', { lineHeight: '1.0', letterSpacing: '-0.03em', fontWeight: '800' }],

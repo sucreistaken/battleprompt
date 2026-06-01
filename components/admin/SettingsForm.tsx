@@ -292,7 +292,7 @@ function NumberField({
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 5))}
-        className="w-10 h-10 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold"
+        className="w-11 h-11 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold transition-colors duration-150 active:scale-95"
         aria-label={decreaseLabel}
       >
         −
@@ -303,7 +303,7 @@ function NumberField({
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 5))}
-        className="w-10 h-10 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold"
+        className="w-11 h-11 rounded-full bg-surface-container hover:bg-primary-50 text-ink-variant font-bold transition-colors duration-150 active:scale-95"
         aria-label={increaseLabel}
       >
         +

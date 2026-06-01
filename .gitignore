@@ -28,3 +28,11 @@ tsconfig.tsbuildinfo
 
 # Local Gemini expansion cache (regenerates as games are played)
 /cache/
+
+# VM deploy .env template — secret içerebilir, repo'ya girmemeli.
+.env.vm.txt
+.env.vm
+
+# BMad agent intermediate output (kişisel/local)
+_bmad-output/
+_bmad/custom/*.user.toml

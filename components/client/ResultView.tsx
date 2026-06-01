@@ -963,29 +963,12 @@ function AiReasoning({ t, text, compact = false }: { t: (k: DictKey) => string; 
 }
 
 function Cta({ t, mySlot, winnerColor }: { t: (k: DictKey) => string; mySlot: Slot | null; winnerColor: string }) {
-  if (mySlot) {
-    return (
-      <button
-        type="button"
-        onClick={() => window.location.assign('/')}
-        style={{
-          marginTop: 'auto',
-          width: '100%',
-          maxWidth: 360,
-          height: 48,
-          border: `1px solid ${C.player(mySlot)}`,
-          background: `color-mix(in srgb, ${C.player(mySlot)} 12%, transparent)`,
-          color: C.bone,
-          fontFamily: FONT.pixel,
-          fontSize: 13,
-          letterSpacing: '0.08em',
-          cursor: 'pointer',
-        }}
-      >
-        {t('playAgain').toUpperCase()}
-      </button>
-    );
-  }
+  // Player + audience aynı countdown'u görür. Rematch lifecycle'ı arka planda
+  // RESULT → LOBBY geçişini yapıyor; oyuncu sayfada kalıyor ve LOBBY açıldığında
+  // ReadyCheckView devralıyor. "Tekrar Oyna" butonu (landing'e yönlendiren)
+  // kaldırıldı — aynı odada akıl yürüten bir UX değildi.
+  void mySlot;
+  void winnerColor;
   return (
     <div
       style={{

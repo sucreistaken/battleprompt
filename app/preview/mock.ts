@@ -41,6 +41,7 @@ export function buildMock(phase: Phase): {
     phase,
     phaseEndsAt: Date.now() + 22_000,
     matchId: 'preview-match-12ab',
+    roomCode: 'DX22DT',
     roundCategory: 'scifi',
     roundDifficulty: 'legendary',
     roundCategoryLabel: 'BİLİM-KURGU',

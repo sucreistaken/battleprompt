@@ -42,19 +42,8 @@ export function AudienceView() {
     return () => window.removeEventListener('resize', fit);
   }, []);
 
-  // Mobile hedef boyutu, kısa ekranlarda (375x667) 180'e düşer.
-  const [mHedefSize, setMHedefSize] = useState(200);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const fit = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      setMHedefSize(w <= 380 && h <= 700 ? 180 : 200);
-    };
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, []);
+  // (Mobile hedef boyutu — eski HedefCorner içindi, artık ReferenceStrip sabit
+  // 52px thumb kullanıyor; ölçüm state'i kaldırıldı.)
 
   // GENERATING fazında geçen saniye, 20+ ise fallback subtitle aktif.
   const [genElapsed, setGenElapsed] = useState(0);
@@ -89,7 +78,6 @@ export function AudienceView() {
         t={t}
         isScoring={phase === 'SCORING'}
         showFallback={phase === 'GENERATING' && genElapsed >= 20}
-        mHedefSize={mHedefSize}
       />
     );
   }
@@ -245,10 +233,9 @@ interface AudienceGeneratingProps {
   t: (key: DictKey) => string;
   isScoring: boolean;
   showFallback: boolean;
-  mHedefSize: number;
 }
 
-function AudienceGenerating({ state, t, isScoring, showFallback, mHedefSize }: AudienceGeneratingProps) {
+function AudienceGenerating({ state, t, isScoring, showFallback }: AudienceGeneratingProps) {
   const aPlayer = state.players.A;
   const bPlayer = state.players.B;
   const aReady = !!aPlayer?.imageUrl;
@@ -288,6 +275,20 @@ function AudienceGenerating({ state, t, isScoring, showFallback, mHedefSize }: A
         @media (prefers-reduced-motion: reduce) {
           .ac-spinner, .ac-live-dot { animation: none !important; }
         }
+        /* Player-card grid:
+           - default (≥360px wide): compact 2-column for side-by-side compare;
+           - <360px (e.g. iPhone SE 320×568): stack so each card keeps width;
+           Desktop has its own grid in DesktopShell, this class only ships with
+           the mobile <main> branch (hidden lg:hidden in JSX). */
+        .ac-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          align-items: start;
+        }
+        @media (max-width: 359px) {
+          .ac-grid { grid-template-columns: 1fr; gap: 14px; }
+        }
       `}</style>
       <main
         style={{
@@ -297,6 +298,10 @@ function AudienceGenerating({ state, t, isScoring, showFallback, mHedefSize }: A
           fontFamily: FONT.body,
           paddingTop: 'env(safe-area-inset-top)',
           paddingBottom: 'env(safe-area-inset-bottom)',
+          // Floating LangToggle is suppressed for these phases (MobileShell.tsx)
+          // and `MinimalTopBar` carries the inline chip — but make sure no
+          // descendant width pushes the page sideways either.
+          overflowX: 'hidden',
         }}
         className="flex flex-col"
       >
@@ -317,11 +322,17 @@ function AudienceGenerating({ state, t, isScoring, showFallback, mHedefSize }: A
           className="flex lg:hidden flex-col items-center"
           style={{
             width: '100%',
-            padding: '14px 14px 18px',
+            // Side padding respects iPhone landscape safe area. `clamp` keeps
+            // 14px on portrait phones, but never collapses below the notch.
+            paddingTop: 14,
+            paddingBottom: 18,
+            paddingLeft: 'max(14px, env(safe-area-inset-left))',
+            paddingRight: 'max(14px, env(safe-area-inset-right))',
             minHeight: '100dvh',
+            boxSizing: 'border-box',
           }}
         >
-          <MobileShell {...shellProps} mHedefSize={mHedefSize} />
+          <MobileShell {...shellProps} />
         </div>
       </main>
     </>
@@ -335,43 +346,227 @@ const SLOT_LIVE = { A: '#7c4dff', B: '#aed24a' } as const;
 const SLOT_PROMPT_BG = { A: 'rgba(124,77,255,0.05)', B: 'rgba(174,210,74,0.05)' } as const;
 
 function MinimalTopBar({ t, compact = false }: { t: (key: DictKey) => string; compact?: boolean }) {
+  // Header is a two-cell flex row: brand wordmark left, [LIVE + lang] right.
+  // `min-width:0` + `flex-shrink` on the brand prevents it pushing the right
+  // cluster off-screen on 320px viewports; `flex-wrap` is a safety net for
+  // extremely narrow widths so LIVE/TR-EN never tuck under the right edge.
   return (
-    <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        flexWrap: 'wrap',
+      }}
+    >
       <span
         style={{
           fontFamily: FONT.pixel,
           fontSize: compact ? 11 : 13,
           color: C.bone,
           letterSpacing: '0.08em',
+          minWidth: 0,
+          flex: '0 1 auto',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
         }}
       >
         {t('brandWordmark').toUpperCase()}
       </span>
-      <span
+      <div
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
-          fontFamily: FONT.mono,
-          fontSize: compact ? 9 : 10,
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
-          color: C.text2,
+          gap: compact ? 8 : 10,
+          flex: '0 0 auto',
         }}
       >
         <span
-          className="ac-live-dot"
           style={{
-            width: compact ? 5 : 6,
-            height: compact ? 5 : 6,
-            borderRadius: '50%',
-            background: C.live,
-            animation: 'acLiveDot 1.6s ease-in-out infinite',
-            display: 'inline-block',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontFamily: FONT.mono,
+            fontSize: compact ? 9 : 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: C.text2,
           }}
-        />
-        {t('live')}
-      </span>
+        >
+          <span
+            className="ac-live-dot"
+            style={{
+              width: compact ? 5 : 6,
+              height: compact ? 5 : 6,
+              borderRadius: '50%',
+              background: C.live,
+              animation: 'acLiveDot 1.6s ease-in-out infinite',
+              display: 'inline-block',
+            }}
+          />
+          {t('live')}
+        </span>
+        <InlineLangChip compact={compact} />
+      </div>
+    </div>
+  );
+}
+
+// Header-inline TR|EN chip. The floating `client/LangToggle` is fixed at
+// top-right and overlaps the audience-generating header (and the mobile
+// reference thumb that used to live there), so for the GENERATING/SCORING
+// surface we mount this inline chip instead. Same i18nContext, no
+// localStorage divergence.
+function InlineLangChip({ compact = false }: { compact?: boolean }) {
+  const { lang, setLang } = useI18n();
+  const padY = compact ? 2 : 3;
+  const padX = compact ? 4 : 5;
+  const chipPadY = compact ? 2 : 3;
+  const chipPadX = compact ? 7 : 8;
+  return (
+    <div
+      aria-label="language"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0,
+        padding: `${padY}px ${padX}px`,
+        background: 'color-mix(in srgb, var(--pc-ink) 75%, transparent)',
+        border: `1px solid ${C.line}`,
+        borderRadius: 999,
+        fontFamily: FONT.mono,
+        fontSize: compact ? 9 : 10,
+        letterSpacing: '0.22em',
+        textTransform: 'uppercase',
+        userSelect: 'none',
+      }}
+    >
+      {(['tr', 'en'] as const).map((code, i) => (
+        <span key={code} style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {i === 1 && <span style={{ width: 1, height: 10, background: C.line, opacity: 0.6 }} />}
+          <button
+            type="button"
+            onClick={() => setLang(code)}
+            aria-pressed={lang === code}
+            style={{
+              appearance: 'none',
+              border: 'none',
+              background: 'transparent',
+              padding: `${chipPadY}px ${chipPadX}px`,
+              color: lang === code ? C.accent : C.text3,
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+              letterSpacing: 'inherit',
+              textTransform: 'inherit',
+              cursor: lang === code ? 'default' : 'pointer',
+              fontWeight: lang === code ? 600 : 400,
+              // 28px minimum touch target on compact (covers a11y without bloating header).
+              minWidth: compact ? 28 : 30,
+              minHeight: compact ? 26 : 28,
+              lineHeight: 1,
+            }}
+          >
+            {code.toUpperCase()}
+          </button>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Mobile-only mini reference strip — replaces the cornered HedefCorner thumb
+// that collided with the floating lang toggle. A horizontal pill: small
+// thumbnail + REFERANS label, centred under the headline so it reads as a
+// dedicated anchor, not header chrome.
+function ReferenceStrip({
+  src,
+  alt,
+  label,
+  loadingLabel,
+}: {
+  src: string | null;
+  alt: string;
+  label: string;
+  loadingLabel: string;
+}) {
+  const thumb = 52;
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '8px 14px 8px 8px',
+        background: 'rgba(124,77,255,0.06)',
+        border: `1px solid rgba(124,77,255,0.32)`,
+        maxWidth: '100%',
+      }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: thumb,
+          height: thumb,
+          flex: '0 0 auto',
+          background: '#0f0e14',
+          border: `1px solid rgba(124,77,255,0.45)`,
+          overflow: 'hidden',
+        }}
+      >
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt={alt}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+            <div
+              className="ac-spinner"
+              aria-label={loadingLabel}
+              style={{
+                width: 18,
+                height: 18,
+                border: `2px solid ${C.line}`,
+                borderTopColor: C.accent,
+                borderRightColor: C.accent,
+                borderRadius: '50%',
+                animation: 'pcSpin 1.6s linear infinite',
+              }}
+            />
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+        <span
+          style={{
+            fontFamily: FONT.pixel,
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: C.accent,
+            lineHeight: 1,
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 10,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: C.text3,
+            lineHeight: 1.2,
+          }}
+        >
+          {alt}
+        </span>
+      </div>
     </div>
   );
 }
@@ -645,23 +840,26 @@ function PlayerCard({
         </span>
       )}
       {prompt !== null && (
+        // Prompt box: previously hard-clipped to 2/3 lines with a mask gradient,
+        // so longer prompts (which is the norm) lost half their content. Now we
+        // give it a comfortable min-height (so short prompts don't collapse the
+        // card), let it grow up to a tall cap, and only then scroll inside the
+        // card. Mask removed — fade-on-overflow read as "we cut your prompt".
         <div
           style={{
             fontFamily: FONT.mono,
-            fontSize: compact ? 10 : 11.5,
-            lineHeight: compact ? 1.4 : 1.5,
+            fontSize: compact ? 11 : 12.5,
+            lineHeight: compact ? 1.5 : 1.55,
             color: prompt ? C.text2 : C.text4,
             fontStyle: prompt ? 'normal' : 'italic',
-            padding: compact ? '7px 9px' : '10px 12px',
+            padding: compact ? '10px 12px' : '12px 14px',
             background: SLOT_PROMPT_BG[slot],
             borderLeft: `2px solid ${slotColor}`,
-            maxHeight: compact
-              ? `calc(${1.4}em * 2 + 14px)`
-              : `calc(${1.5}em * 3 + 20px)`,
-            overflow: 'hidden',
-            WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
-            maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+            minHeight: compact ? 56 : 78,
+            maxHeight: compact ? 160 : 220,
+            overflowY: 'auto',
             wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
           }}
         >
           {prompt || t('typing')}
@@ -794,15 +992,16 @@ function MobileShell({
   bPlayer,
   aReadyFlag,
   bReadyFlag,
-}: ShellProps & { mHedefSize: number }) {
+}: ShellProps) {
+  // Mobile layout now reads top→bottom: header (brand + LIVE/lang), reference
+  // strip, headline, then player grid. Reference no longer occupies the right
+  // edge of the header row, where it both fought the lang chip for space and
+  // pushed the brand pixel into a tight column. Below ~360px the player grid
+  // stacks vertically (.ac-grid responsive class) so each card keeps a usable
+  // width instead of squishing into a desktop-shrunk thumbnail.
   return (
     <>
-      <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-          <MinimalTopBar t={t} compact />
-        </div>
-        <HedefCorner src={referenceUrl} alt={t('referenceImage')} label={t('audienceHedefShort')} />
-      </div>
+      <MinimalTopBar t={t} compact />
       <div style={{ marginTop: 14, width: '100%' }}>
         <Headline
           title={headline}
@@ -813,14 +1012,20 @@ function MobileShell({
       </div>
       <div
         style={{
-          marginTop: 18,
+          marginTop: 14,
           width: '100%',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 10,
-          alignItems: 'start',
+          display: 'flex',
+          justifyContent: 'center',
         }}
       >
+        <ReferenceStrip
+          src={referenceUrl}
+          alt={t('referenceImage')}
+          label={t('audienceHedefShort')}
+          loadingLabel={t('loadingText')}
+        />
+      </div>
+      <div className="ac-grid" style={{ marginTop: 16, width: '100%' }}>
         <PlayerCard
           slot="A"
           nick={aPlayer?.nickname ?? 'Player A'}
@@ -859,59 +1064,6 @@ function MobileShell({
   );
 }
 
-function HedefCorner({ src, alt, label }: { src: string | null; alt: string; label: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
-      <span
-        style={{
-          fontFamily: FONT.pixel,
-          fontSize: 8,
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
-          color: C.accent,
-        }}
-      >
-        {label}
-      </span>
-      <div
-        style={{
-          position: 'relative',
-          width: 72,
-          height: 72,
-          background: '#0f0e14',
-          border: `1.5px solid rgba(124,77,255,0.55)`,
-          overflow: 'hidden',
-        }}
-      >
-        {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-        ) : (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div
-              className="ac-spinner"
-              style={{
-                width: 22,
-                height: 22,
-                border: `2px solid ${C.line}`,
-                borderTopColor: C.accent,
-                borderRightColor: C.accent,
-                borderRadius: '50%',
-                animation: 'pcSpin 1.6s linear infinite',
-              }}
-            />
-          </div>
-        )}
-        {(['tl', 'tr', 'bl', 'br'] as const).map((pos) => {
-          const base: CSSProperties = { position: 'absolute', width: 8, height: 8 };
-          const s: CSSProperties = { ...base };
-          if (pos === 'tl') Object.assign(s, { top: 3, left: 3, borderTop: `1.5px solid ${C.accent}`, borderLeft: `1.5px solid ${C.accent}` });
-          if (pos === 'tr') Object.assign(s, { top: 3, right: 3, borderTop: `1.5px solid ${C.accent}`, borderRight: `1.5px solid ${C.accent}` });
-          if (pos === 'bl') Object.assign(s, { bottom: 3, left: 3, borderBottom: `1.5px solid ${C.accent}`, borderLeft: `1.5px solid ${C.accent}` });
-          if (pos === 'br') Object.assign(s, { bottom: 3, right: 3, borderBottom: `1.5px solid ${C.accent}`, borderRight: `1.5px solid ${C.accent}` });
-          return <div key={pos} style={s} />;
-        })}
-      </div>
-    </div>
-  );
-}
+// `HedefCorner` (sağ üst köşe referans thumbu) Epic 6 mobil header'ında fixed
+// LangToggle ile çakışıyordu — yerine ReferenceStrip eklendi, bu component
+// kullanım dışı kaldığı için kaldırıldı.

@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Prompt Clash — v2 landing</title>
+<meta name="description" content="1v1 AI görsel kapışması. Referansı gör, promptunu yaz, hedefe en yakın olan kazanır." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  /* === Tokens === */
+  :root{
+    --pc-ink:#22202b; --pc-ink2:#2d2b38; --pc-ink3:#383545;
+    --pc-line:#4a4757; --pc-line2:#615d72;
+    --pc-text:#f7f4ec; --pc-text2:#c0bdca;
+    --pc-text3:#a8a4b3;
+    --pc-text4:#605d6c;
+    --pc-bone:#ffffff; --pc-live:#ff5c5c;
+    --pc-accent:#7c4dff; --pc-accent2:#5a35cc; --pc-b:#aed24a; --pc-b2:#88aa2e;
+    --r-sm:10px; --r-md:12px; --r-lg:14px; --r-xl:18px;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--pc-ink)}
+  body{color:var(--pc-text);font-family:var(--body);min-height:100dvh;
+    position:relative;overflow-x:hidden;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* === Atmosphere === */
+  .bg-glow{position:fixed;z-index:0;pointer-events:none;width:900px;height:900px;
+    left:-260px;top:-280px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,rgba(124,77,255,.02) 42%,transparent 64%);
+    filter:blur(20px)}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(124,77,255,.022) 1px,transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 70% 50% at 50% 20%,#000 14%,transparent 70%)}
+
+  .shell{position:relative;z-index:1;max-width:1180px;margin:0 auto;
+    padding:12px 18px 40px}
+
+  /* === Topbar === */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:4px 0 14px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{display:block;width:30px;height:30px}
+  .wm{font-family:var(--pixel);font-size:13px;letter-spacing:.06em;color:var(--pc-bone)}
+  .wm .a{color:var(--pc-accent)}
+  .lang{display:inline-flex;gap:0;padding:3px 4px;
+    background:color-mix(in srgb,var(--pc-ink) 75%,transparent);
+    border:1px solid var(--pc-line);border-radius:999px;
+    backdrop-filter:blur(8px);font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;user-select:none}
+  .lang button{appearance:none;border:none;background:transparent;
+    padding:4px 10px;color:var(--pc-text3);font:inherit;cursor:pointer;min-height:32px}
+  .lang button.on{color:var(--pc-accent);font-weight:600}
+  .lang .sep{width:1px;background:var(--pc-line);opacity:.6;margin:3px 0}
+
+  /* === Hero — mobile: flex column; desktop: 2-col grid === */
+  /* Mobil DOM order = h-copy, mascot, h-flow.
+     Mobilde mascot CSS order ile h-copy ÜSTÜNE alınır
+     → ilk fold: mascot + h1 + CTA birlikte görünür. */
+  .hero{display:flex;flex-direction:column;gap:18px;padding:4px 0 8px}
+  .hero > .mascot-stage{order:-1}
+  .hero > .h-copy{order:0}
+  .hero > .h-flow{order:1}
+
+  /* --- Hero copy block: tag → h1 → slogan → pitch → CTA --- */
+  .h-copy{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+  .tag{display:inline-flex;align-items:center;align-self:flex-start;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(124,77,255,.10);border:1px solid rgba(124,77,255,.34);
+    font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-text)}
+
+  .h1{font-family:var(--pixel);font-size:clamp(38px,10vw,76px);line-height:.96;
+    letter-spacing:.02em;color:var(--pc-bone);font-weight:400;margin:0}
+  .h1 .a{color:var(--pc-accent)}
+
+  .slogan{font-family:var(--body);font-size:clamp(18px,4.6vw,24px);font-weight:700;
+    color:var(--pc-bone);line-height:1.25;letter-spacing:-.005em;margin:-2px 0 0;
+    max-width:520px}
+  .slogan .ac{color:var(--pc-b)}
+
+  .pitch{font-family:var(--body);font-size:15px;line-height:1.5;
+    color:var(--pc-text2);margin:0;max-width:540px}
+  .pitch b{color:var(--pc-bone);font-weight:600}
+
+  /* --- CTA — panel'siz, sade hiyerarşi --- */
+  .cta-block{display:flex;flex-direction:column;gap:16px;margin-top:6px;max-width:480px}
+
+  .cta-primary{position:relative;display:flex;align-items:center;gap:12px;
+    padding:16px 18px;border-radius:var(--r-md);
+    background:var(--pc-accent);color:#fff;border:none;
+    text-decoration:none;cursor:pointer;width:100%;min-height:64px;
+    box-shadow:0 12px 32px rgba(124,77,255,.32),inset 0 -2px 0 rgba(0,0,0,.18);
+    transition:transform .1s,box-shadow .16s}
+  .cta-primary:hover{box-shadow:0 16px 40px rgba(124,77,255,.44),inset 0 -2px 0 rgba(0,0,0,.18)}
+  .cta-primary:active{transform:translateY(1px)}
+  .cta-primary .title{font-family:var(--body);font-size:17px;font-weight:800;
+    line-height:1.1;display:block;text-align:left}
+  .cta-primary .sub{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.10em;
+    text-transform:uppercase;opacity:.82;line-height:1.2;display:block;margin-top:3px;text-align:left}
+  .cta-primary .arrow{margin-left:auto;font-family:var(--pixel);font-size:22px;line-height:1}
+
+  /* kod girişi — secondary, label'lı, tek field + embed arrow */
+  .code-form{display:flex;flex-direction:column;gap:8px}
+  .code-label{font-family:var(--mono);font-size:10.5px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    padding-left:2px;display:flex;align-items:center;gap:10px}
+  .code-label::before{content:'';width:16px;height:1px;background:var(--pc-line2)}
+  .code-field{position:relative;display:flex;align-items:stretch;
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);
+    border-radius:var(--r-md);overflow:hidden;
+    transition:border-color .16s,box-shadow .16s}
+  .code-field:focus-within{border-color:var(--pc-accent);
+    box-shadow:0 0 0 3px rgba(124,77,255,.18)}
+  .code-field input{flex:1;min-width:0;height:56px;
+    background:transparent;border:none;padding:0 18px;
+    font-family:var(--pixel);font-size:16px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--pc-bone);outline:none}
+  .code-field input::placeholder{color:var(--pc-text4);
+    letter-spacing:.18em;font-weight:400}
+  .code-field button{flex:none;width:60px;height:56px;
+    background:transparent;border:none;border-left:1px solid var(--pc-line);
+    color:var(--pc-text3);font-family:var(--pixel);font-size:22px;line-height:1;
+    cursor:pointer;transition:background .14s,color .14s,border-color .14s;
+    display:inline-flex;align-items:center;justify-content:center}
+  .code-field:focus-within button{color:var(--pc-bone)}
+  .code-field button:hover{background:var(--pc-accent);color:#fff;border-left-color:var(--pc-accent)}
+  .code-field button:active{transform:translateY(1px)}
+
+  /* --- Mascot stage --- */
+  .mascot-stage{position:relative;width:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:4px 8px 0;min-height:0}
+  .mascot-halo{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);
+    width:220px;height:220px;pointer-events:none;z-index:0;
+    background:radial-gradient(circle at center,
+      rgba(124,77,255,.26) 0%,rgba(124,77,255,.08) 38%,transparent 64%);
+    filter:blur(6px);
+    animation:haloPulse 6s ease-in-out infinite}
+  @keyframes haloPulse{
+    0%,100%{opacity:.72;transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+  }
+  .mascot-svg{position:relative;z-index:1;width:140px;height:140px;
+    image-rendering:pixelated;
+    filter:drop-shadow(0 14px 24px rgba(0,0,0,.45)) drop-shadow(0 0 16px rgba(124,77,255,.22));
+    animation:mascotFloat 5.2s ease-in-out infinite}
+  @keyframes mascotFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .mascot-halo,.mascot-svg{animation:none}
+  }
+  .mascot-meta{position:relative;z-index:1;display:flex;flex-direction:column;
+    align-items:center;gap:5px;margin-top:8px;text-align:center}
+  .mascot-tag{display:inline-flex;align-items:center;gap:9px;
+    padding:6px 14px;border-radius:999px;
+    background:rgba(174,210,74,.10);border:1px solid rgba(174,210,74,.38);
+    font-family:var(--pixel);font-size:13px;letter-spacing:.10em;color:var(--pc-b);
+    text-shadow:0 0 14px rgba(174,210,74,.32)}
+  .mascot-tag .d{width:7px;height:7px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 8px rgba(174,210,74,.7)}
+  .mascot-sub{font-family:var(--mono);font-size:11px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--pc-text3)}
+
+  /* --- Flow strip --- */
+  .h-flow{display:flex;flex-direction:column;gap:10px}
+  .flow-lab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--pc-text3);display:flex;align-items:center;gap:8px}
+  .flow-lab::after{content:'';flex:1;height:1px;background:var(--pc-ink3)}
+  .flow-row{display:flex;flex-direction:column;gap:8px}
+  .flow-step{display:flex;align-items:center;gap:12px;padding:12px 14px;
+    background:var(--pc-ink2);border:1px solid var(--pc-line);border-radius:var(--r-md);
+    min-height:52px}
+  .flow-step .n{font-family:var(--pixel);font-size:13px;letter-spacing:.04em;
+    color:var(--pc-accent);flex:none;width:24px}
+  .flow-step:nth-child(2) .n{color:var(--pc-b)}
+  .flow-step:nth-child(3) .n{color:var(--pc-bone)}
+  .flow-step .txt{font-family:var(--body);font-size:14px;color:var(--pc-text);
+    font-weight:600;line-height:1.3}
+
+  /* === Arena demo section — sadeleştirilmiş örnek maç === */
+  .arena-section{margin-top:32px;padding-top:24px;
+    border-top:1px solid var(--pc-ink3);
+    display:flex;flex-direction:column;gap:14px}
+  .arena-section-head{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap}
+  .arena-title{font-family:var(--mono);font-size:11px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    display:flex;align-items:center;gap:10px}
+  .arena-title::before{content:'';width:8px;height:8px;background:var(--pc-accent)}
+  .arena-live{display:inline-flex;align-items:center;gap:7px;
+    padding:3px 9px;border-radius:999px;
+    background:rgba(255,92,92,.10);border:1px solid rgba(255,92,92,.32);
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-live)}
+  .arena-live .d{width:6px;height:6px;border-radius:50%;background:var(--pc-live);
+    box-shadow:0 0 0 0 rgba(255,92,92,.5);animation:pcDot 1.8s ease-out infinite}
+  @keyframes pcDot{
+    0%{box-shadow:0 0 0 0 rgba(255,92,92,.5)}
+    70%{box-shadow:0 0 0 8px rgba(255,92,92,0)}
+    100%{box-shadow:0 0 0 0 rgba(255,92,92,0)}
+  }
+  @media(prefers-reduced-motion:reduce){.arena-live .d{animation:none}}
+
+  .arena{position:relative;background:var(--pc-ink2);
+    border:1px solid var(--pc-line);border-radius:var(--r-xl);
+    padding:14px;display:flex;flex-direction:column;gap:12px}
+
+  /* TARGET */
+  .target{position:relative;border:1px solid var(--pc-line2);border-radius:var(--r-md);
+    overflow:hidden;aspect-ratio:16/9;background:#0e0c14}
+  .target-lab{position:absolute;top:8px;left:8px;z-index:2;
+    padding:3px 8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.10);
+    border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--pc-text)}
+  .target-lab::before{content:'';display:inline-block;width:5px;height:5px;
+    background:var(--pc-b);margin-right:6px;vertical-align:middle}
+  .target-art{position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 22% 36%,rgba(255,140,180,.50) 0,transparent 32%),
+      radial-gradient(circle at 70% 28%,rgba(124,77,255,.46) 0,transparent 34%),
+      radial-gradient(circle at 50% 70%,rgba(174,210,74,.38) 0,transparent 40%),
+      linear-gradient(180deg,#1a1626 0%,#241c33 50%,#161020 100%);
+    image-rendering:pixelated}
+
+  /* Players — mobil: 1 col stack; ≥640px: 2 col */
+  .players{display:grid;grid-template-columns:1fr;gap:10px}
+  .pl{position:relative;display:flex;flex-direction:column;gap:10px;
+    padding:12px;background:var(--pc-ink3);border:1px solid var(--pc-line);
+    border-radius:var(--r-md);min-width:0}
+  .pl.a{border-color:rgba(124,77,255,.40)}
+  .pl.b{border-color:rgba(174,210,74,.32)}
+  .pl-head{display:flex;align-items:center;gap:9px}
+  .pl-badge{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:13px;flex:none;font-weight:700;border-radius:3px}
+  .pl.a .pl-badge{background:var(--pc-accent);color:#fff}
+  .pl.b .pl-badge{background:var(--pc-b);color:#0e0e10}
+  .pl-name{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.10em;
+    text-transform:uppercase;color:var(--pc-text);min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .pl-val{font-family:var(--pixel);font-size:14px;color:var(--pc-bone);
+    flex:none;letter-spacing:.02em}
+  .pl.a .pl-val{color:var(--pc-accent)}
+  .pl.b .pl-val{color:var(--pc-b)}
+
+  /* tek satır prompt */
+  .pl-prompt{font-family:var(--body);font-size:13px;color:var(--pc-text2);
+    line-height:1.4;font-style:italic;
+    border-left:2px solid var(--pc-line2);padding:0 0 0 10px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pl.a .pl-prompt{border-left-color:var(--pc-accent)}
+  .pl.b .pl-prompt{border-left-color:var(--pc-b)}
+
+  .pl-bottom{display:flex;align-items:center;gap:10px}
+  .pl-render{position:relative;width:64px;height:64px;flex:none;
+    border-radius:8px;overflow:hidden;border:1px solid var(--pc-line2);background:#0e0c14}
+  .pl.a .pl-render{background:
+    radial-gradient(circle at 28% 40%,rgba(255,160,200,.50) 0,transparent 30%),
+    radial-gradient(circle at 68% 32%,rgba(124,77,255,.60) 0,transparent 36%),
+    radial-gradient(circle at 50% 72%,rgba(174,210,74,.28) 0,transparent 38%),
+    linear-gradient(180deg,#1c1428 0%,#2b1f44 50%,#181028 100%)}
+  .pl.b .pl-render{background:
+    radial-gradient(circle at 32% 32%,rgba(174,210,74,.46) 0,transparent 32%),
+    radial-gradient(circle at 68% 50%,rgba(124,77,255,.36) 0,transparent 34%),
+    radial-gradient(circle at 45% 78%,rgba(255,180,120,.28) 0,transparent 34%),
+    linear-gradient(180deg,#161e14 0%,#1f2a18 50%,#0e1410 100%)}
+  .pl-crown{position:absolute;top:3px;right:4px;z-index:2;
+    font-family:var(--pixel);font-size:12px;color:var(--pc-b);
+    text-shadow:0 0 6px rgba(174,210,74,.6),0 1px 0 #000}
+  .pl-bar{flex:1;height:6px;background:var(--pc-ink);border:1px solid var(--pc-line);
+    border-radius:3px;overflow:hidden}
+  .pl-bar i{display:block;height:100%}
+  .pl.a .pl-bar i{background:var(--pc-accent);width:92%}
+  .pl.b .pl-bar i{background:var(--pc-b);width:87%}
+
+  .arena-foot{display:flex;align-items:center;justify-content:flex-end;
+    padding:6px 4px 0;border-top:1px dashed var(--pc-line);margin-top:2px}
+  .arena-foot .win{font-family:var(--pixel);font-size:12px;letter-spacing:.06em;
+    color:var(--pc-b)}
+
+  /* === Event note + footer === */
+  .event-note{margin:24px 0 0;padding:14px 16px;
+    background:var(--pc-ink2);
+    border:1px solid var(--pc-line);border-radius:var(--r-md);
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .event-note .qr-ic{width:28px;height:28px;flex:none;
+    background:
+      conic-gradient(from 0deg,var(--pc-bone) 0 25%,transparent 0 50%,var(--pc-bone) 0 75%,transparent 0);
+    border:2px solid var(--pc-bone);border-radius:3px;opacity:.55}
+  .event-note .txt{font-family:var(--body);font-size:13px;color:var(--pc-text2);
+    line-height:1.5;flex:1;min-width:160px}
+  .event-note .txt b{color:var(--pc-bone);font-weight:600}
+  .event-note .lab{font-family:var(--pixel);font-size:10px;letter-spacing:.10em;
+    color:var(--pc-b);flex:none}
+
+  .foot{margin-top:24px;padding:14px 0;border-top:1px solid var(--pc-ink3);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--pc-text4)}
+  .foot .ax{color:var(--pc-b);letter-spacing:.06em}
+
+  /* === Mobil özel (max 639) — atmosfer yumuşat === */
+  @media(max-width:639px){
+    .bg-glow{width:600px;height:600px;left:-180px;top:-220px;filter:blur(28px)}
+    .bg-grid{background-size:44px 44px;
+      mask-image:radial-gradient(ellipse 90% 40% at 50% 12%,#000 10%,transparent 72%)}
+  }
+
+  /* === Tablet (≥640px) === */
+  @media(min-width:640px){
+    .shell{padding:18px 24px 56px}
+    .topbar{padding:6px 0 18px}
+    .brand svg{width:34px;height:34px}
+    .wm{font-size:14px}
+    .hero{gap:32px}
+    .h-copy{gap:18px}
+    .flow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .flow-step{flex-direction:column;align-items:flex-start;gap:6px;
+      padding:14px;min-height:72px}
+    .flow-step .n{width:auto}
+    .mascot-stage{min-height:340px;padding:24px 8px 12px}
+    .mascot-svg{width:260px;height:260px}
+    .mascot-halo{width:380px;height:380px}
+    .players{grid-template-columns:1fr 1fr;gap:12px}
+    .arena{padding:16px}
+    .event-note{padding:16px 18px}
+  }
+
+  /* === Desktop (≥960px) — hero 2-col grid, mascot sağda dikey ortalanır === */
+  @media(min-width:960px){
+    .shell{padding:22px 32px 64px}
+    .topbar{padding:8px 0 24px}
+    .brand svg{width:36px;height:36px}
+    .wm{font-size:15px}
+    .hero{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      grid-template-areas:
+        "copy mascot"
+        "flow mascot";
+      column-gap:56px;row-gap:28px;
+      align-items:start;
+      padding:8px 0 32px}
+    .h-copy{grid-area:copy}
+    .h-flow{grid-area:flow}
+    .mascot-stage{grid-area:mascot;align-self:center;min-height:440px}
+    .h1{font-size:clamp(60px,7vw,86px)}
+    .cta-primary{padding:18px 20px}
+    .cta-primary .title{font-size:18px}
+    .mascot-svg{width:340px;height:340px}
+    .mascot-halo{width:500px;height:500px}
+    .mascot-tag{font-size:14px;padding:7px 16px}
+    .arena-section{margin-top:48px;padding-top:32px}
+    .arena{padding:18px}
+  }
+
+  @media(min-width:1180px){
+    .hero{column-gap:72px}
+    .mascot-svg{width:380px;height:380px}
+    .mascot-halo{width:560px;height:560px}
+  }
+
+  /* Focus */
+  button:focus-visible,a:focus-visible,input:focus-visible{
+    outline:2px solid var(--pc-accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- Axolotl pixel mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ax" viewBox="0 0 512 512" shape-rendering="crispEdges">
+    <g fill="#aed24a">
+      <rect x="64" y="64" width="32" height="32"/><rect x="96" y="32" width="32" height="80"/><rect x="128" y="64" width="32" height="32"/>
+      <rect x="208" y="16" width="32" height="96"/><rect x="240" y="0" width="32" height="112"/><rect x="272" y="16" width="32" height="96"/>
+      <rect x="352" y="64" width="32" height="32"/><rect x="384" y="32" width="32" height="80"/><rect x="416" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#7c4dff">
+      <rect x="96" y="112" width="320" height="32"/><rect x="64" y="144" width="384" height="32"/>
+      <rect x="32" y="176" width="448" height="32"/><rect x="32" y="208" width="448" height="32"/>
+      <rect x="32" y="240" width="448" height="32"/><rect x="32" y="272" width="448" height="32"/>
+      <rect x="32" y="304" width="448" height="32"/><rect x="32" y="336" width="448" height="32"/>
+      <rect x="64" y="368" width="384" height="32"/>
+      <rect x="96" y="400" width="64" height="32"/><rect x="208" y="400" width="96" height="32"/><rect x="352" y="400" width="64" height="32"/>
+      <rect x="96" y="432" width="64" height="48"/><rect x="352" y="432" width="64" height="48"/>
+    </g>
+    <g fill="#f5f5f8">
+      <rect x="208" y="240" width="96" height="32"/><rect x="176" y="272" width="160" height="32"/>
+      <rect x="144" y="304" width="224" height="32"/><rect x="144" y="336" width="224" height="32"/>
+      <rect x="176" y="368" width="160" height="32"/>
+    </g>
+    <g fill="#ffffff"><rect x="96" y="208" width="64" height="64"/><rect x="352" y="208" width="64" height="64"/></g>
+    <g fill="#14121a"><rect x="128" y="224" width="32" height="48"/><rect x="352" y="224" width="32" height="48"/></g>
+    <g fill="#ffffff"><rect x="128" y="224" width="16" height="16"/><rect x="352" y="224" width="16" height="16"/></g>
+    <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+  </symbol>
+</svg>
+
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+      <span class="wm">PROMPT <span class="a">CLASH</span></span>
+    </div>
+    <div class="lang" role="group" aria-label="Dil">
+      <button class="on" type="button" aria-pressed="true">TR</button>
+      <span class="sep"></span>
+      <button type="button" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <!--
+    HERO
+    Mobil DOM order = görsel order:
+      1) h-copy   (tag, h1, slogan, pitch, CTA)   — CTA fold içinde
+      2) mascot   (büyük AI HAKEM)                — üstü fold sonunda ipucu, ilk scroll'da tam
+      3) h-flow   (01 / 02 / 03)
+    Desktop ≥960px: 2-col grid → copy + flow soldaki sütun, mascot sağ sütun
+  -->
+  <section class="hero">
+
+    <div class="h-copy">
+      <h1 class="h1">PROMPT<br/><span class="a">CLASH.</span></h1>
+      <p class="slogan">Yarış, <span class="ac">AI çizsin.</span></p>
+
+      <div class="cta-block">
+        <a class="cta-primary" href="/create-room">
+          <span>
+            <span class="title">Oda Aç</span>
+            <span class="sub">Sahibi sen ol, link paylaş</span>
+          </span>
+          <span class="arrow">→</span>
+        </a>
+
+        <form class="code-form" onsubmit="event.preventDefault()">
+          <label class="code-label" for="code">Kodla katıl</label>
+          <div class="code-field">
+            <input id="code" type="text" maxlength="6"
+                   placeholder="ABC123" aria-label="Oda kodu" autocomplete="off"
+                   inputmode="text" />
+            <button type="submit" aria-label="Odaya katıl">→</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <aside class="mascot-stage" aria-label="AI Hakem">
+      <div class="mascot-halo" aria-hidden="true"></div>
+      <svg class="mascot-svg" viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+      <div class="mascot-meta">
+        <span class="mascot-tag"><span class="d"></span>AI HAKEM</span>
+        <span class="mascot-sub">Hedefe en yakın olanı seçer</span>
+      </div>
+    </aside>
+
+    <div class="h-flow">
+      <div class="flow-lab">Nasıl oynanır</div>
+      <div class="flow-row">
+        <div class="flow-step"><span class="n">01</span><span class="txt">Referansı gör</span></div>
+        <div class="flow-step"><span class="n">02</span><span class="txt">Promptunu yaz</span></div>
+        <div class="flow-step"><span class="n">03</span><span class="txt">Sonucu karşılaştır</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Prompt Clash · 2026</span>
+    <span class="ax">▣ AXOLOTL BUILD</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

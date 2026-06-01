@@ -56,13 +56,17 @@ export function I18nProvider({
     [forceLang]
   );
 
+  // `t` yalnızca `lang` değişince yeni referans alır — child memo guard'larında
+  // tutarlı stability sağlar (önceki sürümde inline factory'di, fonksiyonel
+  // olarak aynı sonuç ama identity her render'da yeniden allocate oluyordu).
+  const t = useCallback(
+    (k: DictKey) => dictionaries[lang][k] ?? String(k),
+    [lang]
+  );
+
   const value = useMemo<Ctx>(
-    () => ({
-      lang,
-      setLang,
-      t: (k: DictKey) => dictionaries[lang][k] ?? String(k)
-    }),
-    [lang, setLang]
+    () => ({ lang, setLang, t }),
+    [lang, setLang, t]
   );
 
   return <I18nCtx.Provider value={value}>{children}</I18nCtx.Provider>;

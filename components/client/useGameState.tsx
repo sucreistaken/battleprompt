@@ -30,10 +30,14 @@ export const GameCtx = createContext<Ctx | null>(null);
 
 export function GameStateProvider({
   children,
-  role
+  role,
+  roomId
 }: {
   children: React.ReactNode;
   role: Role;
+  /** Story 2.1/2.2: opt-in room scoping. Omit on legacy single-room paths
+   *  (the socket handshake middleware defaults to the synthetic 'default' room). */
+  roomId?: string;
 }) {
   const deviceId = useDeviceId();
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -45,10 +49,12 @@ export function GameStateProvider({
 
   useEffect(() => {
     if (!deviceId) return;
+    const auth: Record<string, unknown> = { role, deviceId };
+    if (roomId) auth.roomId = roomId;
     const s = io({
       path: '/api/socket',
       transports: ['websocket', 'polling'],
-      auth: { role, deviceId }
+      auth
     });
     sockRef.current = s;
     setSocket(s);
@@ -81,7 +87,7 @@ export function GameStateProvider({
       s.disconnect();
       sockRef.current = null;
     };
-  }, [deviceId, role]);
+  }, [deviceId, role, roomId]);
 
   const value = useMemo<Ctx>(
     () => ({

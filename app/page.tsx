@@ -1,24 +1,25 @@
-'use client';
+import type { Metadata } from 'next';
+import { I18nProvider } from '@/components/client/i18nContext';
+import { LandingClient } from './LandingClient';
 
 /**
- * Root (localhost:3000) — the JOIN surface. Anyone (player or audience), on any
- * device, opens this, types a nickname and joins. The first two devices to join
- * become players A/B; everyone else votes. The /stage QR encodes this URL, so
- * scanning it just opens this page — scanning is a shortcut, never a requirement.
- *
- * The big-screen broadcast lives at /stage; the operator panel at /admin.
+ * Root (`/`) — Sally Sprint v3 landing. Marketing/entry surface with two
+ * intents: "Oda oluştur" (→ /create-room) and "kodla katıl" (→ /join/<code>).
+ * Audience join still happens via stage QR → /watch/<code>. The legacy
+ * single-room MobileShell-on-root flow is retired; in-room player/audience
+ * UI lives under /rooms/[roomId]/lobby and /rooms/[roomId]/game.
  */
 
-import { GameStateProvider } from '@/components/client/useGameState';
-import { I18nProvider } from '@/components/client/i18nContext';
-import { MobileShell } from '@/components/client/MobileShell';
+export const metadata: Metadata = {
+  title: 'Prompt Clash · 1v1 AI görsel kapışması',
+  description:
+    'Etkinliklerde sahneye yansıt, herkes QR ile katılsın. İki kişi prompt yazar, AI iki sonuç üretir, hedefe yakın olan kazanır.'
+};
 
 export default function HomePage() {
   return (
     <I18nProvider>
-      <GameStateProvider role="audience">
-        <MobileShell />
-      </GameStateProvider>
+      <LandingClient />
     </I18nProvider>
   );
 }

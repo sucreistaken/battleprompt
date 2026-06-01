@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lobi · Prompt Clash</title>
+<meta name="description" content="Rakibin geldiğinde maç otomatik başlar. Davet kodunu paylaş." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  /* === Tokens (landing-v2 ile aynı marka) === */
+  :root{
+    --pc-ink:#22202b; --pc-ink2:#2d2b38; --pc-ink3:#383545;
+    --pc-line:#4a4757; --pc-line2:#615d72;
+    --pc-text:#f7f4ec; --pc-text2:#c0bdca; --pc-text3:#a8a4b3; --pc-text4:#605d6c;
+    --pc-bone:#ffffff; --pc-live:#ff5c5c;
+    --pc-accent:#7c4dff; --pc-accent2:#5a35cc; --pc-b:#aed24a; --pc-b2:#88aa2e;
+    --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--pc-ink)}
+  body{color:var(--pc-text);font-family:var(--body);min-height:100dvh;
+    position:relative;overflow-x:hidden;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* === Atmosfer: glow + çok düşük opaklıklı pixel grid === */
+  .bg-glow{position:fixed;z-index:0;pointer-events:none;width:700px;height:700px;
+    left:-180px;top:-200px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,rgba(124,77,255,.02) 42%,transparent 64%);
+    filter:blur(22px)}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(124,77,255,.022) 1px,transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse 90% 50% at 50% 18%,#000 14%,transparent 72%)}
+
+  .shell{position:relative;z-index:1;max-width:560px;margin:0 auto;
+    padding:14px 18px 32px;
+    padding-top:max(14px,env(safe-area-inset-top,14px))}
+  .stage{display:flex;flex-direction:column}
+
+  /* === Topbar — kompakt, 360px'te bile rahat === */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:2px 0 12px;border-bottom:1px solid var(--pc-ink3)}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand svg{display:block;width:30px;height:30px;flex:none;image-rendering:pixelated}
+  .wm{font-family:var(--pixel);font-size:13px;letter-spacing:.06em;color:var(--pc-bone);
+    white-space:nowrap}
+  .wm .a{color:var(--pc-accent)}
+  .topright{display:flex;align-items:center;gap:8px;flex:none}
+  .back{display:inline-flex;align-items:center;gap:5px;
+    font-family:var(--mono);font-size:10.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--pc-text3);
+    text-decoration:none;padding:5px 8px;border-radius:6px;
+    transition:color .14s,background .14s}
+  .back:hover{color:var(--pc-text);background:var(--pc-ink2)}
+  .lang{display:inline-flex;gap:0;padding:2px 3px;
+    background:color-mix(in srgb,var(--pc-ink) 75%,transparent);
+    border:1px solid var(--pc-line);border-radius:999px;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;user-select:none}
+  .lang button{appearance:none;border:none;background:transparent;
+    padding:3px 8px;color:var(--pc-text3);font:inherit;cursor:pointer;min-height:26px}
+  .lang button.on{color:var(--pc-accent);font-weight:600}
+  .lang .sep{width:1px;background:var(--pc-line);opacity:.6;margin:3px 0}
+
+  /* === Head — sade, dengeli === */
+  .head{display:flex;flex-direction:column;gap:9px;padding:18px 0 12px}
+  .tag{display:inline-flex;align-items:center;align-self:flex-start;gap:8px;
+    padding:4px 10px;border-radius:999px;
+    background:rgba(174,210,74,.08);border:1px solid rgba(174,210,74,.30);
+    font-family:var(--pixel);font-size:10.5px;letter-spacing:.10em;color:var(--pc-b)}
+  .tag .d{width:6px;height:6px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 8px rgba(174,210,74,.5)}
+  .head h1{font-family:var(--body);font-size:clamp(26px,7vw,30px);font-weight:700;
+    color:var(--pc-bone);letter-spacing:-.005em;line-height:1.15;margin:0}
+  .head .sub{font-family:var(--body);font-size:14px;color:var(--pc-text2);
+    line-height:1.5;margin:0;max-width:46ch}
+
+  /* === AI HAKEM — maskot bekleme alanı === */
+  .mascot-host{display:flex;flex-direction:column;align-items:center;
+    gap:9px;padding:12px 0 18px;position:relative}
+  .mascot-frame{position:relative;width:120px;height:120px;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .mascot-frame .halo{position:absolute;inset:-18px;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at center,
+      rgba(124,77,255,.24) 0%,rgba(124,77,255,.06) 38%,transparent 64%);
+    filter:blur(8px)}
+  .mascot{position:relative;z-index:1;width:96px;height:96px;
+    image-rendering:pixelated;
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.45)) drop-shadow(0 0 12px rgba(124,77,255,.20));
+    animation:mascotFloat 4.8s ease-in-out infinite}
+  @keyframes mascotFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+  }
+  @media(prefers-reduced-motion:reduce){.mascot{animation:none}}
+  /* 3 küçük pixel parçacık — statik, sadece dekor */
+  .particles{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .particles .p{position:absolute;display:block;image-rendering:pixelated}
+  .particles .p1{top:8px;right:6px;width:6px;height:6px;background:var(--pc-b);
+    box-shadow:0 0 8px rgba(174,210,74,.5)}
+  .particles .p2{bottom:14px;left:2px;width:5px;height:5px;background:var(--pc-accent);
+    box-shadow:0 0 8px rgba(124,77,255,.55)}
+  .particles .p3{top:48%;right:-6px;width:4px;height:4px;background:var(--pc-bone);
+    opacity:.7}
+  .mascot-label{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;
+    padding:5px 12px;border-radius:999px;
+    background:rgba(174,210,74,.10);border:1px solid rgba(174,210,74,.38);
+    font-family:var(--pixel);font-size:11px;letter-spacing:.10em;color:var(--pc-b);
+    text-shadow:0 0 12px rgba(174,210,74,.30)}
+  .mascot-label .dt{width:6px;height:6px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 8px rgba(174,210,74,.6)}
+  .mascot-sub{font-family:var(--body);font-size:12.5px;color:var(--pc-text3);
+    line-height:1.4;text-align:center;max-width:30ch;margin:0;font-style:italic}
+
+  /* === Oyuncu slotları — Me VS Opp, pixel panel hissi === */
+  .slots{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+  .slot{display:flex;align-items:center;gap:10px;padding:11px 12px;
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);
+    border-radius:var(--r-md);min-width:0;position:relative}
+  .slot.me{border-color:var(--pc-accent);
+    box-shadow:inset 0 -2px 0 rgba(124,77,255,.28)}
+  .slot.opp{border-style:dashed;border-color:var(--pc-line2)}
+  /* Rakip katıldığında JS .joined ekleyince düz border + lime'a geçer */
+  .slot.opp.joined{border-style:solid;border-color:var(--pc-b);
+    box-shadow:inset 0 -2px 0 rgba(174,210,74,.28)}
+  .ava{width:38px;height:38px;flex:none;display:inline-flex;
+    align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:16px;letter-spacing:.04em;
+    border-radius:3px;image-rendering:pixelated}
+  .ava.me{background:var(--pc-accent);color:#fff;
+    box-shadow:inset 0 -3px 0 var(--pc-accent2),inset 0 1px 0 rgba(255,255,255,.18)}
+  .ava.opp{background:var(--pc-ink3);color:var(--pc-text3);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.04);
+    border:1px solid var(--pc-line)}
+  .slot .meta{display:flex;flex-direction:column;gap:2px;min-width:0;position:relative;z-index:1}
+  .slot .lab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-text3)}
+  .slot.me .lab{color:var(--pc-accent)}
+  .slot.opp .lab{color:var(--pc-b)}
+  .slot .name{font-family:var(--body);font-size:14px;font-weight:700;color:var(--pc-bone);
+    line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slot .opp-wait{font-family:var(--mono);font-size:11.5px;color:var(--pc-text3);
+    line-height:1.2;letter-spacing:.06em}
+  .slot .opp-wait::after{content:'';display:inline-block;width:14px;text-align:left;
+    animation:wDots 1.6s steps(4,end) infinite}
+  @keyframes wDots{
+    0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}
+  }
+  @media(prefers-reduced-motion:reduce){.slot .opp-wait::after{animation:none;content:'…'}}
+  .vs{display:flex;align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:14px;letter-spacing:.04em;
+    color:var(--pc-text3);padding:0 4px;flex:none;min-width:28px;
+    text-shadow:0 0 10px rgba(124,77,255,.3)}
+
+  /* === Davet bloğu === */
+  .invite{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+
+  /* 1) Oda kodu — landing'deki kod-field pattern'i: label dışarıda */
+  .invite-code{display:flex;flex-direction:column;gap:8px}
+  .code-label{font-family:var(--mono);font-size:10.5px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    padding-left:2px;display:flex;align-items:center;gap:10px}
+  .code-label::before{content:'';width:16px;height:1px;background:var(--pc-line2)}
+  .code-field{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 16px;background:var(--pc-ink2);
+    border:1.5px solid var(--pc-line);border-radius:var(--r-md);
+    transition:border-color .16s}
+  .code-field:focus-within{border-color:var(--pc-accent)}
+  .code{font-family:var(--pixel);font-size:clamp(32px,9vw,40px);
+    color:var(--pc-bone);letter-spacing:.10em;line-height:1;min-width:0}
+
+  /* Kopya butonu + toast feedback */
+  .copy-slot{position:relative;flex:none}
+  .copy{width:44px;height:44px;padding:0;
+    background:transparent;border:1.5px solid var(--pc-line);
+    border-radius:var(--r-sm);color:var(--pc-text2);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:border-color .14s,color .14s,background .14s}
+  .copy:hover{border-color:var(--pc-accent);color:var(--pc-bone);
+    background:rgba(124,77,255,.10)}
+  .copy svg{display:block}
+  .copy-toast{position:absolute;right:0;bottom:calc(100% + 8px);
+    padding:5px 9px;border-radius:4px;
+    background:var(--pc-b);color:#0e0e10;
+    font-family:var(--pixel);font-size:10px;letter-spacing:.08em;
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transform:translateY(4px);
+    transition:opacity .16s ease-out,transform .16s ease-out;
+    box-shadow:0 6px 18px rgba(174,210,74,.30)}
+  .copy-toast::after{content:'';position:absolute;right:14px;top:100%;
+    border:5px solid transparent;border-top-color:var(--pc-b)}
+  .copy-slot.is-copied .copy-toast{opacity:1;transform:translateY(0)}
+  .copy-slot.is-copied .copy{border-color:var(--pc-b);color:var(--pc-b);
+    background:rgba(174,210,74,.10)}
+
+  /* 2) Primary share CTA */
+  .share-cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;min-height:60px;border-radius:var(--r-md);
+    background:var(--pc-accent);color:#fff;border:none;
+    font-family:var(--body);font-size:15.5px;font-weight:800;
+    letter-spacing:.005em;cursor:pointer;
+    box-shadow:0 10px 26px rgba(124,77,255,.30),inset 0 -2px 0 rgba(0,0,0,.18);
+    transition:transform .1s,box-shadow .16s}
+  .share-cta:hover{box-shadow:0 14px 34px rgba(124,77,255,.42),inset 0 -2px 0 rgba(0,0,0,.18)}
+  .share-cta:active{transform:translateY(1px)}
+  .share-cta svg{flex:none}
+
+  /* 3) QR — inline, panel yok */
+  .invite-qr{display:flex;align-items:center;gap:14px;
+    padding:6px 2px 0}
+  .qr{width:84px;height:84px;flex:none;background:#fff;
+    background-image:
+      repeating-linear-gradient(0deg,#0e0e10 0,#0e0e10 6px,#fff 6px,#fff 12px),
+      repeating-linear-gradient(90deg,rgba(0,0,0,.5) 0,rgba(0,0,0,.5) 6px,transparent 6px,transparent 12px);
+    background-blend-mode:multiply;image-rendering:pixelated;
+    display:block;border-radius:4px}
+  .qr-meta{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+  .qr-meta .qr-h{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--pc-text3);display:flex;align-items:center;gap:10px}
+  .qr-meta .qr-h::before{content:'';width:16px;height:1px;background:var(--pc-line2)}
+  .qr-meta .qr-host{font-family:var(--mono);font-size:12px;color:var(--pc-text2);
+    word-break:break-all;line-height:1.4}
+
+  /* === İzleyici linki — sessiz alt aksiyon === */
+  .aud-secondary{margin-top:18px;padding-top:14px;
+    border-top:1px dashed var(--pc-ink3);
+    display:flex;align-items:center;justify-content:center}
+  .aud-link{display:inline-flex;align-items:center;gap:8px;
+    padding:8px 12px;border-radius:6px;
+    background:transparent;border:none;color:var(--pc-text3);
+    font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;cursor:pointer;
+    transition:color .14s,background .14s}
+  .aud-link:hover{color:var(--pc-text);background:var(--pc-ink2)}
+  .aud-link svg{flex:none;opacity:.85}
+
+  /* === Mobil sıkı (≤380px) === */
+  @media(max-width:380px){
+    .shell{padding:12px 14px 28px}
+    .head h1{font-size:24px}
+    .head .sub{font-size:13.5px}
+    .mascot-frame{width:112px;height:112px}
+    .mascot{width:90px;height:90px}
+    .code{font-size:30px}
+    .qr{width:78px;height:78px}
+    .qr-meta .qr-host{font-size:11.5px}
+  }
+
+  /* === Tablet (≥640px) — biraz nefes === */
+  @media(min-width:640px){
+    .shell{padding:18px 24px 40px}
+    .head{padding:22px 0 14px;gap:10px}
+    .head h1{font-size:30px}
+    .mascot-host{padding:14px 0 22px;gap:10px}
+    .mascot-frame{width:128px;height:128px}
+    .mascot{width:108px;height:108px}
+    .code-field{padding:16px 18px}
+    .share-cta{font-size:16px;min-height:62px}
+    .qr{width:92px;height:92px}
+  }
+
+  /* === Desktop (≥900px) — 2-col grid: sol action, sağ maskot === */
+  @media(min-width:900px){
+    .shell{max-width:1080px;padding:20px 36px 44px}
+    .stage{
+      display:grid;
+      grid-template-columns:1fr .85fr;
+      grid-template-areas:
+        "head    mascot"
+        "slots   mascot"
+        "invite  mascot"
+        "audience mascot";
+      column-gap:56px;row-gap:0;
+      align-items:start}
+    .head{grid-area:head;padding:14px 0 12px}
+    .slots{grid-area:slots}
+    .invite{grid-area:invite;margin-top:18px}
+    .aud-secondary{grid-area:audience;justify-content:flex-start;
+      margin-top:14px;padding-top:12px}
+
+    /* Maskot artık sağ sütunun feature'ı — büyük, dikey ortalı */
+    .mascot-host{grid-area:mascot;align-self:center;
+      padding:0;min-height:480px;
+      gap:14px}
+    .mascot-frame{width:280px;height:280px}
+    .mascot{width:240px;height:240px}
+    .mascot-frame .halo{inset:-40px;filter:blur(14px)}
+    .particles .p1{top:18px;right:14px;width:8px;height:8px}
+    .particles .p2{bottom:28px;left:8px;width:7px;height:7px}
+    .particles .p3{top:48%;right:-8px;width:6px;height:6px}
+    .mascot-label{font-size:13px;padding:6px 14px}
+    .mascot-sub{font-size:13.5px;max-width:32ch}
+
+    /* Sol sütun içeriği biraz büyür */
+    .head h1{font-size:34px}
+    .head .sub{font-size:14.5px}
+    .code-field{padding:16px 20px}
+    .code{font-size:44px}
+    .share-cta{font-size:16.5px;min-height:64px}
+  }
+
+  /* === Geniş desktop (≥1180px) — biraz daha luxury spacing === */
+  @media(min-width:1180px){
+    .shell{padding:26px 40px 52px}
+    .stage{column-gap:72px}
+    .mascot-frame{width:320px;height:320px}
+    .mascot{width:280px;height:280px}
+  }
+
+  /* === Focus === */
+  button:focus-visible,a:focus-visible{
+    outline:2px solid var(--pc-accent);outline-offset:2px}
+  .copy:focus-visible{outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- Axolotl pixel symbol — landing-v2 ile aynı -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ax" viewBox="0 0 512 512" shape-rendering="crispEdges">
+    <g fill="#aed24a">
+      <rect x="64" y="64" width="32" height="32"/><rect x="96" y="32" width="32" height="80"/><rect x="128" y="64" width="32" height="32"/>
+      <rect x="208" y="16" width="32" height="96"/><rect x="240" y="0" width="32" height="112"/><rect x="272" y="16" width="32" height="96"/>
+      <rect x="352" y="64" width="32" height="32"/><rect x="384" y="32" width="32" height="80"/><rect x="416" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#7c4dff">
+      <rect x="96" y="112" width="320" height="32"/><rect x="64" y="144" width="384" height="32"/>
+      <rect x="32" y="176" width="448" height="32"/><rect x="32" y="208" width="448" height="32"/>
+      <rect x="32" y="240" width="448" height="32"/><rect x="32" y="272" width="448" height="32"/>
+      <rect x="32" y="304" width="448" height="32"/><rect x="32" y="336" width="448" height="32"/>
+      <rect x="64" y="368" width="384" height="32"/>
+      <rect x="96" y="400" width="64" height="32"/><rect x="208" y="400" width="96" height="32"/><rect x="352" y="400" width="64" height="32"/>
+      <rect x="96" y="432" width="64" height="48"/><rect x="352" y="432" width="64" height="48"/>
+    </g>
+    <g fill="#f5f5f8">
+      <rect x="208" y="240" width="96" height="32"/><rect x="176" y="272" width="160" height="32"/>
+      <rect x="144" y="304" width="224" height="32"/><rect x="144" y="336" width="224" height="32"/>
+      <rect x="176" y="368" width="160" height="32"/>
+    </g>
+    <g fill="#ffffff"><rect x="96" y="208" width="64" height="64"/><rect x="352" y="208" width="64" height="64"/></g>
+    <g fill="#14121a"><rect x="128" y="224" width="32" height="48"/><rect x="352" y="224" width="32" height="48"/></g>
+    <g fill="#ffffff"><rect x="128" y="224" width="16" height="16"/><rect x="352" y="224" width="16" height="16"/></g>
+    <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+  </symbol>
+</svg>
+
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+      <span class="wm">PROMPT <span class="a">CLASH</span></span>
+    </div>
+    <div class="topright">
+      <a class="back" href="/" aria-label="Lobiden çık">← Vazgeç</a>
+      <div class="lang" role="group" aria-label="Dil">
+        <button class="on" type="button" aria-pressed="true">TR</button>
+        <span class="sep"></span>
+        <button type="button" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stage">
+
+  <!-- HEADER -->
+  <section class="head">
+    <span class="tag"><span class="d"></span>LOBI</span>
+    <h1>Rakibini bekliyoruz.</h1>
+    <p class="sub">İkinci oyuncu katılınca maç otomatik başlar. Bu ekranı açık tut.</p>
+  </section>
+
+  <!-- AI HAKEM — maskotlu bekleme alanı -->
+  <section class="mascot-host" aria-label="AI Hakem bekliyor">
+    <div class="mascot-frame">
+      <div class="halo" aria-hidden="true"></div>
+      <span class="particles" aria-hidden="true">
+        <span class="p p1"></span>
+        <span class="p p2"></span>
+        <span class="p p3"></span>
+      </span>
+      <svg class="mascot" viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+    </div>
+    <span class="mascot-label"><span class="dt"></span>AI HAKEM</span>
+    <p class="mascot-sub">Rakibin geldiğinde kapışmayı başlatacağım.</p>
+  </section>
+
+  <!-- OYUNCU SLOTLARI -->
+  <section class="slots" aria-label="Oyuncular">
+    <div class="slot me">
+      <span class="ava me" aria-hidden="true">A</span>
+      <div class="meta">
+        <span class="lab">Sen</span>
+        <span class="name">AlfaBot</span>
+      </div>
+    </div>
+    <div class="vs" aria-hidden="true">VS</div>
+    <div class="slot opp" aria-live="polite">
+      <span class="ava opp" aria-hidden="true">?</span>
+      <div class="meta">
+        <span class="lab">Rakip</span>
+        <span class="opp-wait">Bekleniyor</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAVET — sıra: kod → share → QR -->
+  <section class="invite" aria-label="Davet">
+
+    <!-- 1) Oda kodu — label dışarıda, landing kod-field pattern'i -->
+    <div class="invite-code">
+      <label class="code-label" for="roomCode">Oda kodu</label>
+      <div class="code-field">
+        <span class="code" id="roomCode">DX22DT</span>
+        <div class="copy-slot">
+          <button class="copy" type="button" data-copy="DX22DT" aria-label="Oda kodunu kopyala">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <span class="copy-toast" role="status" aria-live="polite">KOPYALANDI ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2) Primary share -->
+    <button class="share-cta" type="button" data-share-url="https://promptclash.app/join/DX22DT" aria-label="Davet linkini paylaş">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+      Davet linkini paylaş
+    </button>
+
+    <!-- 3) QR — inline, panel yok -->
+    <div class="invite-qr">
+      <div class="qr" role="img" aria-label="Odaya katılım QR kodu"></div>
+      <div class="qr-meta">
+        <span class="qr-h">QR ile katıl</span>
+        <span class="qr-host">promptclash.app/join/DX22DT</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4) İzleyici linki — sessiz alt aksiyon -->
+  <section class="aud-secondary">
+    <button class="aud-link" type="button" aria-label="İzleyici linkini paylaş">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      İzleyici linki
+    </button>
+  </section>
+
+  </div><!-- /stage -->
+
+</div>
+
+<script>
+  // Kopya feedback — KOPYALANDI ✓ toast 1.4s görünür
+  (function(){
+    const slot = document.querySelector('.copy-slot');
+    if(!slot) return;
+    const btn = slot.querySelector('.copy');
+    let timer;
+    btn.addEventListener('click', async function(){
+      const val = btn.dataset.copy || '';
+      try{
+        if(navigator.clipboard && val) await navigator.clipboard.writeText(val);
+      }catch(e){ /* fallback yok — feedback yine göster */ }
+      slot.classList.add('is-copied');
+      clearTimeout(timer);
+      timer = setTimeout(function(){ slot.classList.remove('is-copied'); }, 1400);
+    });
+  })();
+
+  // Share — native Web Share, yoksa link kopyala
+  (function(){
+    const btn = document.querySelector('.share-cta');
+    if(!btn) return;
+    btn.addEventListener('click', async function(){
+      const url = btn.dataset.shareUrl || location.href;
+      if(navigator.share){
+        try{
+          await navigator.share({
+            title:'Prompt Clash · Davet',
+            text:'Bana bir 1v1 prompt kapışmasında katıl:',
+            url
+          });
+          return;
+        }catch(_){ /* iptal edildi */ }
+      }
+      try{ await navigator.clipboard.writeText(url); }catch(_){}
+    });
+  })();
+</script>
+
+</body>
+</html>

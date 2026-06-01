@@ -80,6 +80,23 @@ Every stage phase board is built as a fixed 1920×1080 absolute layout. `StageSc
 
 `MobileShell` routes by `mySlot` (player) vs no slot (audience). `AudienceView` is mobile-first (single column) but responsive at `md:` (side-by-side cards). All client views share `atmosphere.tsx`'s `C`/`FONT` so phone and stage stay visually coherent.
 
+### Shared common components (Epic 6 · Visual Refresh)
+
+The visual refresh (2026-06-01) consolidated the v2 mockup pattern into `components/common/`. Use these instead of re-rolling the same chrome per surface:
+
+- `<BgAtmosphere variant="default|lime|danger" />` — fixed glow + pixel-grid backdrop. Lime = audience surfaces (watch), danger = 404.
+- `<MascotFrame size mascotSize variant particles label sub desktopSize desktopMascotSize />` — axolotl + halo + opt. 3 particles + opt. label badge + opt. micro copy. `variant: default | lime | dim` (dim = grayscale "uyuyor" for 404). `desktopSize` grows the mascot at ≥960px via useId-scoped CSS.
+- `<SectionLabel htmlFor?>` — mono caps + line-prefix label pattern (renders `<label>` or `<span>`).
+- `<RolePill kind="host|audience|player|lobi" />` — topbar role chip.
+- `<AppHeader right>` — brand + slot for right content (BackLink, RolePill); auto-mounts `<LangToggle/>` (fixed top-right).
+- `<NotFoundShell context?>` — 4 `not-found.tsx` routes consume this; danger atmosphere + dim mascot + err pill + pixel h1.
+
+Removed in Epic 6 (Strategy B: old removed when last consumer migrates): `BrandFrame`, `StatusIndicator`, `RoomCode`, `ShareActions` — don't reintroduce, use the new components above.
+
+**Hydration trap:** Avoid `grid-template-areas: "..."` inside `<style>{...}</style>` JSX children — SSR escapes the quotes to `&quot;` causing a mismatch. Use explicit `grid-column` + `grid-row` placement on children instead.
+
+**i18n parity gate:** `npm run i18n:check` (scripts/i18nParityCheck.js) regex-walks `i18n/dict.ts` and asserts every `tr:` key has an `en:` twin. Run after adding any new copy.
+
 ### Sockets
 
 `lib/socket/server.js` has one namespace, no rooms. Events are rate-limited per `(ip, event)` + `(deviceId, event)` via `lib/rateLimit.js`. The admin role is identified by a signed cookie (`lib/adminAuth.js`) read off the handshake. Device identity persists via `pc_device_id` cookie (used to reattach players across reconnects).

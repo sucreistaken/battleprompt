@@ -113,6 +113,7 @@ export async function PUT(req: Request) {
 
   await connectMongo();
   const settings = await saveSettings(patch);
-  lifecycle.adminUpdateSettings(settings);
+  // TODO(Story 4.x): apply settings to every room; default to 'default' for now.
+  lifecycle.adminUpdateSettings('default', settings);
   return NextResponse.json({ ok: true, settings });
 }

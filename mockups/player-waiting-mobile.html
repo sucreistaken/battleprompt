@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="tr" data-pc-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lobi — mobile · Prompt Clash</title>
+<meta name="description" content="player-waiting mobil mockup — telefon framesi içinde 390×780 simülasyon." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  /* === Tokens (landing-v2 ile aynı) === */
+  :root{
+    --pc-ink:#22202b; --pc-ink2:#2d2b38; --pc-ink3:#383545;
+    --pc-line:#4a4757; --pc-line2:#615d72;
+    --pc-text:#f7f4ec; --pc-text2:#c0bdca; --pc-text3:#a8a4b3; --pc-text4:#605d6c;
+    --pc-bone:#ffffff; --pc-live:#ff5c5c;
+    --pc-accent:#7c4dff; --pc-accent2:#5a35cc; --pc-b:#aed24a; --pc-b2:#88aa2e;
+    --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --pixel:'Silkscreen',monospace;
+    --body:'Inter Tight','IBM Plex Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#15131c}
+  body{color:var(--pc-text);font-family:var(--body);min-height:100dvh;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* ====== Preview frame (sadece bu mockup için) ====== */
+  .preview-stage{min-height:100dvh;padding:32px 16px;
+    display:flex;flex-direction:column;align-items:center;gap:20px;
+    background:
+      radial-gradient(circle at 20% 10%,rgba(124,77,255,.08),transparent 50%),
+      radial-gradient(circle at 80% 90%,rgba(174,210,74,.05),transparent 45%),
+      #15131c}
+  .preview-head{font-family:var(--mono);font-size:11px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    text-align:center;line-height:1.6}
+  .preview-head .px{color:var(--pc-accent)}
+  .phone{width:390px;max-width:100%;height:780px;border-radius:42px;
+    background:var(--pc-ink);
+    box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0a12,
+               inset 0 0 0 1px rgba(255,255,255,.04);
+    overflow:hidden;position:relative}
+  .phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:122px;height:28px;background:#0c0a12;
+    border-radius:0 0 18px 18px;z-index:50;pointer-events:none}
+  .phone-scroll{position:absolute;inset:0;overflow:auto;
+    overscroll-behavior:contain}
+  .phone-scroll::-webkit-scrollbar{width:0}
+
+  .fold-line{position:absolute;left:-44px;right:auto;
+    top:660px;height:1px;width:38px;
+    background:linear-gradient(90deg,transparent,var(--pc-accent),transparent);
+    z-index:60}
+  .fold-line::after{content:'fold';position:absolute;left:-26px;top:-7px;
+    font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-accent)}
+
+  /* ====== Mobil sayfa içeriği ====== */
+  .bg-glow{position:absolute;z-index:0;pointer-events:none;width:520px;height:520px;
+    left:-160px;top:-180px;
+    background:radial-gradient(circle at center,rgba(124,77,255,.14) 0%,rgba(124,77,255,.02) 42%,transparent 64%);
+    filter:blur(22px)}
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(124,77,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(124,77,255,.022) 1px,transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse 90% 50% at 50% 16%,#000 12%,transparent 72%)}
+
+  .shell{position:relative;z-index:1;padding:12px 18px 28px;
+    padding-top:max(36px,env(safe-area-inset-top,36px))}
+
+  /* === Topbar === */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:0 0 10px;border-bottom:1px solid var(--pc-ink3)}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand svg{display:block;width:28px;height:28px;flex:none;image-rendering:pixelated}
+  .wm{font-family:var(--pixel);font-size:12px;letter-spacing:.06em;color:var(--pc-bone);
+    white-space:nowrap}
+  .wm .a{color:var(--pc-accent)}
+  .topright{display:flex;align-items:center;gap:6px;flex:none}
+  .back{display:inline-flex;align-items:center;gap:4px;
+    font-family:var(--mono);font-size:10px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--pc-text3);
+    text-decoration:none;padding:4px 6px;border-radius:6px}
+  .lang{display:inline-flex;gap:0;padding:2px 3px;
+    background:color-mix(in srgb,var(--pc-ink) 75%,transparent);
+    border:1px solid var(--pc-line);border-radius:999px;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;user-select:none}
+  .lang button{appearance:none;border:none;background:transparent;
+    padding:3px 8px;color:var(--pc-text3);font:inherit;cursor:pointer;min-height:24px}
+  .lang button.on{color:var(--pc-accent);font-weight:600}
+  .lang .sep{width:1px;background:var(--pc-line);opacity:.6;margin:3px 0}
+
+  /* === Head — kompakt === */
+  .head{display:flex;flex-direction:column;gap:8px;padding:14px 0 10px}
+  .tag{display:inline-flex;align-items:center;align-self:flex-start;gap:7px;
+    padding:4px 10px;border-radius:999px;
+    background:rgba(174,210,74,.08);border:1px solid rgba(174,210,74,.30);
+    font-family:var(--pixel);font-size:10px;letter-spacing:.10em;color:var(--pc-b)}
+  .tag .d{width:5px;height:5px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 8px rgba(174,210,74,.5)}
+  .head h1{font-family:var(--body);font-size:24px;font-weight:700;
+    color:var(--pc-bone);letter-spacing:-.005em;line-height:1.15;margin:0}
+  .head .sub{font-family:var(--body);font-size:13.5px;color:var(--pc-text2);
+    line-height:1.5;margin:0}
+
+  /* === AI HAKEM === */
+  .mascot-host{display:flex;flex-direction:column;align-items:center;
+    gap:8px;padding:10px 0 14px;position:relative}
+  .mascot-frame{position:relative;width:112px;height:112px;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .mascot-frame .halo{position:absolute;inset:-16px;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at center,
+      rgba(124,77,255,.24) 0%,rgba(124,77,255,.06) 38%,transparent 64%);
+    filter:blur(8px)}
+  .mascot{position:relative;z-index:1;width:92px;height:92px;
+    image-rendering:pixelated;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)) drop-shadow(0 0 10px rgba(124,77,255,.20));
+    animation:mascotFloat 4.8s ease-in-out infinite}
+  @keyframes mascotFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-5px)}
+  }
+  @media(prefers-reduced-motion:reduce){.mascot{animation:none}}
+  .particles{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .particles .p{position:absolute;display:block;image-rendering:pixelated}
+  .particles .p1{top:6px;right:4px;width:5px;height:5px;background:var(--pc-b);
+    box-shadow:0 0 7px rgba(174,210,74,.5)}
+  .particles .p2{bottom:12px;left:2px;width:4px;height:4px;background:var(--pc-accent);
+    box-shadow:0 0 7px rgba(124,77,255,.55)}
+  .particles .p3{top:48%;right:-4px;width:3px;height:3px;background:var(--pc-bone);
+    opacity:.7}
+  .mascot-label{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;
+    padding:4px 11px;border-radius:999px;
+    background:rgba(174,210,74,.10);border:1px solid rgba(174,210,74,.38);
+    font-family:var(--pixel);font-size:10.5px;letter-spacing:.10em;color:var(--pc-b);
+    text-shadow:0 0 12px rgba(174,210,74,.30)}
+  .mascot-label .dt{width:5px;height:5px;background:var(--pc-b);flex:none;
+    box-shadow:0 0 7px rgba(174,210,74,.6)}
+  .mascot-sub{font-family:var(--body);font-size:12px;color:var(--pc-text3);
+    line-height:1.4;text-align:center;max-width:28ch;margin:0;font-style:italic}
+
+  /* === Slotlar === */
+  .slots{display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:stretch;
+    margin-top:6px}
+  .slot{display:flex;align-items:center;gap:9px;padding:10px 11px;
+    background:var(--pc-ink2);border:1.5px solid var(--pc-line);
+    border-radius:var(--r-md);min-width:0}
+  .slot.me{border-color:var(--pc-accent);
+    box-shadow:inset 0 -2px 0 rgba(124,77,255,.28)}
+  .slot.opp{border-style:dashed;border-color:var(--pc-line2)}
+  .ava{width:34px;height:34px;flex:none;display:inline-flex;
+    align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:15px;letter-spacing:.04em;
+    border-radius:3px;image-rendering:pixelated}
+  .ava.me{background:var(--pc-accent);color:#fff;
+    box-shadow:inset 0 -3px 0 var(--pc-accent2),inset 0 1px 0 rgba(255,255,255,.18)}
+  .ava.opp{background:var(--pc-ink3);color:var(--pc-text3);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.04);
+    border:1px solid var(--pc-line)}
+  .slot .meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .slot .lab{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pc-text3)}
+  .slot.me .lab{color:var(--pc-accent)}
+  .slot.opp .lab{color:var(--pc-b)}
+  .slot .name{font-family:var(--body);font-size:13.5px;font-weight:700;color:var(--pc-bone);
+    line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slot .opp-wait{font-family:var(--mono);font-size:11px;color:var(--pc-text3);
+    line-height:1.2;letter-spacing:.06em}
+  .slot .opp-wait::after{content:'';display:inline-block;width:12px;text-align:left;
+    animation:wDots 1.6s steps(4,end) infinite}
+  @keyframes wDots{
+    0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}
+  }
+  @media(prefers-reduced-motion:reduce){.slot .opp-wait::after{animation:none;content:'…'}}
+  .vs{display:flex;align-items:center;justify-content:center;
+    font-family:var(--pixel);font-size:12px;letter-spacing:.04em;
+    color:var(--pc-text3);padding:0 3px;flex:none;min-width:22px;
+    text-shadow:0 0 8px rgba(124,77,255,.3)}
+
+  /* === Davet === */
+  .invite{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+
+  /* Oda kodu — label dışarıda */
+  .invite-code{display:flex;flex-direction:column;gap:7px}
+  .code-label{font-family:var(--mono);font-size:10px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--pc-text3);
+    padding-left:2px;display:flex;align-items:center;gap:9px}
+  .code-label::before{content:'';width:14px;height:1px;background:var(--pc-line2)}
+  .code-field{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;background:var(--pc-ink2);
+    border:1.5px solid var(--pc-line);border-radius:var(--r-md)}
+  .code{font-family:var(--pixel);font-size:32px;
+    color:var(--pc-bone);letter-spacing:.10em;line-height:1;min-width:0}
+
+  .copy-slot{position:relative;flex:none}
+  .copy{width:40px;height:40px;padding:0;
+    background:transparent;border:1.5px solid var(--pc-line);
+    border-radius:var(--r-sm);color:var(--pc-text2);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:border-color .14s,color .14s,background .14s}
+  .copy:hover,.copy:active{border-color:var(--pc-accent);color:var(--pc-bone);
+    background:rgba(124,77,255,.10)}
+  .copy svg{display:block}
+  .copy-toast{position:absolute;right:0;bottom:calc(100% + 8px);
+    padding:5px 9px;border-radius:4px;
+    background:var(--pc-b);color:#0e0e10;
+    font-family:var(--pixel);font-size:10px;letter-spacing:.08em;
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transform:translateY(4px);
+    transition:opacity .16s ease-out,transform .16s ease-out;
+    box-shadow:0 6px 18px rgba(174,210,74,.30)}
+  .copy-toast::after{content:'';position:absolute;right:12px;top:100%;
+    border:5px solid transparent;border-top-color:var(--pc-b)}
+  .copy-slot.is-copied .copy-toast{opacity:1;transform:translateY(0)}
+  .copy-slot.is-copied .copy{border-color:var(--pc-b);color:var(--pc-b);
+    background:rgba(174,210,74,.10)}
+
+  /* Primary share */
+  .share-cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;min-height:58px;border-radius:var(--r-md);
+    background:var(--pc-accent);color:#fff;border:none;
+    font-family:var(--body);font-size:15px;font-weight:800;
+    letter-spacing:.005em;cursor:pointer;
+    box-shadow:0 10px 24px rgba(124,77,255,.30),inset 0 -2px 0 rgba(0,0,0,.18)}
+  .share-cta:active{transform:translateY(1px)}
+  .share-cta svg{flex:none}
+
+  /* QR — inline, panel yok */
+  .invite-qr{display:flex;align-items:center;gap:12px;padding:6px 2px 0}
+  .qr{width:80px;height:80px;flex:none;background:#fff;
+    background-image:
+      repeating-linear-gradient(0deg,#0e0e10 0,#0e0e10 6px,#fff 6px,#fff 12px),
+      repeating-linear-gradient(90deg,rgba(0,0,0,.5) 0,rgba(0,0,0,.5) 6px,transparent 6px,transparent 12px);
+    background-blend-mode:multiply;image-rendering:pixelated;
+    display:block;border-radius:4px}
+  .qr-meta{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+  .qr-meta .qr-h{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--pc-text3);display:flex;align-items:center;gap:9px}
+  .qr-meta .qr-h::before{content:'';width:14px;height:1px;background:var(--pc-line2)}
+  .qr-meta .qr-host{font-family:var(--mono);font-size:11.5px;color:var(--pc-text2);
+    word-break:break-all;line-height:1.4}
+
+  /* İzleyici linki */
+  .aud-secondary{margin-top:14px;padding-top:12px;
+    border-top:1px dashed var(--pc-ink3);
+    display:flex;align-items:center;justify-content:center}
+  .aud-link{display:inline-flex;align-items:center;gap:7px;
+    padding:7px 11px;border-radius:6px;
+    background:transparent;border:none;color:var(--pc-text3);
+    font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;cursor:pointer;
+    transition:color .14s,background .14s}
+  .aud-link:hover{color:var(--pc-text);background:var(--pc-ink2)}
+  .aud-link svg{flex:none;opacity:.85}
+
+  /* Focus */
+  button:focus-visible,a:focus-visible{outline:2px solid var(--pc-accent);outline-offset:2px}
+
+  /* küçük ekranlarda phone frame yok, full akışa geç */
+  @media(max-width:440px){
+    .preview-stage{padding:0;background:var(--pc-ink)}
+    .preview-head{display:none}
+    .fold-line{display:none}
+    .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+    .phone::before{display:none}
+    .phone-scroll{position:relative;inset:auto;height:auto;overflow:visible}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ax" viewBox="0 0 512 512" shape-rendering="crispEdges">
+    <g fill="#aed24a">
+      <rect x="64" y="64" width="32" height="32"/><rect x="96" y="32" width="32" height="80"/><rect x="128" y="64" width="32" height="32"/>
+      <rect x="208" y="16" width="32" height="96"/><rect x="240" y="0" width="32" height="112"/><rect x="272" y="16" width="32" height="96"/>
+      <rect x="352" y="64" width="32" height="32"/><rect x="384" y="32" width="32" height="80"/><rect x="416" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#7c4dff">
+      <rect x="96" y="112" width="320" height="32"/><rect x="64" y="144" width="384" height="32"/>
+      <rect x="32" y="176" width="448" height="32"/><rect x="32" y="208" width="448" height="32"/>
+      <rect x="32" y="240" width="448" height="32"/><rect x="32" y="272" width="448" height="32"/>
+      <rect x="32" y="304" width="448" height="32"/><rect x="32" y="336" width="448" height="32"/>
+      <rect x="64" y="368" width="384" height="32"/>
+      <rect x="96" y="400" width="64" height="32"/><rect x="208" y="400" width="96" height="32"/><rect x="352" y="400" width="64" height="32"/>
+      <rect x="96" y="432" width="64" height="48"/><rect x="352" y="432" width="64" height="48"/>
+    </g>
+    <g fill="#f5f5f8">
+      <rect x="208" y="240" width="96" height="32"/><rect x="176" y="272" width="160" height="32"/>
+      <rect x="144" y="304" width="224" height="32"/><rect x="144" y="336" width="224" height="32"/>
+      <rect x="176" y="368" width="160" height="32"/>
+    </g>
+    <g fill="#ffffff"><rect x="96" y="208" width="64" height="64"/><rect x="352" y="208" width="64" height="64"/></g>
+    <g fill="#14121a"><rect x="128" y="224" width="32" height="48"/><rect x="352" y="224" width="32" height="48"/></g>
+    <g fill="#ffffff"><rect x="128" y="224" width="16" height="16"/><rect x="352" y="224" width="16" height="16"/></g>
+    <rect x="240" y="336" width="32" height="16" fill="#5a35cc"/>
+  </symbol>
+</svg>
+
+<div class="preview-stage">
+  <div class="preview-head">
+    <span class="px">▣</span> player waiting — <span class="px">mobile</span> · 390×780 simülasyon<br/>
+    <span style="opacity:.6;letter-spacing:.16em">first fold = head + mascot + slots + code + share</span>
+  </div>
+
+  <div class="phone">
+    <div class="fold-line"></div>
+    <div class="phone-scroll">
+
+      <div class="bg-glow"></div>
+      <div class="bg-grid"></div>
+
+      <div class="shell">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+          <div class="brand">
+            <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+            <span class="wm">PROMPT <span class="a">CLASH</span></span>
+          </div>
+          <div class="topright">
+            <a class="back" href="/" aria-label="Lobiden çık">← Vazgeç</a>
+            <div class="lang" role="group" aria-label="Dil">
+              <button class="on" type="button" aria-pressed="true">TR</button>
+              <span class="sep"></span>
+              <button type="button" aria-pressed="false">EN</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- HEADER -->
+        <section class="head">
+          <span class="tag"><span class="d"></span>LOBI</span>
+          <h1>Rakibini bekliyoruz.</h1>
+          <p class="sub">İkinci oyuncu katılınca maç otomatik başlar. Bu ekranı açık tut.</p>
+        </section>
+
+        <!-- AI HAKEM -->
+        <section class="mascot-host" aria-label="AI Hakem bekliyor">
+          <div class="mascot-frame">
+            <div class="halo" aria-hidden="true"></div>
+            <span class="particles" aria-hidden="true">
+              <span class="p p1"></span>
+              <span class="p p2"></span>
+              <span class="p p3"></span>
+            </span>
+            <svg class="mascot" viewBox="0 0 512 512" aria-hidden="true"><use href="#ax"/></svg>
+          </div>
+          <span class="mascot-label"><span class="dt"></span>AI HAKEM</span>
+          <p class="mascot-sub">Rakibin geldiğinde kapışmayı başlatacağım.</p>
+        </section>
+
+        <!-- SLOTLAR -->
+        <section class="slots" aria-label="Oyuncular">
+          <div class="slot me">
+            <span class="ava me" aria-hidden="true">A</span>
+            <div class="meta">
+              <span class="lab">Sen</span>
+              <span class="name">AlfaBot</span>
+            </div>
+          </div>
+          <div class="vs" aria-hidden="true">VS</div>
+          <div class="slot opp" aria-live="polite">
+            <span class="ava opp" aria-hidden="true">?</span>
+            <div class="meta">
+              <span class="lab">Rakip</span>
+              <span class="opp-wait">Bekleniyor</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- DAVET -->
+        <section class="invite" aria-label="Davet">
+
+          <div class="invite-code">
+            <label class="code-label" for="roomCode">Oda kodu</label>
+            <div class="code-field">
+              <span class="code" id="roomCode">DX22DT</span>
+              <div class="copy-slot">
+                <button class="copy" type="button" data-copy="DX22DT" aria-label="Oda kodunu kopyala">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <span class="copy-toast" role="status" aria-live="polite">KOPYALANDI ✓</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="share-cta" type="button" data-share-url="https://promptclash.app/join/DX22DT" aria-label="Davet linkini paylaş">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+            Davet linkini paylaş
+          </button>
+
+          <div class="invite-qr">
+            <div class="qr" role="img" aria-label="Odaya katılım QR kodu"></div>
+            <div class="qr-meta">
+              <span class="qr-h">QR ile katıl</span>
+              <span class="qr-host">promptclash.app/join/DX22DT</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="aud-secondary">
+          <button class="aud-link" type="button" aria-label="İzleyici linkini paylaş">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            İzleyici linki
+          </button>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Kopya feedback
+  (function(){
+    const slot = document.querySelector('.copy-slot');
+    if(!slot) return;
+    const btn = slot.querySelector('.copy');
+    let timer;
+    btn.addEventListener('click', async function(){
+      const val = btn.dataset.copy || '';
+      try{ if(navigator.clipboard && val) await navigator.clipboard.writeText(val); }catch(e){}
+      slot.classList.add('is-copied');
+      clearTimeout(timer);
+      timer = setTimeout(function(){ slot.classList.remove('is-copied'); }, 1400);
+    });
+  })();
+
+  // Share — native Web Share, yoksa clipboard
+  (function(){
+    const btn = document.querySelector('.share-cta');
+    if(!btn) return;
+    btn.addEventListener('click', async function(){
+      const url = btn.dataset.shareUrl || location.href;
+      if(navigator.share){
+        try{ await navigator.share({ title:'Prompt Clash · Davet', text:'Bana bir 1v1 prompt kapışmasında katıl:', url }); return; }
+        catch(_){}
+      }
+      try{ await navigator.clipboard.writeText(url); }catch(_){}
+    });
+  })();
+</script>
+
+</body>
+</html>

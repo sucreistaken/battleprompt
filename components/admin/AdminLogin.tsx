@@ -78,7 +78,7 @@ export function AdminLogin({ onSuccess }: Props) {
           <button
             type="submit"
             disabled={working || !password.trim()}
-            className={cn('q-cta', working && 'opacity-70')}
+            className={cn('q-cta transition-opacity duration-150', working && 'opacity-70 cursor-wait')}
           >
             {working ? '…' : t('adminLogin')}
           </button>

@@ -23,6 +23,9 @@ export const STAGE_H = 1080;
 export const PROMPT_MAX = 280;
 
 // ─── Font stacks (loaded via <StageFonts/>) ──────────────────────────────
+// Üç ayrı font ailesi — kullanıcı talebi (2026-06-01): Silkscreen sadece
+// pixel başlık/brand showcase'lerinde; gövde metni Inter Tight'a, mono
+// etiketler JetBrains Mono'ya geri döndü (okunabilirlik).
 export const FONT = {
   pixel: "'Silkscreen', monospace",
   body: "'Inter Tight','IBM Plex Sans',system-ui,sans-serif",
@@ -209,30 +212,44 @@ export function StageScaler({ children }: { children: ReactNode }) {
       setScale(Math.min(vw / STAGE_W, vh / STAGE_H));
       setReady(true);
     };
+
+    // rAF-debounce: 6 ayrı listener (resize / visualViewport resize+scroll /
+    // orientationchange / ResizeObserver / initial raf) viewport değiştikçe
+    // hep `fit()`'i tetikliyordu — paint jitter ve gereksiz render. Aynı
+    // animation frame içindeki tüm trigger'lar tek `fit()` çağrısına düşer.
+    let scheduledRaf: number | null = null;
+    const scheduleFit = () => {
+      if (scheduledRaf !== null) return;
+      scheduledRaf = requestAnimationFrame(() => {
+        scheduledRaf = null;
+        fit();
+      });
+    };
+
     fit();
     // One more pass after layout/fonts settle.
-    const raf = requestAnimationFrame(fit);
+    scheduleFit();
 
-    window.addEventListener('resize', fit);
+    window.addEventListener('resize', scheduleFit);
     const vv = window.visualViewport;
-    vv?.addEventListener('resize', fit);
-    vv?.addEventListener('scroll', fit);
+    vv?.addEventListener('resize', scheduleFit);
+    vv?.addEventListener('scroll', scheduleFit);
     // Orientation flips (mobile/tablet) sometimes fire after resize with a
     // stale viewport — listen explicitly so the rotation lands fitted.
-    window.addEventListener('orientationchange', fit);
+    window.addEventListener('orientationchange', scheduleFit);
 
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined' && frameRef.current) {
-      ro = new ResizeObserver(fit);
+      ro = new ResizeObserver(scheduleFit);
       ro.observe(frameRef.current);
     }
 
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', fit);
-      vv?.removeEventListener('resize', fit);
-      vv?.removeEventListener('scroll', fit);
-      window.removeEventListener('orientationchange', fit);
+      if (scheduledRaf !== null) cancelAnimationFrame(scheduledRaf);
+      window.removeEventListener('resize', scheduleFit);
+      vv?.removeEventListener('resize', scheduleFit);
+      vv?.removeEventListener('scroll', scheduleFit);
+      window.removeEventListener('orientationchange', scheduleFit);
       ro?.disconnect();
     };
   }, []);

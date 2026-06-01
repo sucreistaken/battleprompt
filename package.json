@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/matchSmoke.js && node scripts/multiRoomSmoke.js",
+    "smoke:match": "node scripts/matchSmoke.js",
+    "smoke:multi-room": "node scripts/multiRoomSmoke.js",
+    "i18n:check": "node scripts/i18nParityCheck.js"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.12.1",
@@ -23,7 +27,8 @@
     "react-confetti": "^6.1.0",
     "react-dom": "18.3.1",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cookie": "^0.6.0",
