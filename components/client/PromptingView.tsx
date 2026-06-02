@@ -34,10 +34,6 @@ export function PromptingView() {
   const [text, setText] = useState('');
   const [submittedLocal, setSubmittedLocal] = useState(false);
   const [focused, setFocused] = useState(false);
-  // iOS klavyesi açıkken textarea ve hedef görseli daraltmak için visualViewport.
-  const [kbdOpen, setKbdOpen] = useState(false);
-  // Mobile'da inline `100dvh` iOS'te keyboard'la güvenilmez; visualViewport.height takip ediyoruz.
-  const [shellHeight, setShellHeight] = useState<string | number>('100dvh');
 
   // Throttle typing broadcast (every 250ms while user types).
   useEffect(() => {
@@ -45,25 +41,6 @@ export function PromptingView() {
     const id = setTimeout(() => sendTyping(text), 250);
     return () => clearTimeout(id);
   }, [text, submittedLocal, sendTyping, state?.phase]);
-
-  // Klavye + viewport takibi.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const handle = () => {
-      const gap = window.innerHeight - vv.height;
-      setKbdOpen(gap > 120);
-      setShellHeight(vv.height);
-    };
-    handle();
-    vv.addEventListener('resize', handle);
-    vv.addEventListener('scroll', handle);
-    return () => {
-      vv.removeEventListener('resize', handle);
-      vv.removeEventListener('scroll', handle);
-    };
-  }, []);
 
   const cd = useCountdown(state?.phaseEndsAt ?? null, state?.durations.promptDurationSec ?? 60);
 
@@ -294,8 +271,8 @@ export function PromptingView() {
   };
 
   const textArea = (variant: 'desktop' | 'mobile') => {
-    const minH = variant === 'desktop' ? 200 : kbdOpen ? 120 : 140;
-    const maxH = variant === 'mobile' ? (kbdOpen ? 140 : 240) : undefined;
+    const minH = variant === 'desktop' ? 200 : 140;
+    const maxH = variant === 'mobile' ? 200 : undefined;
     return (
       <textarea
         rows={5}
@@ -317,7 +294,7 @@ export function PromptingView() {
           border: `1.5px solid ${locked ? C.line : focused ? slotColor : C.line}`,
           boxShadow: !locked && focused ? `0 0 0 4px ${slotSoft}` : 'none',
           fontFamily: FONT.mono,
-          fontSize: variant === 'mobile' ? 15 : 16,
+          fontSize: 16,
           lineHeight: 1.55,
           resize: 'none',
           outline: 'none',
@@ -548,7 +525,7 @@ export function PromptingView() {
       className="flex lg:hidden"
       style={{
         flexDirection: 'column',
-        height: typeof shellHeight === 'number' ? shellHeight : '100dvh',
+        minHeight: '100dvh',
         background: C.ink,
       }}
     >
@@ -587,12 +564,10 @@ export function PromptingView() {
         </div>
       </header>
 
-      {/* scroll body */}
+      {/* body — natural flow, iOS klavyesi textarea'yı kendi scroll'lar */}
       <div
         style={{
           flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
           padding: '16px 20px 24px',
           display: 'flex',
           flexDirection: 'column',
@@ -600,15 +575,13 @@ export function PromptingView() {
         }}
       >
         {miniLabelEl(t('referenceImage'))}
-        <div style={{ alignSelf: 'center', width: '100%', maxWidth: kbdOpen ? 200 : 340 }}>
-          {targetImage(kbdOpen ? 200 : 340)}
+        <div style={{ alignSelf: 'center', width: '100%', maxWidth: 260 }}>
+          {targetImage(260)}
         </div>
-        {!kbdOpen && (
-          <div style={{ fontSize: 14, color: C.text2, textAlign: 'center', lineHeight: 1.4 }}>
-            {t('promptingSubtitleShort')}
-          </div>
-        )}
-        {!kbdOpen && hintChips()}
+        <div style={{ fontSize: 14, color: C.text2, textAlign: 'center', lineHeight: 1.4 }}>
+          {t('promptingSubtitleShort')}
+        </div>
+        {hintChips()}
 
         <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span

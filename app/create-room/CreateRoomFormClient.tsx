@@ -17,7 +17,6 @@ import { MascotFrame } from '@/components/common/MascotFrame';
 type CategoryMode = 'RANDOM' | 'HOST_SELECTED' | 'PLAYER_VOTE';
 
 type RoomDraft = {
-  roomName: string;
   categoryMode: CategoryMode;
   audienceEnabled: boolean;
   promptDuration: number;
@@ -30,7 +29,6 @@ type RoomDraft = {
 };
 
 const DEFAULTS: RoomDraft = {
-  roomName: '',
   categoryMode: 'RANDOM',
   audienceEnabled: true,
   promptDuration: 60,
@@ -65,16 +63,12 @@ function CreateRoomBody() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
-    if (!draft.roomName.trim()) {
-      setErr(t('createRoomNameRequired'));
-      return;
-    }
     setSubmitting(true);
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...draft, roomName: draft.roomName.trim() }),
+        body: JSON.stringify(draft),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body.ok) {
@@ -131,30 +125,6 @@ function CreateRoomBody() {
         </section>
 
         <form onSubmit={submit} noValidate style={formStyle}>
-          {/* roomName */}
-          <div style={fieldStyle}>
-            <label htmlFor="roomName" style={lblStyle}>
-              <span aria-hidden="true" style={lblLineStyle} />
-              {t('createRoomNameLabel')}
-            </label>
-            <input
-              id="roomName"
-              type="text"
-              value={draft.roomName}
-              onChange={(e) => set('roomName', e.target.value)}
-              placeholder={t('createRoomNamePlaceholder')}
-              maxLength={50}
-              autoFocus
-              className="pc-input"
-              style={{
-                ...inputStyle,
-                color: draft.roomName ? 'var(--pc-bone)' : 'var(--pc-text)',
-                fontWeight: draft.roomName ? 600 : 400,
-                borderColor: draft.roomName ? 'var(--pc-line2)' : 'var(--pc-line)',
-              }}
-            />
-          </div>
-
           {/* categoryMode segmented */}
           <div style={fieldStyle}>
             <span style={lblStyle}>
@@ -588,17 +558,6 @@ const lblLineStyle: CSSProperties = {
   height: 1,
   background: 'var(--pc-line2)',
   flex: 'none',
-};
-
-const inputStyle: CSSProperties = {
-  height: 54,
-  borderRadius: 10,
-  background: 'var(--pc-ink2)',
-  border: '1.5px solid var(--pc-line)',
-  padding: '0 16px',
-  fontFamily: "'Inter Tight', system-ui, sans-serif",
-  fontSize: 15.5,
-  width: '100%',
 };
 
 const segStyle: CSSProperties = {

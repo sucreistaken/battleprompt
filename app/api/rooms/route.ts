@@ -36,7 +36,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const CreateRoomBody = z.object({
-  roomName: z.string().min(1).max(50),
+  roomName: z.string().max(50).optional().default(''),
   categoryMode: z.enum(['RANDOM', 'HOST_SELECTED', 'PLAYER_VOTE']).default('RANDOM'),
   promptDuration: z.number().int().min(10).max(180).default(60),
   votingDuration: z.number().int().min(5).max(120).default(15),

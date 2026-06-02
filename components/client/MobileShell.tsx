@@ -67,12 +67,9 @@ function MobileShellInner() {
       return <ReadyCheckView />;
     }
     if (state.phase === 'PROMPTING' || state.phase === 'VS_INTRO') {
-      return (
-        <>
-          <LangToggle />
-          <PromptingView />
-        </>
-      );
+      // Sayaç sağ üstte; fixed LangToggle çakışıyordu. AudienceView
+      // GENERATING/SCORING ile aynı pattern: oyun fazlarında dil chip'i suppress.
+      return <PromptingView />;
     }
     if (state.phase === 'GENERATING' || state.phase === 'SCORING') {
       // AudienceView GENERATING/SCORING dalı kendi inline lang chip'ini kullanır:
